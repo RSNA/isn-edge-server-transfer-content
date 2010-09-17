@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="ASCII"?>
+<metadata:ProvideAndRegisterDocumentSet xmlns:metadata="urn:org:openhealthtools:ihe:xds:metadata">
+  <submissionSet>
+    <author>
+      <authorInstitution>
+        <organizationName>University Hospital</organizationName>
+      </authorInstitution>
+      <authorPerson>
+        <idNumber>1234</idNumber>
+        <familyName>CASEY</familyName>
+        <givenName>BEN</givenName>
+        <assigningAuthorityUniversalId>2.16.840.1.113883.3.933</assigningAuthorityUniversalId>
+        <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
+      </authorPerson>
+    </author>
+    <contentTypeCode>
+      <code>Radiology Exam</code>
+      <displayName>
+        <LocalizedString value="Radiology Exam"/>
+      </displayName>
+      <schemeName>Connect-a-thon contentTypeCodes</schemeName>
+    </contentTypeCode>
+    <entryUUID>urn:uuid:10e6595a-b0e0-6eaa-ee8e-0019bbdcbe0a</entryUUID>
+    <patientId>
+      <idNumber>50000678</idNumber>
+      <assigningAuthorityUniversalId>1.3.6.1.4.1.21367.2009.1.2.300</assigningAuthorityUniversalId>
+      <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
+    </patientId>
+    <submissionTime>20100914192011</submissionTime>
+    <uniqueId>1.3.6.1.4.1.21367.100.142050233018142045.1284492011731</uniqueId>
+  </submissionSet>
+  <documentEntry>
+    <author>
+      <authorInstitution>
+        <organizationName>University Hospital</organizationName>
+      </authorInstitution>
+      <authorPerson>
+        <idNumber>1234</idNumber>
+        <familyName>CASEY</familyName>
+        <givenName>BEN</givenName>
+        <assigningAuthorityUniversalId>2.16.840.1.113883.3.933</assigningAuthorityUniversalId>
+        <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
+      </authorPerson>
+    </author>
+    <classCode>
+      <code>Radiology Exam</code>
+      <displayName>
+        <LocalizedString value="Radiology Exam"/>
+      </displayName>
+      <schemeName>Connect-a-thon classCodes</schemeName>
+    </classCode>
+    <creationTime>20100914142004</creationTime>
+    <entryUUID>urn:uuid:10e69708-b0e0-6eaa-1be1-0019bbdcbe0a</entryUUID>
+    <formatCode>
+      <code>CDAR2/IHE 1.0</code>
+      <displayName>
+        <LocalizedString value="CDAR2/IHE 1.0"/>
+      </displayName>
+      <schemeName>Connect-a-thon formatCodes</schemeName>
+    </formatCode>
+    <healthCareFacilityTypeCode>
+      <code>Outpatient</code>
+      <displayName>
+        <LocalizedString value="Outpatient"/>
+      </displayName>
+      <schemeName>Connect-a-thon healthcareFacilityTypeCodes</schemeName>
+    </healthCareFacilityTypeCode>
+    <languageCode>en-us</languageCode>
+    <mimeType>application/dicom</mimeType>
+    <patientId>
+      <idNumber>50000678</idNumber>
+      <assigningAuthorityUniversalId>1.2</assigningAuthorityUniversalId>
+      <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
+    </patientId>
+    <practiceSettingCode>
+      <code>Radiology</code>
+      <displayName>
+        <LocalizedString value="Radiology"/>
+      </displayName>
+      <schemeName>Connect-a-thon practiceSettingCodes</schemeName>
+    </practiceSettingCode>
+    <sourcePatientId>
+      <idNumber>50000678</idNumber>
+      <assigningAuthorityUniversalId>1.2</assigningAuthorityUniversalId>
+      <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
+    </sourcePatientId>
+    <sourcePatientInfo>
+      <patientIdentifier>
+        <idNumber>50000678</idNumber>
+        <assigningAuthorityUniversalId>1.2</assigningAuthorityUniversalId>
+        <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
+      </patientIdentifier>
+      <patientName>
+        <familyName>TEST</familyName>
+        <givenName>RSNA</givenName>
+      </patientName>
+      <patientDateOfBirth>19500101</patientDateOfBirth>
+      <patientSex>M</patientSex>
+      <patientAddress>
+        <streetAddress>7255 S. KEDZIE CHICAGO IL 60629</streetAddress>
+      </patientAddress>
+    </sourcePatientInfo>
+    <uniqueId>1.3.6.1.4.1.21367.100.105013172006285011.1284492011700</uniqueId>
+  </documentEntry>
+</metadata:ProvideAndRegisterDocumentSet>
