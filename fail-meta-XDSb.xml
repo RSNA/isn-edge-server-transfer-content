@@ -6,28 +6,28 @@
         <organizationName>University Hospital</organizationName>
       </authorInstitution>
       <authorPerson>
-        <idNumber>1234</idNumber>
-        <familyName>CASEY</familyName>
-        <givenName>BEN</givenName>
+        <idNumber></idNumber>
+        <familyName>SIGNER</familyName>
+        <givenName>K</givenName>
         <assigningAuthorityUniversalId>2.16.840.1.113883.3.933</assigningAuthorityUniversalId>
         <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
       </authorPerson>
     </author>
     <contentTypeCode>
-      <code>Radiology Exam</code>
+      <code>Consult</code>
       <displayName>
-        <LocalizedString value="Radiology Exam"/>
+        <LocalizedString value="Consult"/>
       </displayName>
       <schemeName>Connect-a-thon contentTypeCodes</schemeName>
     </contentTypeCode>
-    <entryUUID>urn:uuid:10e6595a-b0e0-6eaa-ee8e-0019bbdcbe0a</entryUUID>
+    <entryUUID>urn:uuid:8c2ca70e-ac28-71ac-bdcb-e57037c93f9b</entryUUID>
     <patientId>
-      <idNumber>50000678</idNumber>
+      <idNumber>89bf6068fc0248e</idNumber>
       <assigningAuthorityUniversalId>1.3.6.1.4.1.21367.2009.1.2.300</assigningAuthorityUniversalId>
       <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
     </patientId>
-    <submissionTime>20100914192011</submissionTime>
-    <uniqueId>1.3.6.1.4.1.21367.100.142050233018142045.1284492011731</uniqueId>
+    <submissionTime>20100929150252</submissionTime>
+    <uniqueId>1.3.6.1.4.1.21367.100.175003107007049097.1285772572829</uniqueId>
   </submissionSet>
   <documentEntry>
     <author>
@@ -35,22 +35,29 @@
         <organizationName>University Hospital</organizationName>
       </authorInstitution>
       <authorPerson>
-        <idNumber>1234</idNumber>
-        <familyName>CASEY</familyName>
-        <givenName>BEN</givenName>
+        <idNumber></idNumber>
+        <familyName>SIGNER</familyName>
+        <givenName>K</givenName>
         <assigningAuthorityUniversalId>2.16.840.1.113883.3.933</assigningAuthorityUniversalId>
         <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
       </authorPerson>
     </author>
     <classCode>
-      <code>Radiology Exam</code>
+      <code>Consult</code>
       <displayName>
-        <LocalizedString value="Radiology Exam"/>
+        <LocalizedString value="Consult"/>
       </displayName>
       <schemeName>Connect-a-thon classCodes</schemeName>
     </classCode>
-    <creationTime>20100914142004</creationTime>
-    <entryUUID>urn:uuid:10e69708-b0e0-6eaa-1be1-0019bbdcbe0a</entryUUID>
+    <confidentialityCode>
+      <code>N</code>
+      <displayName>
+        <LocalizedString value="Normal"/>
+      </displayName>
+      <schemeName>Connect-a-thon confidentialityCodes</schemeName>
+    </confidentialityCode>
+    <creationTime>20100929</creationTime>
+    <entryUUID>urn:uuid:8c2ca880-ac28-71ac-d0ad-0ba02c1ba834</entryUUID>
     <formatCode>
       <code>CDAR2/IHE 1.0</code>
       <displayName>
@@ -65,41 +72,54 @@
       </displayName>
       <schemeName>Connect-a-thon healthcareFacilityTypeCodes</schemeName>
     </healthCareFacilityTypeCode>
-    <languageCode>en-us</languageCode>
+    <languageCode>en-US</languageCode>
     <mimeType>application/dicom</mimeType>
     <patientId>
-      <idNumber>50000678</idNumber>
-      <assigningAuthorityUniversalId>1.2</assigningAuthorityUniversalId>
+      <idNumber>89bf6068fc0248e</idNumber>
+      <assigningAuthorityUniversalId>1.3.6.1.4.1.21367.2009.1.2.300</assigningAuthorityUniversalId>
       <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
     </patientId>
     <practiceSettingCode>
-      <code>Radiology</code>
+      <code>General Medicine</code>
       <displayName>
-        <LocalizedString value="Radiology"/>
+        <LocalizedString value="General Medicine"/>
       </displayName>
       <schemeName>Connect-a-thon practiceSettingCodes</schemeName>
     </practiceSettingCode>
     <sourcePatientId>
-      <idNumber>50000678</idNumber>
-      <assigningAuthorityUniversalId>1.2</assigningAuthorityUniversalId>
+      <idNumber>89bf6068fc0248e</idNumber>
+      <assigningAuthorityUniversalId>1.3.6.1.4.1.21367.2009.1.2.300</assigningAuthorityUniversalId>
       <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
     </sourcePatientId>
     <sourcePatientInfo>
       <patientIdentifier>
-        <idNumber>50000678</idNumber>
-        <assigningAuthorityUniversalId>1.2</assigningAuthorityUniversalId>
+        <idNumber>89bf6068fc0248e</idNumber>
+        <assigningAuthorityUniversalId>1.3.6.1.4.1.21367.2009.1.2.300</assigningAuthorityUniversalId>
         <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
       </patientIdentifier>
       <patientName>
         <familyName>TEST</familyName>
-        <givenName>RSNA</givenName>
+        <givenName> SEVEN </givenName>
       </patientName>
-      <patientDateOfBirth>19500101</patientDateOfBirth>
+      <patientDateOfBirth>19761108</patientDateOfBirth>
       <patientSex>M</patientSex>
       <patientAddress>
-        <streetAddress>7255 S. KEDZIE CHICAGO IL 60629</streetAddress>
+        <streetAddress>
+		  114 Jefferson Ave  
+		  Atlanta,   
+		  GA   
+		  30317     
+		  US 
+		</streetAddress>
       </patientAddress>
     </sourcePatientInfo>
-    <uniqueId>1.3.6.1.4.1.21367.100.105013172006285011.1284492011700</uniqueId>
+    <typeCode>
+      <code>11488-4</code>
+      <displayName>
+        <LocalizedString value="Consultation Note"/>
+      </displayName>
+      <schemeName>LOINC</schemeName>
+    </typeCode>
+    <uniqueId>1.3.6.1.4.1.21367.100.137005130010142144.1285772572480</uniqueId>
   </documentEntry>
 </metadata:ProvideAndRegisterDocumentSet>

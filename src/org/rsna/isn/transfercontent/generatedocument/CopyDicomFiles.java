@@ -18,6 +18,8 @@ import org.apache.commons.io.FileUtils;
 
 import java.nio.channels.FileLock;
 import java.text.Format;
+import java.util.TimeZone;
+import org.rsna.isn.transfercontent.dao.SQLUpdates;
 
 
 public class CopyDicomFiles {
@@ -28,13 +30,15 @@ public class CopyDicomFiles {
     private static String an;
     private static String studyUID;
     private static String studyDate;
+    private static String sDate;
     private static String studyTime;
-    private static String studyDateTime;
+    private static String sTime;
+    private static String studyDesc;
+    private static String sDateTime;
     private static String key;
-    private static String newDirPath;
     private static String newsUIDDirPath;
     private static int index = 0;
-    private static String[] uidDirs = new String[5];
+    private static String[] uidDir = new String[10];
     private static long threadID = 0;
     private static String CRLF = "\r\n";
     private static String tstamp;
@@ -51,14 +55,13 @@ public class CopyDicomFiles {
     public CopyDicomFiles() {
     }
 
-    public static String[] CopyAllFiles(String source, String destination, String mrn, String accessionNumber) throws FileNotFoundException, IOException, InterruptedException, Exception {
+    public static String[] CopyAllFiles(String source, String destination, String mrn, String accessionNumber, int examID) throws FileNotFoundException, IOException, InterruptedException, Exception {
         RunnableThread copyThread = new RunnableThread("CopyDirectory");
         copyThread.run();
 
         File fs = new File(source);
         File fd = new File(destination);
 
-        newDirPath = destination;
         newsUIDDirPath = destination;
 
         int FileNum;
@@ -82,7 +85,7 @@ public class CopyDicomFiles {
             } else {
                 threadID = Thread.currentThread().getId();
                 for (int i = 0; i < FileNum; i++) {
-                       CopyFile(source, destination, files[i], mrn, accessionNumber);
+                       CopyFile(source, destination, files[i], i, mrn, accessionNumber, examID);
                 }
             }
 
@@ -95,13 +98,13 @@ public class CopyDicomFiles {
         } else {
             return null;
         }
-        return uidDirs;
+        return uidDir;
     }
 
     //copy files method
-    public static void CopyFile(String source, String destination, String fileName, String mrn, String accessionNumber) throws FileNotFoundException, IOException, InterruptedException, Exception {
+    public static void CopyFile(String source, String destination, String fileName, int index, String mrn, String accessionNumber, int examID) throws FileNotFoundException, IOException, InterruptedException, Exception {
         Properties props = new Properties();
-        props.load(new FileInputStream("c:/rsna/rsna.properties"));
+        props.load(new FileInputStream("/rsna/properties/rsna.properties"));
 
         String newFname;
 
@@ -121,20 +124,34 @@ public class CopyDicomFiles {
             formatter = new SimpleDateFormat("yyyyMMdd");
 
             if (dateTime == null) {
-                studyDate = formatter.format(today);
+                sDate = formatter.format(today);
             } else {
-                studyDate = formatter.format(formatter.parseObject(dateTime));
+                sDate = formatter.format(formatter.parseObject(dateTime));
             }
 
             dateTime = dcmObj.getString(Tag.StudyTime);
             formatter = new SimpleDateFormat("HHmmss");
             if (dateTime == null) {
-                studyTime = formatter.format(today);
+                sTime = formatter.format(today);
             } else {
-                studyTime = formatter.format(formatter.parseObject(dateTime));
+                sTime = formatter.format(formatter.parseObject(dateTime));
             }
 
-            studyDateTime = studyDate + studyTime;
+            String yr = sDate.substring(0,4);
+            String month = sDate.substring(4,6);
+            String day = sDate.substring(6,8);
+            studyDate = yr + "-" + month + "-" + day;
+
+            String hr = sTime.substring(0,2);
+            String minutes = sTime.substring(2,4);
+            String seconds = sTime.substring(4,6);
+            studyTime = hr + ":" + minutes + ":" + seconds;
+
+            sDateTime = studyDate + " " + studyTime;
+            java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            java.util.Date parsedDate = dateFormat.parse(sDateTime);
+            java.sql.Timestamp studyDateTime = new java.sql.Timestamp(parsedDate.getTime());
+            java.sql.Timestamp modifiedDateTime = new java.sql.Timestamp(System.currentTimeMillis());
 
             pID = dcmObj.getString(Tag.PatientID);
             if (!pID.equals(mrn)) {
@@ -147,24 +164,11 @@ public class CopyDicomFiles {
             }
 
             studyUID = dcmObj.getString(Tag.StudyInstanceUID);
+            studyDesc = dcmObj.getString(Tag.StudyDescription);
 
-            newDirPath = destination + pID;
-            File newDir = new File(newDirPath);
-            if (!newDir.exists()) {
-                success = newDir.mkdir();
-                if (success) {
-                    tstamp = stamp.Date();
-                    lmsg = "CopyFile: Successfully created subdirectory for  " + pID;
-                    log.logger("LogTime is " + "  " + tstamp + ": " + "::     " + lmsg);
-                    log.logger(CRLF);
-                    System.out.println("Successfully created subdirectory for " + pID);
-                } else {
-                    tstamp = stamp.Date();
-                    lmsg = "Error in CopyDirFile: Unsuccessfully created subdirectory for " + pID;
-                    log.logger("LogTime is " + "  " + tstamp + ": " + "::     " + lmsg);
-                    log.logger(CRLF);
-                    System.out.println("Unsuccessfully created subdirectory for " + pID);
-                }
+            if (index == 0) {
+                SQLUpdates.InsertStudyRow(studyUID, examID, studyDesc, studyDateTime, modifiedDateTime);
+                System.out.println("Updated study table");
             }
 
             try {
@@ -177,10 +181,10 @@ public class CopyDicomFiles {
                 log.logger(CRLF);
             }
 
-            newsUIDDirPath = newDirPath + File.separatorChar + studyUID;
+            newsUIDDirPath = destination + File.separatorChar + studyUID;
             File newsUIDDir = new File(newsUIDDirPath);
             if (!newsUIDDir.exists()) {
-                uidDirs[index] = newsUIDDirPath;
+                uidDir[index] = newsUIDDirPath;
                 index++;
                 success2 = newsUIDDir.mkdir();
                 if (success2) {
@@ -225,7 +229,7 @@ public class CopyDicomFiles {
                 e.printStackTrace();
             }
 
-              System.out.println("Moved " + fileName + "to directory " + newsUIDDirPath);
+             System.out.println("Moved " + fileName + " to directory " + newsUIDDirPath);
              tstamp = stamp.Date();
              lmsg = "CopyDicomFile: Wrote " + fileName + "to directory " + newsUIDDirPath;
              log.logger("LogTime is " + "  " + tstamp + ": " + "::     " + lmsg);

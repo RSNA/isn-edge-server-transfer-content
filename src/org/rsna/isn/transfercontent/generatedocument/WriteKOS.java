@@ -79,7 +79,7 @@ public class WriteKOS {
 //        copyThread.run();
 
         fs = new File(source);
-        fd = new File(source, "KOS.dcm");
+        fd = new File(source + File.separatorChar + "KOS.dcm");
 
         try {
             fos = new FileOutputStream(fd);
@@ -368,11 +368,9 @@ public class WriteKOS {
             dcmObj.putString(Tag.InstanceNumber, VR.IS, "1");
             dos.writeDataset(dcmObj, transferSyntaxUID);
         } catch (IOException e) {
-            errorMsg = e.getMessage();
-            System.out.println("WriteKOS error: " + errorMsg);
+            System.out.println("WriteKOS error: " + e.getMessage());
         } catch (Exception e) {
-            errorMsg = e.getMessage();
-            System.out.println("WriteKOS error: " + errorMsg);
+            System.out.println("WriteKOS error: " + e.getMessage());
         }
     }
 

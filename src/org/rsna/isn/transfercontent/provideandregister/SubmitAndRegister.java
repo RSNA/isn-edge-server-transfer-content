@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.TimeZone;
+import org.apache.axis2.client.Options;
+import org.apache.axis2.addressing.EndpointReference;
+import org.apache.axis2.client.ServiceClient;
 import org.apache.log4j.Logger;
 import org.openhealthtools.ihe.utils.OID;
 import org.openhealthtools.ihe.xds.document.DocumentDescriptor;
@@ -39,13 +42,13 @@ public class SubmitAndRegister {
         return temp;
     }
 
-    public int SendFiles(String endPoint, String configFolder, String outputFolder, DocumentDescriptor documentDescriptor, SubmissionSetData InputData) throws Exception {
+    public int SendFiles(String endPoint, String configFolder, String outputFolder, DocumentDescriptor documentDescriptor, SubmissionSetData inputData) throws Exception {
         returnValue = 0;
         System.out.println(endPoint);
         sendFilesList = new ArrayList<String>();
 
 
-        String fname = InputData.getFilename();
+        String fname = inputData.getFilename();
         sendFilesList = ListSubmissionSetFiles.listSetFiles(fname);
 
 
@@ -66,38 +69,42 @@ public class SubmitAndRegister {
 
             //  System.out.println("XXXXXXXXXXXXXXXXXXXXX" + kosDcmReportFile );
 
-            String assigningAuthority = InputData.getAssigningauthority();
-            String assigningAuthorityOID = InputData.getAssigningauthorityOID();
-            String uuid = InputData.getUuid();
-            String uid1 = InputData.getUid1();
-            String uid2 = InputData.getUid2();
-            String uid3 = InputData.getUid3();
-            String uid4 = InputData.getUid4();
-            String path = InputData.getPath();
-            String patientName = InputData.getPatientname();
-            String fullName = InputData.getFullname();
-            String givenName = InputData.getGivenname();
-            String familyName = InputData.getFamilyname();
-            String patientID = InputData.getPatientid();
-            String InstitutionName = InputData.getInstitutionname();
-            String documentID = InputData.getDocumentid();
-            String title = InputData.getTitle();
-            String date = InputData.getDate();
-            String time = InputData.getTime();
-            String street = InputData.getStreet();
-            String city = InputData.getCity();
-            String state = InputData.getState();
-            String zipCode = InputData.getZip();
-            String country = InputData.getCountry();
-            String sex = InputData.getSex();
-            String birthDate = InputData.getBirthdate();
-            String pdf = InputData.getPdf();
+            String assigningAuthority = inputData.getAssigningauthority();
+            String assigningAuthorityOID = inputData.getAssigningauthorityOID();
+            String uuid = inputData.getUuid();
+            String uid1 = inputData.getUid1();
+            String uid2 = inputData.getUid2();
+            String uid3 = inputData.getUid3();
+            String uid4 = inputData.getUid4();
+            String path = inputData.getPath();
+            String patientName = inputData.getPatientname();
+            String fullName = inputData.getFullname();
+            String givenName = inputData.getGivenname();
+            String familyName = inputData.getFamilyname();
+            String patientID = inputData.getPatientid();
+            String authorID = inputData.getAuthorID();
+            String authorFamilyName = inputData.getAuthorFamilyName();
+            String authorGivenName = inputData.getAuthorGivenName();
+            String authorAssigningAuthorityOID = inputData.getAuthorAssigningAuthorityOID();
+            String InstitutionName = inputData.getInstitutionname();
+            String documentID = inputData.getDocumentid();
+            String title = inputData.getTitle();
+            String date = inputData.getDate();
+            String time = inputData.getTime();
+            String street = inputData.getStreet();
+            String city = inputData.getCity();
+            String state = inputData.getState();
+            String zipCode = inputData.getZip();
+            String country = inputData.getCountry();
+            String sex = inputData.getSex();
+            String birthDate = inputData.getBirthdate();
+            String pdf = inputData.getPdf();
 
 
 
 
             String[] params = new String[]{
-                //   "path",         path,
+                //"path",         path,
                 "patient-name", patientName,
                 "full-name", fullName,
                 "given-name", givenName,
@@ -105,6 +112,10 @@ public class SubmitAndRegister {
                 "patient-id", patientID,
                 "assigning-authority", assigningAuthority,
                 "assigning-authority-OID", assigningAuthorityOID,
+                "author-id", authorID,
+                "author-family-name", authorFamilyName,
+                "author-given-name", authorGivenName,
+                "author-assigning-authority-OID", authorAssigningAuthorityOID,
                 "institution-name", InstitutionName,
                 "document-id", documentID,
                 "title", title,
@@ -126,15 +137,15 @@ public class SubmitAndRegister {
             };
 
 
-            String docEntrySourceFileName = outputFolder + File.separatorChar + InputData.getDocEntrySourceFileName();
-            String docEntryFileName = outputFolder + File.separatorChar + InputData.getDocEntryFileName();
+            String docEntrySourceFileName = outputFolder + File.separatorChar + inputData.getDocEntrySourceFileName();
+            String docEntryFileName = outputFolder + File.separatorChar + inputData.getDocEntryFileName();
 
 
             File docEntrySource = new File(docEntrySourceFileName);
             File docEntry = new File(docEntryFileName);
 
-            String docxslpath = InputData.getDocxslpath();
-            String docEntrySourceToDocEntryFileName = InputData.getDocEntrySourceToDocEntryFileName();
+            String docxslpath = inputData.getDocxslpath();
+            String docEntrySourceToDocEntryFileName = inputData.getDocEntrySourceToDocEntryFileName();
             File docEntrySourceToDocEntry = new File(
                     configFolder, docxslpath + File.separatorChar + docEntrySourceToDocEntryFileName);
             FileUtil.setFileText(
@@ -144,12 +155,12 @@ public class SubmitAndRegister {
                     docEntrySource, docEntrySourceToDocEntry, params)));
 
 
-            String submissionSetSourceFilename = outputFolder + File.separatorChar + InputData.getSubmissionSetSourceFileName();
+            String submissionSetSourceFilename = outputFolder + File.separatorChar + inputData.getSubmissionSetSourceFileName();
             File submissionSetSource = new File(submissionSetSourceFilename);
-            String submissionSetFileName = InputData.getSubmissionSetFileName();
+            String submissionSetFileName = inputData.getSubmissionSetFileName();
             File submissionSet = new File(temp, submissionSetFileName);
 
-            String submissionSetSourceToSubmissionSetFileName = InputData.getSubmissionSetSourceToSubmissionSetFileName();
+            String submissionSetSourceToSubmissionSetFileName = inputData.getSubmissionSetSourceToSubmissionSetFileName();
 
 
             File submissionSetSourceToSubmissionSet = new File(configFolder, docxslpath + File.separatorChar + submissionSetSourceToSubmissionSetFileName);
@@ -168,7 +179,7 @@ public class SubmitAndRegister {
 
             responseText = "XDS.b transmission attempted";
             System.out.println("Make a new txnData");
-            String organizationalOID = InputData.getOrganizationalOID();
+            String organizationalOID = inputData.getOrganizationalOID();
             SubmitTransactionData txnData = new SubmitTransactionData();
             XDSDocument clinicalDocument = new XDSDocumentFromFile(
                     documentDescriptor,
@@ -187,13 +198,20 @@ public class SubmitAndRegister {
             txnData.loadSubmissionSet(fis);
             fis.close();
 
+            ServiceClient serviceClient = new ServiceClient ();
+            Options options = new Options();
+            options.setTo(new EndpointReference(endPoint));
+            options.setProperty(org.apache.axis2.Constants.Configuration.ENABLE_MTOM, org.apache.axis2.Constants.VALUE_TRUE);
+            serviceClient .setOptions(options);
+
+
             logger.debug("txtData.loadSubmissionSet");
             uniqueID = OID.createOIDGivenRoot(organizationalOID, 64);
             System.out.println("Submission Set Unique ID: " + uniqueID);
             txnData.getSubmissionSet().setUniqueId(uniqueID);
             txnData.getSubmissionSet().setSubmissionTime(SubmitAndRegister.formGMT_DTM());
 
-            String saveMetadataToFileName = InputData.getSaveMetadataToFile();
+            String saveMetadataToFileName = inputData.getSaveMetadataToFile();
 
             txnData.saveMetadataToFile(saveMetadataToFileName);
             txnData.getSubmissionSet().setSourceId(organizationalOID);

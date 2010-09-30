@@ -15,6 +15,7 @@ import org.rsna.isn.transfercontent.dao.*;
  */
 public class TimerPoller {
     Timer timer;
+    int job_id;
 
     public TimerPoller() {
     }
@@ -30,14 +31,13 @@ public class TimerPoller {
             TransferContentJobStatus tcJobStatus = new TransferContentJobStatus();
 
             try {
-                tcJobStatus =  SQLQueries.GetTransferContentJobStatus(3);
-                if (tcJobStatus != null) {
-                    int job_id = tcJobStatus.getJob_id();
+                tcJobStatus =  SQLQueries.GetTransferContentJobStatus(2);
+                job_id = tcJobStatus.getJob_id();
+                if (job_id != 0) {
                     TransferContent.PrepareandTransfer(job_id);
                 }
             } catch (Exception e) {
-                String error = e.getMessage();
-                System.out.println("Poll Database: " + error);
+                System.out.println("Poll Database: " + e.getMessage());
             }
             //timer.cancel(); //Not necessary because we call System.exit
             //System.exit(0); //Stops the AWT thread (and everything else)

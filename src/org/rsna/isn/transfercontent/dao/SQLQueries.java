@@ -327,7 +327,11 @@ public class SQLQueries {
             con = conn.runConnect(SqlHost, RSNADB, UserName, PassWord);
             con.setAutoCommit(true);
             Statement s = con.createStatement();
-            s.executeQuery("SELECT j.exam_id,  e.patient_id,  p.mrn,  p.patient_name,  p.dob,  p.sex,  p.street,  p.city,  p.state,  p.zip_code,  r.report_text,  r.signer,  r.dictator,  e.exam_description,  e.accession_number,  j.report_id FROM public.jobs j, public.exams e,  public.patients p,  public.reports r " + " WHERE j.exam_id = e.exam_id AND j.report_id = r.report_id AND e.patient_id = p.patient_id AND job_id = '" + jobid + "' ");
+            String qString = "SELECT v_exam_status.patient_id, v_exam_status.mrn, v_exam_status.patient_name, v_exam_status.dob, v_exam_status.sex, v_exam_status.street, " +
+                    "v_exam_status.city, v_exam_status.state, v_exam_status.zip_code, v_exam_status.exam_id, v_exam_status.accession_number, v_exam_status.exam_description, " +
+                    "v_exam_status.report_id, v_exam_status.report_text, v_exam_status.dictator, v_exam_status.signer FROM " +
+                    "public.v_exam_status, public.v_job_status WHERE v_job_status.exam_id = v_exam_status.exam_id AND v_job_status.job_id = '" + jobid + "'";
+            s.executeQuery(qString);
             ResultSet rs = s.getResultSet();
             submitData = new SubmissionSetSqlQueryData();
             while (rs.next()) {

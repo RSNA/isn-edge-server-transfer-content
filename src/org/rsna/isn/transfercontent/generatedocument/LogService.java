@@ -20,7 +20,7 @@ public class LogService {
     public synchronized void logger(String msg) throws IOException {
         DataOutputStream dos = null;
         Properties props = new Properties();
-        props.load(new FileInputStream("c:/rsna/rsna.properties"));
+        props.load(new FileInputStream("/rsna/properties/rsna.properties"));
         
         String logfile;
         logfile = props.getProperty("transfercontentlog");

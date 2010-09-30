@@ -23,7 +23,7 @@ public class Main {
      */
     public static void main(String[] args) throws IOException {
         Properties props = new Properties();
-        props.load(new FileInputStream("c:/rsna/rsna.properties"));
+        props.load(new FileInputStream("/rsna/properties/rsna.properties"));
         logProperties = props.getProperty("transfercontentlogproperties");
         logFile = props.getProperty("transfercontentlog");
         LogProvider.init(logProperties, logFile);
