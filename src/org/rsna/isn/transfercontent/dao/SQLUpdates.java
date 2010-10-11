@@ -28,7 +28,7 @@ public class SQLUpdates {
     private static Configuration config;
     private static int updateStatus;
 
-    public static synchronized int UpdateJobDocumentID(int examID, String documentID) throws InterruptedException, SQLException, FileNotFoundException, IOException, Exception {
+    public static synchronized int UpdateJobDocumentID(int jobID, String documentID) throws InterruptedException, SQLException, FileNotFoundException, IOException, Exception {
         RunnableThread insertPatientTable = new RunnableThread("UpdateStatusinJobTable");
         insertPatientTable.run();
 
@@ -47,7 +47,7 @@ public class SQLUpdates {
             System.out.println("Database connection established");
             con.setAutoCommit(true);
             Statement s = con.createStatement();
-            String sql = "update jobs set document_id='" + documentID +  "'  where exam_id='" + examID + "'";
+            String sql = "update jobs set document_id='" + documentID +  "'  where job_id='" + jobID + "'";
             updateStatus = s.executeUpdate(sql);
 
               if (updateStatus  == 1) {
@@ -188,4 +188,56 @@ public class SQLUpdates {
         }
         return updateStatus;
     }
+
+    public static synchronized int UpdateRegistered(int patientID, boolean state) throws InterruptedException, SQLException, FileNotFoundException, IOException, Exception {
+        RunnableThread insertPatientTable = new RunnableThread("UpdateStatusinJobTable");
+        insertPatientTable.run();
+
+        GetDBCredentials db = new GetDBCredentials();
+        UserName = GetDBCredentials.Credentials().getUsername();
+        PassWord = GetDBCredentials.Credentials().getPassword();
+        SqlHost = GetDBCredentials.Credentials().getSqlhost();
+        RSNADB = GetDBCredentials.Credentials().getRsnadb();
+        URL = "jdbc:postgresql://" + SqlHost + "/" + RSNADB;
+
+        DBConnection conn = new DBConnection();
+        con = conn.runConnect(SqlHost, RSNADB, UserName, PassWord);
+        System.out.println("Database connection established");
+        try {
+
+            System.out.println("Database connection established");
+            con.setAutoCommit(true);
+            Statement s = con.createStatement();
+            String sql = "update patient_rsna_ids set registered='" + state +  "'  where patient_id='" + patientID + "'";
+            updateStatus = s.executeUpdate(sql);
+
+              if (updateStatus  == 1) {
+
+                    con.commit();
+                    System.out.println("Row is updated.");
+                } else {
+                    System.out.println("Row is not updated.");
+                }
+
+             s.close(); // close result set
+            con.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+
+            con.close();
+            if (con != null) {
+                try {
+                    con.close();
+                    System.out.println("Patient_RSNA_IDs: Upate registered operation complete");
+                    System.out.println("Database connection terminated");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+        return updateStatus;
+    }
+
 }

@@ -11,6 +11,8 @@ import org.openhealthtools.ihe.xds.document.DocumentDescriptor;
 import org.rsna.isn.transfercontent.dao.*;
 import org.rsna.isn.transfercontent.generatedocument.*;
 import java.util.UUID;
+import org.rsna.isn.transfercontent.exception.TransferContentException;
+import org.rsna.isn.transfercontent.logging.LogProvider;
 
 /**
  *
@@ -19,18 +21,20 @@ import java.util.UUID;
 public class ProvideandRegister {
 
     private static int returnResult;
+    private static LogProvider lp;
 
     /**
      * @param args the command line arguments
      */
-    public static int SubmitDocument(int jobID, int examID, String inputFolder) {
+    public static int SubmitDocument(int jobID, int examID, String inputFolder) throws TransferContentException{
         returnResult = 0;
         SubmitAndRegister s = new SubmitAndRegister();
+        lp = LogProvider.getInstance();
 
         try {
 
-            //String endPoint = "http://172.20.175.44:9080/tf6/services/xdsrepositoryb";
-            String endPoint = "http://ihexds.nist.gov:9080/tf6/services/xdsrepositoryb";
+            String endPoint = "http://www.rsnaclearinghouse.com:9090/services/xdsrepositoryb";
+//            String endPoint = "http://ihexds.nist.gov:9080/tf6/services/xdsrepositoryb";
             DocumentDescriptor d = DocumentDescriptor.DICOM;
             String docSetFolder = "/rsna";
             SubmissionSetData inputData = new SubmissionSetData();
@@ -66,6 +70,8 @@ public class ProvideandRegister {
             inputData.setAssigningauthorityOID("1.3.6.1.4.1.21367.2009.1.2.300");
             inputData.setInstitutionname("University Hospital");
             String documentID = UUID.randomUUID().toString();
+            inputData.setExamDescription(ssQueryData.getExamdescription());
+            inputData.setSopInstanceUID("1.2");
 
             inputData.setDocumentid(documentID);
             inputData.setTitle("SubmissionSet" + documentID);
@@ -103,16 +109,16 @@ public class ProvideandRegister {
             inputData.setOrganizationalOID("1.3.6.1.4.1.21367.100");
             inputData.setSaveMetadataToFile("fail-meta-XDSb.xml");
 
-//            DocumentEntryGenerator.CreateSubmissionSet(inputData, inputFolder);
-
-            returnResult = s.SendFiles(endPoint, docSetFolder, inputFolder, d, inputData);
+            returnResult = s.SendFiles(jobID, endPoint, docSetFolder, inputFolder, d, inputData);
             if (returnResult == 0) {
                 SQLUpdates.UpdateJobDocumentID(examID, documentID);
             }
             s.initialize();
         } catch (Exception e) {
-            //System.out.println("Could not submit document " + e.getMessage());
+            System.out.println("Error in Submit Document " + e.getMessage());
             e.printStackTrace();
+            lp.getLog().error("Error in Submit Document " + e.getMessage());
+            throw new TransferContentException("Error in in Submit Document", ProvideandRegister.class.getName());
         }
         return returnResult;
     }

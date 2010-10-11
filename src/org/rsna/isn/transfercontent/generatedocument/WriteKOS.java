@@ -19,6 +19,8 @@ import java.util.List;
 import org.dcm4che2.data.BasicDicomObject;
 import org.dcm4che2.data.VR;
 import org.dcm4che2.io.DicomOutputStream;
+import org.rsna.isn.transfercontent.exception.TransferContentException;
+import org.rsna.isn.transfercontent.logging.LogProvider;
 
 public class WriteKOS {
 
@@ -53,8 +55,7 @@ public class WriteKOS {
     private static boolean firstFlag = true;
     private static String savedSeriesInstanceUID = "";
 
-    private static LogService log = new LogService();
-    private static TimeStamp stamp = new TimeStamp();
+    private static LogProvider lp;
     private static Tree<String> t = new Tree<String>();
     private static Node<String> root;
     private static Node<String> seriesNode;
@@ -74,9 +75,10 @@ public class WriteKOS {
     public WriteKOS() {
     }
 
-    public static void Generate(String source) throws FileNotFoundException, IOException, InterruptedException, Exception {
-//        RunnableThread copyThread = new RunnableThread("ScanDirectory");
+    public static void Generate(String source) throws FileNotFoundException, IOException, InterruptedException, Exception, TransferContentException {
+//        RunnableThread copyThread = new RunnableThread("WriteKOS");
 //        copyThread.run();
+        lp =LogProvider.getInstance();
 
         fs = new File(source);
         fd = new File(source + File.separatorChar + "KOS.dcm");
@@ -86,8 +88,8 @@ public class WriteKOS {
             bos = new BufferedOutputStream(fos);
             dos = new DicomOutputStream(bos);
         } catch (Exception e) {
-            errorMsg = e.getMessage();
-            System.out.println("WriteKOS error: " + errorMsg);
+            lp.getLog().error("WriteKOS error: " + e.getMessage());
+            System.out.println("WriteKOS error: " + e.getMessage());
         }
         int FileNum;
         DicomObject dcmObj = new BasicDicomObject();
@@ -100,6 +102,7 @@ public class WriteKOS {
         //  check if source directory is there
         if (!fs.exists()) {
             fs.mkdir();
+            lp.getLog().info("Source Directory or File doesn't exist:" + fs);
             System.out.println("Source Directory or File doesn't exist:" + fs);
         } else {
 
@@ -235,6 +238,7 @@ public class WriteKOS {
                 dos.writeHeader(Tag.SequenceDelimitationItem, null, 0);
                 dos.writeDataset(dcmObj, transferSyntaxUID);
                 dos.close();
+                lp.getLog().info("Finished writing KOS in subdirectory " + source);
                 System.out.println("Finished writing KOS in subdirectory " + source);
             }
         }
@@ -307,23 +311,22 @@ public class WriteKOS {
                 din.close();
              } catch (IOException e) {
                 System.out.println("Error in closing DICOM input stream");
-                errorMsg = e.getMessage();
-                System.out.println("WriteKOS error: " + errorMsg);
-                tstamp = stamp.Date();
-                lmsg = "Error in closing DICOM input stream for " + fileName;
-                log.logger("LogTime is " + "  " + tstamp + ": " + "::     " + lmsg);
-                log.logger(CRLF);
+                System.out.println("WriteKOS error: " + e.getMessage());
+                lp.getLog().error("Error in closing DICOM input stream for " + fileName);
+                throw new TransferContentException("WriteKOS error: " + e.getMessage(), WriteKOS.class.getName());
              }
         } catch (IOException e) {
-            errorMsg = e.getMessage();
-            System.out.println("WriteKOS error: " + errorMsg);
+            System.out.println("WriteKOS error: " + e.getMessage());
+            lp.getLog().error("WriteKOS error: " + e.getMessage());
+            throw new TransferContentException("WriteKOS error: " + e.getMessage(), WriteKOS.class.getName());
         } catch (Exception e) {
-            errorMsg = e.getMessage();
-            System.out.println("WriteKOS error: " + errorMsg);
+            System.out.println("WriteKOS error: " + e.getMessage());
+            lp.getLog().error("WriteKOS error: " + e.getMessage());
+            throw new TransferContentException("WriteKOS error: " + e.getMessage(), WriteKOS.class.getName());
         }
     }
 
-    private static void WriteKOSHeader(DicomObject dcmObj) throws InterruptedException {
+    private static void WriteKOSHeader(DicomObject dcmObj) throws InterruptedException, TransferContentException {
 
         DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd HHmmss.000");
         Date date = new Date();
@@ -369,8 +372,12 @@ public class WriteKOS {
             dos.writeDataset(dcmObj, transferSyntaxUID);
         } catch (IOException e) {
             System.out.println("WriteKOS error: " + e.getMessage());
+            lp.getLog().error("WriteKOS error: " + e.getMessage());
+            throw new TransferContentException("WriteKOS error: " + e.getMessage(), WriteKOS.class.getName());
         } catch (Exception e) {
             System.out.println("WriteKOS error: " + e.getMessage());
+            lp.getLog().error("WriteKOS error: " + e.getMessage());
+            throw new TransferContentException("WriteKOS error: " + e.getMessage(), WriteKOS.class.getName());
         }
     }
 

@@ -5,6 +5,8 @@
 
 package org.rsna.isn.transfercontent.generatedocument;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Timer;
 import java.util.TimerTask;
 import org.rsna.isn.transfercontent.dao.*;
@@ -28,13 +30,18 @@ public class TimerPoller {
     class PollDatabase extends TimerTask {
         public void run() {
             System.out.println("Doing Transfer Content task now!");
-            TransferContentJobStatus tcJobStatus = new TransferContentJobStatus();
-
+            TransferContentJobStatus tcJobStatus;// = new TransferContentJobStatus();
+            ArrayList<TransferContentJobStatus> readyJobs = new ArrayList<TransferContentJobStatus>();
+            Iterator itr;
             try {
-                tcJobStatus =  SQLQueries.GetTransferContentJobStatus(2);
-                job_id = tcJobStatus.getJob_id();
-                if (job_id != 0) {
-                    TransferContent.PrepareandTransfer(job_id);
+                readyJobs =  SQLQueries.GetTransferContentJobStatus(2);
+                itr = readyJobs.iterator();
+                while(itr.hasNext()) {
+                    tcJobStatus = (TransferContentJobStatus)itr.next();
+                    job_id = tcJobStatus.getJob_id();
+                    if (job_id != 0) {
+                        TransferContent.PrepareandTransfer(job_id);
+                    }
                 }
             } catch (Exception e) {
                 System.out.println("Poll Database: " + e.getMessage());

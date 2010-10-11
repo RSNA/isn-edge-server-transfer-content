@@ -30,6 +30,9 @@ private String authorGivenName;
 private String authorAssigningAuthorityOID;
 
 private String institutionname ;
+private String examDescription;
+private String sopInstanceUID;
+
 private String documentid ;
 private String title ;
 private String date ;
@@ -243,6 +246,22 @@ private String docxslpath  ;
 
     public void setAuthorID(String authorID) {
         this.authorID = authorID;
+    }
+
+    public String getExamDescription() {
+        return examDescription;
+    }
+
+    public void setExamDescription(String examDescription) {
+        this.examDescription = examDescription;
+    }
+
+    public String getSopInstanceUID() {
+        return sopInstanceUID;
+    }
+
+    public void setSopInstanceUID(String sopInstanceUID) {
+        this.sopInstanceUID = sopInstanceUID;
     }
 
     public String getBirthdate() {

@@ -18,8 +18,11 @@ import org.apache.commons.io.FileUtils;
 
 import java.nio.channels.FileLock;
 import java.text.Format;
+import java.util.ArrayList;
 import java.util.TimeZone;
 import org.rsna.isn.transfercontent.dao.SQLUpdates;
+import org.rsna.isn.transfercontent.exception.TransferContentException;
+import org.rsna.isn.transfercontent.logging.LogProvider;
 
 
 public class CopyDicomFiles {
@@ -28,6 +31,7 @@ public class CopyDicomFiles {
     private static boolean lockfile;
     private static String pID;
     private static String an;
+    private static String sopInstanceUID;
     private static String studyUID;
     private static String studyDate;
     private static String sDate;
@@ -37,8 +41,6 @@ public class CopyDicomFiles {
     private static String sDateTime;
     private static String key;
     private static String newsUIDDirPath;
-    private static int index = 0;
-    private static String[] uidDir = new String[10];
     private static long threadID = 0;
     private static String CRLF = "\r\n";
     private static String tstamp;
@@ -48,16 +50,18 @@ public class CopyDicomFiles {
     private static boolean success = false ;
     private static boolean success2 = false;
     private static boolean success3  = false;
-
-    static LogService log = new LogService();
-    static TimeStamp stamp = new TimeStamp();
+    private static LogProvider lp;
+    private static ArrayList<String> uidDir;
 
     public CopyDicomFiles() {
     }
 
-    public static String[] CopyAllFiles(String source, String destination, String mrn, String accessionNumber, int examID) throws FileNotFoundException, IOException, InterruptedException, Exception {
+    public static ArrayList<String> CopyAllFiles(String source, String destination, String mrn, String accessionNumber, int examID) throws FileNotFoundException, IOException, InterruptedException, TransferContentException, Exception {
         RunnableThread copyThread = new RunnableThread("CopyDirectory");
         copyThread.run();
+
+        lp = LogProvider.getInstance();
+        uidDir = new ArrayList<String>();
 
         File fs = new File(source);
         File fd = new File(destination);
@@ -70,9 +74,11 @@ public class CopyDicomFiles {
         if (!fs.exists()) {
             fs.mkdir();
             System.out.println("Source Directory or File doesn't exist:" + fs);
+            lp.getLog().info("Source Directory or File doesn't exist:" + fs);
         } else if (!fd.exists()) {
             fd.mkdir();
             System.out.println("Destination Directory or File doesn't exist:" + fd);
+            lp.getLog().info("Destination Directory or File doesn't exist:" + fd);
         // create destination Directory
         } else if (fs.exists() && fd.exists()) {
 
@@ -155,68 +161,58 @@ public class CopyDicomFiles {
 
             pID = dcmObj.getString(Tag.PatientID);
             if (!pID.equals(mrn)) {
-                return;
+                throw new TransferContentException("Patient ID does not match!", CopyDicomFiles.class.getName());
             }
 
             an = dcmObj.getString(Tag.AccessionNumber);
             if (!an.equals(accessionNumber)) {
-                return;
+                throw new TransferContentException("Patient Accession number does not match!", CopyDicomFiles.class.getName());
             }
 
+            sopInstanceUID = dcmObj.getString(Tag.SOPInstanceUID);
             studyUID = dcmObj.getString(Tag.StudyInstanceUID);
             studyDesc = dcmObj.getString(Tag.StudyDescription);
 
             if (index == 0) {
                 SQLUpdates.InsertStudyRow(studyUID, examID, studyDesc, studyDateTime, modifiedDateTime);
                 System.out.println("Updated study table");
+                lp.getLog().info("Updated study table");
             }
 
             try {
                 din.close();
-            } catch (IOException e) {
-                System.out.println("Error in closing DICOM input stream");
-                tstamp = stamp.Date();
-                lmsg = "Error in closing DICOM input stream for " + fileName;
-                log.logger("LogTime is " + "  " + tstamp + ": " + "::     " + lmsg);
-                log.logger(CRLF);
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("CopyDicomFiles: Error in closing DICOM input stream");
+                lp.getLog().error("CopyDicomFiles: Error in closing DICOM input stream for " + fileName);
+                throw new TransferContentException("CopyDicomFiles: Error in closing DICOM input stream for " + fileName, CopyDicomFiles.class.getName());
             }
 
             newsUIDDirPath = destination + File.separatorChar + studyUID;
             File newsUIDDir = new File(newsUIDDirPath);
             if (!newsUIDDir.exists()) {
-                uidDir[index] = newsUIDDirPath;
-                index++;
+                uidDir.add(newsUIDDirPath);
                 success2 = newsUIDDir.mkdir();
                 if (success2) {
                     System.out.println("Created filefolder " + newsUIDDirPath);
-                    tstamp = stamp.Date();
-                    lmsg = "CopyFile: Created filefolder " + newsUIDDirPath;
-                    log.logger("LogTime is " + "  " + tstamp + ": " + "::     " + lmsg);
-                    log.logger(CRLF);
+                    lp.getLog().info("CopyFile: Created filefolder " + newsUIDDirPath);
                 } else {
                     System.out.println("Error creating filefolder " + newsUIDDirPath);
-                    tstamp = stamp.Date();
-                    lmsg = "Exception in CopyFile: Error creating filefolder " + newsUIDDirPath;
-                    log.logger("LogTime is " + "  " + tstamp + ": " + "::     " + lmsg);
-                    log.logger(CRLF);
+                    lp.getLog().error("Exception in CopyFile: Error creating filefolder " + newsUIDDirPath);
+                    throw new TransferContentException("Error creating filefolder " + newsUIDDirPath, CopyDicomFiles.class.getName());
                 }
             }
 
             String fPath = newsUIDDirPath + File.separatorChar + fileName;
             if(new File(fPath).exists()) {
-                tstamp = stamp.Date();
-                lmsg = "CopyFile: File already exists in finalcopydir for MRN = " + pID;
-                log.logger("LogTime is " + "  " + tstamp + ": " + "::     " + lmsg);
-                log.logger(CRLF);
+                lp.getLog().info("CopyFile: File already exists in finalcopydir for MRN = " + pID);
                 String oldFPath = source + fileName;
                 success3 = new File(oldFPath).delete();
                 if (!success3) {
                     System.out.println("Delete of " + fileName + " in CopyDirFile failed!");
-                    lmsg = "Exception in CopyDir File: Delete of Duplicate file " + fileName+ "failed";
-                    log.logger("LogTime is " + "  " + tstamp + ": " + "::     " + lmsg);
-                    log.logger(CRLF);
+                    lp.getLog().error("Exception in CopyDir File: Delete of Duplicate file " + fileName+ "failed");
+                    throw new TransferContentException("Delete of " + fileName + " in CopyDirFile failed!", CopyDicomFiles.class.getName());
                 }
-                return;
             }
 
             newFname = newsUIDDirPath + File.separatorChar + fileName;
@@ -226,33 +222,30 @@ public class CopyDicomFiles {
                 FileUtils.moveFile(fs, fd);
             } catch (Exception e) {
                 System.out.println("CopyDicomFiles Error" + e.getMessage());
+                lp.getLog().error("CopyDicomFiles Error" + e.getMessage());
                 e.printStackTrace();
+                throw new TransferContentException("CopyDicomFiles Error" + e.getMessage(), CopyDicomFiles.class.getName());
             }
 
              System.out.println("Moved " + fileName + " to directory " + newsUIDDirPath);
-             tstamp = stamp.Date();
-             lmsg = "CopyDicomFile: Wrote " + fileName + "to directory " + newsUIDDirPath;
-             log.logger("LogTime is " + "  " + tstamp + ": " + "::     " + lmsg);
-             log.logger(CRLF);
+             lp.getLog().info("CopyDicomFile: Wrote " + fileName + "to directory " + newsUIDDirPath);
 
 
             if (fs.exists() && fs.length() > 0) {
                 if (fs.delete()) {
-                    tstamp = stamp.Date();
-                    lmsg = "CopyDir File: Deleted " + fileName + " in incomingdir";
-                    log.logger("LogTime is " + "  " + tstamp + ": " + "::     " + lmsg);
-                    log.logger(CRLF);
+                    lp.getLog().info("CopyDir File: Deleted " + fileName + " in incomingdir");
                 } else {
-                    tstamp = stamp.Date();
-                    lmsg = "Exception in CopyDir File: " + fileName + " not deleted in incomingdir";
-                    log.logger("LogTime is " + "  " + tstamp + ": " + "::     " + lmsg);
-                    log.logger(CRLF);
+                    lp.getLog().info("Exception in CopyDir File: " + fileName + " not deleted in incomingdir");
                 }
             }
         } catch (IOException e) {
+            lp.getLog().error("CopyDir File: IO Error");
             e.printStackTrace();
+            throw new TransferContentException("CopyDir File: IO Error", CopyDicomFiles.class.getName());
         } catch (Exception e) {
+            lp.getLog().error("CopyDir File: Error");
             e.printStackTrace();
+            throw new TransferContentException("CopyDir File: Error", CopyDicomFiles.class.getName());
         }
     }
 
