@@ -25,7 +25,7 @@ public class ListSubmissionSetFiles {
             for (int i = 0; i < listOfFiles.length; i++) {
                 String fileName = listOfFiles[i].getName().toString();
 
-                if (fileName.endsWith(".dcm") || fileName.endsWith(".txt")) {
+                if (fileName.endsWith(".dcm") || fileName.startsWith("Report")) {
                     if (listOfFiles[i].isFile()) {
                         System.out.println("File " + listOfFiles[i].getAbsolutePath());
                         sendFilesList.add(listOfFiles[i].getName());

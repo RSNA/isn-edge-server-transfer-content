@@ -5,9 +5,7 @@
 
 package org.rsna.isn.transfercontent.generatedocument;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Properties;
 import org.rsna.isn.transfercontent.logging.LogProvider;
 
 /**
@@ -16,21 +14,17 @@ import org.rsna.isn.transfercontent.logging.LogProvider;
  */
 public class Main {
 
-    private static String logProperties;
-    private static String logFile;
-    /**
-     * @param args the command line arguments
-     */
+    private static LogProvider lp;
+
     public static void main(String[] args) throws IOException {
-        Properties props = new Properties();
-        props.load(new FileInputStream("c:/rsna/rsna.properties"));
-        logProperties = props.getProperty("transfercontentlogproperties");
-        logFile = props.getProperty("transfercontentlog");
-        LogProvider.init(logProperties, logFile);
+        LogProvider.init("/home/erackus/dev/transfer-content-app/src/org/rsna/isn/transfercontent/log4j.properties", "/rsna/logs/rsnatransfercontent.log");
+        lp = LogProvider.getInstance();
         System.out.println("About to schedule Transfer Content Task.");
         TimerPoller tPoller = new TimerPoller();
         tPoller.init(60);
         System.out.println("Transfer Content Task scheduled.");
+        lp.getLog().info("Transfer Content Task scheduled.");
+
     }
 
 }

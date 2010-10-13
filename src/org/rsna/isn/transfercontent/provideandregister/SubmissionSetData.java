@@ -18,8 +18,45 @@ public class SubmissionSetData {
 private String path  ;
 private String patientname ;
 private String fullname ;
+private String filename;
+private String givenname ;
+private String familyname ;
+private String patientid ;
+private String assigningauthority ;
+private String assigningauthorityOID ;
+private String authorID;
+private String authorFamilyName;
+private String authorGivenName;
+private String authorAssigningAuthorityOID;
 
-    public SubmissionSetData(String path, String patientname, String fullname, String givenname, String familyname, String patientid, String assigningauthority, String assigningauthorityOID, String institutionname, String documentid, String title, String date, String time, String street, String city, String state, String zip, String country, String sex, String birthdate, String uuid, String uid1, String uid2, String uid3, String uid4, String pdf) {
+private String institutionname ;
+private String examDescription;
+private String sopInstanceUID;
+
+private String documentid ;
+private String title ;
+private String date ;
+private String time ;
+private String street  ;
+private String city ;
+private String state ;
+private String zip ;
+private String country ;
+private String sex   ;
+private String birthdate ;
+private String uuid ;
+private String uid1 ;
+private String uid2 ;
+private String uid3 ;
+private String uid4 ;
+private String pdf ;
+private String docEntrySourceFileName ;
+private String docEntryFileName  ;
+private String docEntrySourceToDocEntryFileName ;
+private String submissionSetSourceFileName ;
+
+
+    public SubmissionSetData(String path, String patientname, String fullname, String givenname, String familyname, String patientid, String assigningauthority, String assigningauthorityOID, String authorID, String authorFamilyName, String authorGivenName, String authorAssigningAuthorityOID, String institutionname, String documentid, String title, String date, String time, String street, String city, String state, String zip, String country, String sex, String birthdate, String uuid, String uid1, String uid2, String uid3, String uid4, String pdf) {
         this.path = path;
         this.patientname = patientname;
         this.fullname = fullname;
@@ -28,6 +65,9 @@ private String fullname ;
         this.patientid = patientid;
         this.assigningauthority = assigningauthority;
         this.assigningauthorityOID = assigningauthorityOID;
+        this.authorID = authorID;
+        this.authorFamilyName = authorFamilyName;
+        this.authorGivenName = authorGivenName;
         this.institutionname = institutionname;
         this.documentid = documentid;
         this.title = title;
@@ -70,23 +110,6 @@ private String fullname ;
         this.filename = kosfilename;
     }
 
-private String filename;
-private String givenname ;
-private String familyname ;
-private String patientid ;
-private String assigningauthority ;
-private String assigningauthorityOID ;
-private String institutionname ;
-private String documentid ;
-private String title ;
-private String date ;
-private String time ;
-private String street  ;
-private String city ;
-private String state ;
-private String zip ;
-private String country ;
-
     public SubmissionSetData(String docEntrySourceFileName, String docEntryFileName, String docEntrySourceToDocEntryFileName, String submissionSetSourceFileName, String submissionSetSourceToSubmissionSetFileName, String organizationalOID, String saveMetadataToFile) {
         this.docEntrySourceFileName = docEntrySourceFileName;
         this.docEntryFileName = docEntryFileName;
@@ -96,9 +119,6 @@ private String country ;
         this.organizationalOID = organizationalOID;
         this.saveMetadataToFile = saveMetadataToFile;
     }
-private String sex   ;
-private String birthdate ;
-private String uuid ;
 
     public String getDocEntryFileName() {
         return docEntryFileName;
@@ -155,11 +175,6 @@ private String uuid ;
     public void setSubmissionSetSourceToSubmissionSetFileName(String submissionSetSourceToSubmissionSetFileName) {
         this.submissionSetSourceToSubmissionSetFileName = submissionSetSourceToSubmissionSetFileName;
     }
-private String uid1 ;
-private String uid2 ;
-private String uid3 ;
-
-
 
     public String getDocxslpath() {
         return docxslpath;
@@ -168,12 +183,6 @@ private String uid3 ;
     public void setDocxslpath(String docxslpath) {
         this.docxslpath = docxslpath;
     }
-private String uid4 ;
-private String pdf ;
-private String docEntrySourceFileName ;
-private String docEntryFileName  ;
-private String docEntrySourceToDocEntryFileName ;
-private String submissionSetSourceFileName ;
 
     public String getSubmissionSetFileName() {
         return submissionSetFileName;
@@ -205,6 +214,54 @@ private String docxslpath  ;
 
     public void setAssigningauthorityOID(String assigningauthorityOID) {
         this.assigningauthorityOID = assigningauthorityOID;
+    }
+
+    public String getAuthorAssigningAuthorityOID() {
+        return authorAssigningAuthorityOID;
+    }
+
+    public void setAuthorAssigningAuthorityOID(String authorAssigningAuthorityOID) {
+        this.authorAssigningAuthorityOID = authorAssigningAuthorityOID;
+    }
+
+    public String getAuthorFamilyName() {
+        return authorFamilyName;
+    }
+
+    public void setAuthorFamilyName(String authorFamilyName) {
+        this.authorFamilyName = authorFamilyName;
+    }
+
+    public String getAuthorGivenName() {
+        return authorGivenName;
+    }
+
+    public void setAuthorGivenName(String authorGivenName) {
+        this.authorGivenName = authorGivenName;
+    }
+
+    public String getAuthorID() {
+        return authorID;
+    }
+
+    public void setAuthorID(String authorID) {
+        this.authorID = authorID;
+    }
+
+    public String getExamDescription() {
+        return examDescription;
+    }
+
+    public void setExamDescription(String examDescription) {
+        this.examDescription = examDescription;
+    }
+
+    public String getSopInstanceUID() {
+        return sopInstanceUID;
+    }
+
+    public void setSopInstanceUID(String sopInstanceUID) {
+        this.sopInstanceUID = sopInstanceUID;
     }
 
     public String getBirthdate() {
