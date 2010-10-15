@@ -24,8 +24,10 @@ import ca.uhn.hl7v2.model.v24.segment.PID;
 import ca.uhn.hl7v2.parser.Parser;
 import ca.uhn.hl7v2.parser.PipeParser;
 import ca.uhn.hl7v2.validation.impl.NoValidation;
+import java.io.FileInputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Properties;
 import org.rsna.isn.transfercontent.dao.*;
 
 /**
@@ -37,11 +39,16 @@ public class SendMessageToPix {
     private static String responseString;
     private static String encodedMessage;
     static TimeStamp stamp = new TimeStamp();
-    private String tstamp;
+    private static int hl7TimeOut;
 
     public static PixMessageType createAdt01(PixMessageType pixmsg) throws Exception {
 
         try {
+            Properties props = new Properties();
+            props.load(new FileInputStream("c:/mtom/rsna.properties"));
+            String sequencenum = props.getProperty("sequencenum");
+            String timeOut = props.getProperty("hl7timeout");
+            hl7TimeOut = Integer.parseInt(timeOut.trim());
 
 
             ADT_A01 adt = new ADT_A01();
@@ -134,7 +141,7 @@ public class SendMessageToPix {
 
     }
 
-    public static String sendHL7(PixMessageType pixmsg) throws Exception {
+    public static String sendHL7(PixMessageType pixmsg, int hl7TimeOut) throws Exception {
 
         try {
             ca.uhn.hl7v2.parser.PipeParser parser = new ca.uhn.hl7v2.parser.PipeParser();
@@ -156,7 +163,7 @@ public class SendMessageToPix {
 
             Connection connection = connectionHub.attach(hostname, port, new PipeParser(), MinLowerLayerProtocol.class);
             Initiator initiator = connection.getInitiator();
-            //  initiator.setTimeoutMillis(100000000);
+            initiator.setTimeoutMillis(hl7TimeOut);
             Message response = initiator.sendAndReceive(adt);
 
             responseString = parser.encode(response);

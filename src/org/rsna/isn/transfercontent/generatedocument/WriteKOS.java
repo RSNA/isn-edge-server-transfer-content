@@ -43,7 +43,6 @@ public class WriteKOS {
     private static String errorMsg;
     private static String fileMetaInformationVersion;
     private static String mediaStorageSOPClassUID;
-    private static String mediaStorageSOPInstanceUID;
     private static String transferSyntaxUID;
     private static String implementationClassUID;
     private static String implementationVersionName;
@@ -51,6 +50,7 @@ public class WriteKOS {
     private static String patientBirthDate;
     private static String studyInstanceUID;
     private static String seriesInstanceUID;
+    private static String organizationalOID = "1.3.6.1.4.1.21367.100";
 
     private static boolean firstFlag = true;
     private static String savedSeriesInstanceUID = "";
@@ -82,6 +82,9 @@ public class WriteKOS {
 
         fs = new File(source);
         fd = new File(source + File.separatorChar + "KOS.dcm");
+        
+        mediaStorageSOPClassUID = "1.2.840.10008.5.1.4.1.1.88.59";
+        SOPInstanceUID = org.dcm4che2.util.UIDUtils.createUID(organizationalOID);
 
         try {
             fos = new FileOutputStream(fd);
@@ -337,14 +340,15 @@ public class WriteKOS {
 
         // Set basic Meta info
         mediaStorageSOPClassUID = "1.2.840.10008.5.1.4.1.1.88.59";
-        mediaStorageSOPInstanceUID = "1.2.528.1.1001.100.25.2645.1933.36321246679.20040824141444562";
+        SOPInstanceUID = org.dcm4che2.util.UIDUtils.createUID(organizationalOID);
+//        SOPInstanceUID = org.dcm4che2.util.UIDUtils.createUID();
 
         try {
-            dcmObj.initFileMetaInformation(mediaStorageSOPClassUID, mediaStorageSOPInstanceUID, transferSyntaxUID);
+            dcmObj.initFileMetaInformation(mediaStorageSOPClassUID, SOPInstanceUID, transferSyntaxUID);
 //            dcmObj.putString(Tag.FileMetaInformationVersion, VR.OB, fileMetaInformationVersion);
             dcmObj.putString(Tag.SpecificCharacterSet, VR.CS, specificCharacterSet);
             dcmObj.putString(Tag.SOPClassUID, VR.UI, mediaStorageSOPClassUID);
-            dcmObj.putString(Tag.SOPInstanceUID, VR.UI, mediaStorageSOPInstanceUID);
+            dcmObj.putString(Tag.SOPInstanceUID, VR.UI, SOPInstanceUID);
             dcmObj.putString(Tag.StudyDate, VR.DA, studyDate);
             dcmObj.putString(Tag.ContentDate, VR.DA, contentDate);
             dcmObj.putString(Tag.StudyTime, VR.TM, studyTime);

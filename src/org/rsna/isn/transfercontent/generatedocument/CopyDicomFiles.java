@@ -19,10 +19,10 @@ import org.apache.commons.io.FileUtils;
 import java.nio.channels.FileLock;
 import java.text.Format;
 import java.util.ArrayList;
-import java.util.TimeZone;
 import org.rsna.isn.transfercontent.dao.SQLUpdates;
 import org.rsna.isn.transfercontent.exception.TransferContentException;
 import org.rsna.isn.transfercontent.logging.LogProvider;
+import org.rsna.isn.transfercontent.runnable.RunnableThread;
 
 
 public class CopyDicomFiles {

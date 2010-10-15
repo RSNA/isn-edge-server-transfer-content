@@ -4,15 +4,18 @@
  */
 package org.rsna.isn.transfercontent.provideandregister;
 
+import java.io.FileInputStream;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Properties;
 import org.openhealthtools.ihe.xds.document.DocumentDescriptor;
 import org.rsna.isn.transfercontent.dao.*;
 import org.rsna.isn.transfercontent.generatedocument.*;
 import java.util.UUID;
 import org.rsna.isn.transfercontent.exception.TransferContentException;
 import org.rsna.isn.transfercontent.logging.LogProvider;
+import org.rsna.isn.transfercontent.runnable.RunnableThread;
 
 /**
  *
@@ -22,47 +25,39 @@ public class ProvideandRegister {
 
     private static int returnResult;
     private static LogProvider lp;
+    private static String metaDataFile;
+    private static String endPoint;
 
     /**
      * @param args the command line arguments
      */
     public static int SubmitDocument(int jobID, int examID, String inputFolder) throws TransferContentException{
         returnResult = 0;
-        SubmitAndRegister s = new SubmitAndRegister();
+        SubmitDocumentSet s = new SubmitDocumentSet();
         lp = LogProvider.getInstance();
 
         try {
+            Properties props = new Properties();
+            props.load(new FileInputStream("/rsna/properties/rsna.properties"));
+            metaDataFile = props.getProperty("metadatafile");
+            endPoint = props.getProperty("endpoint");
 
-            String endPoint = "http://www.rsnaclearinghouse.com:9090/services/xdsrepositoryb";
-//            String endPoint = "http://ihexds.nist.gov:9080/tf6/services/xdsrepositoryb";
             DocumentDescriptor d = DocumentDescriptor.DICOM;
-            String docSetFolder = "/rsna";
             SubmissionSetData inputData = new SubmissionSetData();
             SubmissionSetSqlQueryData ssQueryData = new SubmissionSetSqlQueryData();
             ssQueryData = SQLQueries.GetSubmisionSetData(jobID);
 
             inputData.setFilename(inputFolder);
 
-            String pName = ssQueryData.getPatientname();
-            String[] pInfo = SplitPatientName.find(pName);
-            String patientLastName = pInfo[1];
-            String patientFirstName = pInfo[2];
-            String patientName = patientFirstName + " " + patientLastName;
+            inputData.setPatientname("PatientName");
+            inputData.setFullname("PatientName");
+            inputData.setGivenname("PatientFirstName");
+            inputData.setFamilyname("PatientLastName");
 
-            inputData.setPatientname(patientName);
-            inputData.setFullname(patientName);
-            inputData.setGivenname(patientFirstName);
-            inputData.setFamilyname(patientLastName);
 
-            String signer = ssQueryData.getSigner();
-            String[] signerInfo = SplitDoctorName.find(signer);
-            String signerIDNumber = signerInfo[1];
-            String signerLastName = signerInfo[2];
-            String signerFirstName = signerInfo[3];
-
-            inputData.setAuthorID(signerIDNumber);
-            inputData.setAuthorFamilyName(signerLastName);
-            inputData.setAuthorGivenName(signerFirstName);
+            inputData.setAuthorID("SignerIDNumber");
+            inputData.setAuthorFamilyName("SignerLastName");
+            inputData.setAuthorGivenName("SignerFirstName");
             inputData.setAuthorAssigningAuthorityOID("2.16.840.1.113883.3.933");
 
             inputData.setPatientid("89bf6068fc0248e");
@@ -107,9 +102,9 @@ public class ProvideandRegister {
             inputData.setSubmissionSetSourceFileName("submissionSetSource.xml");
             inputData.setSubmissionSetSourceToSubmissionSetFileName("submissionSetSourceToSubmissionSet.xsl");
             inputData.setOrganizationalOID("1.3.6.1.4.1.21367.100");
-            inputData.setSaveMetadataToFile("fail-meta-XDSb.xml");
+            inputData.setSaveMetadataToFile(metaDataFile);
 
-            returnResult = s.SendFiles(jobID, endPoint, docSetFolder, inputFolder, d, inputData);
+            returnResult = s.SendFiles(jobID, endPoint, inputFolder, inputData);
             if (returnResult == 0) {
                 SQLUpdates.UpdateJobDocumentID(examID, documentID);
             }

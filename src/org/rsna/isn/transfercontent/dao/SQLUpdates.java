@@ -12,6 +12,7 @@ package org.rsna.isn.transfercontent.dao;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.*;
+import org.rsna.isn.transfercontent.runnable.RunnableThread;
 
 public class SQLUpdates {
 

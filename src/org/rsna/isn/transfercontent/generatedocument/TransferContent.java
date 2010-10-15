@@ -19,6 +19,7 @@ import org.rsna.isn.transfercontent.dao.*;
 import org.rsna.isn.transfercontent.logging.LogProvider;
 import org.rsna.isn.transfercontent.provideandregister.*;
 import org.rsna.isn.transfercontent.pix.*;
+import org.rsna.isn.transfercontent.runnable.RunnableThread;
 
 /**
  *
@@ -68,15 +69,17 @@ public class TransferContent {
         int patientID = ssQueryData.getPatientid();
         patientRSNAIDs = SQLQueries.GetRSNAIDfromPatientID(patientID);
 
- //       updateStatus = SQLUpdates.UpdateRegistered(patientID, false);
+//        updateStatus = SQLUpdates.UpdateRegistered(patientID, false);
 
         boolean isRegistered = patientRSNAIDs.isRegistered();
 
         if (!patientRSNAIDs.isRegistered()) {
             hl7Result = Pix.RegisterPatient(jobID);
-            if (!hl7Result.contains("error")) {
+            if (!hl7Result.contains("Error")) {
                 updateStatus = SQLUpdates.UpdateRegistered(patientID, true);
                 lp.getLog().info("Registered patient with patient ID = " + patientID);
+            } else {
+                lp.getLog().error(hl7Result);
             }
         }
 
@@ -94,7 +97,13 @@ public class TransferContent {
             }
 
             try {
+                java.sql.Timestamp modifiedDateTime = new java.sql.Timestamp(System.currentTimeMillis());
+                updateTransactionStatus = SQLUpdates.UpdateTransactionStatus(jobID, 3, "Preparing content for transfer to clearinghouse", modifiedDateTime);
                 outgoingDir = CopyDicomFiles.CopyAllFiles(inDir, outDir, mrn, accessionNumber, examID);
+                delDirSuccess = DeleteDir.deleteDir(new File(source + File.separatorChar + mrn));
+                if (!delDirSuccess) {
+                    lp.getLog().error("Could not delete directory " + source + File.separatorChar + mrn);
+                }
                 if (outgoingDir != null) {
                     itr = outgoingDir.iterator();
                     while (itr.hasNext()) {
@@ -116,13 +125,8 @@ public class TransferContent {
                             }
                         }
                     }
-                    java.sql.Timestamp modifiedDateTime = new java.sql.Timestamp(System.currentTimeMillis());
                     if (success) {
-                        delDirSuccess = DeleteDir.deleteDir(new File(source + File.separatorChar + mrn));
-                        if (!delDirSuccess) {
-                            lp.getLog().error("Could not delete directory " + source + File.separatorChar + mrn);
-                        }
-                        delDirSuccess = DeleteDir.deleteDir(new File(destination + File.separatorChar + mrn));
+                       delDirSuccess = DeleteDir.deleteDir(new File(destination + File.separatorChar + mrn));
                         if (!delDirSuccess) {
                             lp.getLog().error("Could not delete directory " + destination + File.separatorChar + mrn);
                         }
@@ -131,19 +135,12 @@ public class TransferContent {
                             lp.getLog().error("SQLUpdates: Could not update transaction status to 4");
                         }
                     } else {
-                        delDirSuccess = DeleteDir.deleteDir(new File(destination + File.separatorChar + mrn));
-                        if (!delDirSuccess) {
-                            lp.getLog().error("Could not delete directory " + destination + File.separatorChar + mrn);
-                        }
-                        updateTransactionStatus = SQLUpdates.UpdateTransactionStatus(jobID, 3, "Document prepared for transfer to clearinghouse", modifiedDateTime);
-                        if (updateTransactionStatus == 0) {
-                            lp.getLog().error("SQLUpdates: Could not update transaction status to 3");
-                        }
+                            lp.getLog().error("TransferContent Error");
                     }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                lp.getLog().error("Error in Transfer Content ");
+                lp.getLog().error("Error in Transfer Content ", e);
                 return;
             }
         }

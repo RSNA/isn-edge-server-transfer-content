@@ -23,13 +23,15 @@ import org.rsna.isn.transfercontent.logging.LogProvider;
 public class OpenDicom  {
     
     private static String sopClassUID;
+    private static String sopInstanceUID;
     private static LogProvider lp;
 
     public OpenDicom(){
     }
 
-    public static String GetSopClassUID(String source) {
+    public static String[] GetSOPClassandInstance(String source) {
        File fs = new File(source);
+       String[] sop = new String[2];
         // Do the anonymization and conversion to part10 format, if necessary
 
         DicomObject dcmObj = null;
@@ -40,6 +42,7 @@ public class OpenDicom  {
             dcmObj = din.readDicomObject();
 
             sopClassUID = dcmObj.getString(Tag.SOPClassUID);
+            sopInstanceUID = dcmObj.getString(Tag.SOPInstanceUID);
 
             try {
                 din.close();
@@ -55,7 +58,9 @@ public class OpenDicom  {
            e.printStackTrace();
         }
 
-        return sopClassUID;
+        sop[0] = sopClassUID;
+        sop[1] = sopInstanceUID;
+        return sop;
     }
 
 }

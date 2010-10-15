@@ -41,7 +41,6 @@ public class SetMessageToPixandRegistry {
     private String tstamp;
 
 
-
     public static PixData setAdt01(PixData pixmsg) throws Exception {
 
         try {

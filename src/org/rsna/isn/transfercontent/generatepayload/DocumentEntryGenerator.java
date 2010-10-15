@@ -31,7 +31,7 @@ public class DocumentEntryGenerator {
     public DocumentEntryGenerator() {
     }
 
-        public static void CreateSubmissionSet(int jobID, String studyDesc, String sopClassUID, File destination) throws TransferContentException {
+        public static void CreateDocumentEntry(int jobID, String studyDesc, String sopClassUID, String sopInstanceUID, File destination) throws TransferContentException {
         try {
             /////////////////////////////
             //Creating an empty XML Document
@@ -105,7 +105,7 @@ public class DocumentEntryGenerator {
 
             Element assigningAuthorityUniversalIdType = doc.createElement("assigningAuthorityUniversalIdType");
             authorPerson.appendChild(assigningAuthorityUniversalIdType);
-            text = doc.createTextNode("ISO^^RSNA");
+            text = doc.createTextNode("ISO");
             assigningAuthorityUniversalIdType.appendChild(text);
 
             Element classCode = doc.createElement("classCode");
@@ -218,7 +218,7 @@ public class DocumentEntryGenerator {
 
             assigningAuthorityUniversalIdType = doc.createElement("assigningAuthorityUniversalIdType");
             patientId.appendChild(assigningAuthorityUniversalIdType);
-            text = doc.createTextNode("ISO^^RSNA");
+            text = doc.createTextNode("ISO");
             assigningAuthorityUniversalIdType.appendChild(text);
 
             Element practiceSettingCode = doc.createElement("practiceSettingCode");
@@ -256,7 +256,7 @@ public class DocumentEntryGenerator {
 
             assigningAuthorityUniversalIdType = doc.createElement("assigningAuthorityUniversalIdType");
             sourcePatientId.appendChild(assigningAuthorityUniversalIdType);
-            text = doc.createTextNode("ISO^^RSNA");
+            text = doc.createTextNode("ISO");
             assigningAuthorityUniversalIdType.appendChild(text);
 
             Element sourcePatientInfo = doc.createElement("sourcePatientInfo");
@@ -272,12 +272,12 @@ public class DocumentEntryGenerator {
 
             assigningAuthorityUniversalId = doc.createElement("assigningAuthorityUniversalId");
             patientIdentifier.appendChild(assigningAuthorityUniversalId);
-            text = doc.createTextNode("1.3.6.1.4.1.21367.2009.1.2.300");
+            text = doc.createTextNode("1.3.6.1.4.1.21367.2010.1.2.300");
             assigningAuthorityUniversalId.appendChild(text);
 
             assigningAuthorityUniversalIdType = doc.createElement("assigningAuthorityUniversalIdType");
             patientIdentifier.appendChild(assigningAuthorityUniversalIdType);
-            text = doc.createTextNode("ISO^^RSNA");
+            text = doc.createTextNode("ISO");
             assigningAuthorityUniversalIdType.appendChild(text);
 
             Element patientName = doc.createElement("patientName");
@@ -335,6 +335,11 @@ public class DocumentEntryGenerator {
             typeCode.appendChild(schemeName);
             text = doc.createTextNode("typeCode DisplayName");
             schemeName.appendChild(text);
+
+            Element uniqueID = doc.createElement("uniqueId");
+            root.appendChild(uniqueID);
+            text = doc.createTextNode(sopInstanceUID);
+            uniqueID.appendChild(text);
 
             //set up a transformer
             TransformerFactory transfac = TransformerFactory.newInstance();

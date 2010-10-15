@@ -25,7 +25,7 @@ public class SubmissionSetGenerator {
     public SubmissionSetGenerator() {
     }
 
-    public static void CreateSubmissionSet(int jobID, File destination) throws TransferContentException {
+    public static void CreateSubmissionSet(int jobID, String documentUUID, File destination) throws TransferContentException {
         try {
             /////////////////////////////
             //Creating an empty XML Document
@@ -99,7 +99,7 @@ public class SubmissionSetGenerator {
 
             Element assigningAuthorityUniversalIdType = doc.createElement("assigningAuthorityUniversalIdType");
             authorPerson.appendChild(assigningAuthorityUniversalIdType);
-            text = doc.createTextNode("ISO^^RSNA");
+            text = doc.createTextNode("ISO");
             assigningAuthorityUniversalIdType.appendChild(text);
 
             Element contentTypeCode = doc.createElement("contentTypeCode");
@@ -132,13 +132,18 @@ public class SubmissionSetGenerator {
 
             assigningAuthorityUniversalId = doc.createElement("assigningAuthorityUniversalId");
             patientId.appendChild(assigningAuthorityUniversalId);
-            text = doc.createTextNode("1.3.6.1.4.1.21367.2009.1.2.300");
+            text = doc.createTextNode("1.3.6.1.4.1.21367.2010.1.2.300");
             assigningAuthorityUniversalId.appendChild(text);
 
             assigningAuthorityUniversalIdType = doc.createElement("assigningAuthorityUniversalIdType");
             patientId.appendChild(assigningAuthorityUniversalIdType);
-            text = doc.createTextNode("ISO^^RSNA");
+            text = doc.createTextNode("ISO");
             assigningAuthorityUniversalIdType.appendChild(text);
+
+            Element uniqueID = doc.createElement("uniqueId");
+            root.appendChild(uniqueID);
+            text = doc.createTextNode(documentUUID);
+            uniqueID.appendChild(text);
 
             //set up a transformer
             TransformerFactory transfac = TransformerFactory.newInstance();

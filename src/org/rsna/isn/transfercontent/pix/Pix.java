@@ -22,6 +22,7 @@ public class Pix {
   
     private static PixData encodedMsg2;
     private static LogProvider lp;
+    private static int timeOut;
    
 
     /**
@@ -71,13 +72,13 @@ public class Pix {
         hl7msg01.setPid3_1ID(patientRSNAIDs.getRsnaID());
         //  hl7msg01.setPid3_4_1assigninganothioritynamespaceID("RSNA");
 
-        hl7msg01.setPid3_4_2universalID("1.3.6.1.4.1.21367.2009.1.2.300");
+        hl7msg01.setPid3_4_2universalID("1.3.6.1.4.1.21367.2010.1.2.300");
         hl7msg01.setPid3_4_3universalidtype("ISO");
-        //   hl7msg01.setPid3_2checkdigits("1.3.6.1.4.1.21367.2009.1.2.300") ;
+        //   hl7msg01.setPid3_2checkdigits("1.3.6.1.4.1.21367.2010.1.2.300") ;
         hl7msg01.setPid5_1patientfamilyname(patientRSNAIDs.getPatientAliasLastName());
         hl7msg01.setPid5_2patientgivenname(patientRSNAIDs.getPatientAliasFirstName());
         hl7msg01.setPvi1_2patientvisitclass("I");
-        hl7msg01.setPid_3_6_1namespaceID("RSNA");
+        //hl7msg01.setPid_3_6_1namespaceID("RSNA");
 
         PixData encodedMsg = new PixData();
 
@@ -93,7 +94,7 @@ public class Pix {
         send.setPort(port);
 
         send.setEncodedMessage(encodeOut);
-            String response = SendMessageToPix.sendHL7(send);
+            String response = SendMessageToPix.sendHL7(send, timeOut);
             System.out.println(response);
 
         int port2 = 8888;
@@ -101,7 +102,7 @@ public class Pix {
 
 
         send.setEncodedMessage(encodeOut);
-        String response2 = SendMessageToPix.sendHL7(send);
+        String response2 = SendMessageToPix.sendHL7(send, timeOut);
         System.out.println(response2);
 
         String out = response + "*****" + response2;
@@ -141,9 +142,9 @@ public class Pix {
       //  hl7msg04.setPid3_1ID("2000");
         //  hl7msg01.setPid3_4_1assigninganothioritynamespaceID("RSNA");
 
-     //   hl7msg04.setPid3_4_2universalID("1.3.6.1.4.1.21367.2009.1.2.300");
+     //   hl7msg04.setPid3_4_2universalID("1.3.6.1.4.1.21367.2010.1.2.300");
     //    hl7msg04.setPid3_4_3universalidtype("ISO");
-        //   hl7msg01.setPid3_2checkdigits("1.3.6.1.4.1.21367.2009.1.2.300") ;
+        //   hl7msg01.setPid3_2checkdigits("1.3.6.1.4.1.21367.2010.1.2.300") ;
      //   hl7msg04.setPid5_1patientfamilyname("Oyesanya");
      //   hl7msg04.setPid5_2patientgivenname("Femi");
      //   hl7msg04.setPvi1_2patientvisitclass("I");
