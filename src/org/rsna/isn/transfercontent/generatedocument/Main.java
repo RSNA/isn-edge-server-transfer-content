@@ -40,20 +40,23 @@ public class Main {
             Iterator itr;
             try {
                 readyJobs =  SQLQueries.GetTransferContentJobStatus(2);
-                if (readyJobs != null) {
-                    itr = readyJobs.iterator();
-                    while(itr.hasNext()) {
-                        System.out.println("Transfer Content Task scheduled.");
-                        lp.getLog().info("Transfer Content Task scheduled.");
-                        tcJobStatus = (TransferContentJobStatus)itr.next();
-                        job_id = tcJobStatus.getJob_id();
-                        if (job_id != 0) {
-                            TransferContent.PrepareandTransfer(job_id);
-                        }
+                if (!readyJobs.isEmpty()) {
+                    synchronized (Main.class) {
+                        itr = readyJobs.iterator();
+                            while(itr.hasNext()) {
+                                System.out.println("Transfer Content Task scheduled.");
+                                lp.getLog().info("Transfer Content Task scheduled.");
+                                tcJobStatus = (TransferContentJobStatus)itr.next();
+                                job_id = tcJobStatus.getJob_id();
+                                if (job_id != 0) {
+                                    TransferContent.PrepareandTransfer(job_id);
+                                }
+                            }
+                            readyJobs.clear();
+                            Thread.sleep(seconds*1000);
                     }
-                    readyJobs.clear();
-                    Thread.sleep(seconds*1000);
                 }
+                Thread.sleep(seconds*1000);
             } catch (Exception e) {
                 System.out.println("Main: " + e.getMessage());
                 lp.getLog().error("Main",e);

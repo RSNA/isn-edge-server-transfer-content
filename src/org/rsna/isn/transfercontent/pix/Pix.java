@@ -22,13 +22,17 @@ public class Pix {
   
     private static PixData encodedMsg2;
     private static LogProvider lp;
-    private static int timeOut;
+    private static int hl7TimeOut;
    
 
     /**
      * @param args the command line arguments
      */
     public static String RegisterPatient(int jobID) throws IOException, Exception {
+        Properties props = new Properties();
+        props.load(new FileInputStream("/rsna/properties/rsna.properties"));
+        String timeOut = props.getProperty("hl7timeout");
+        hl7TimeOut = Integer.parseInt(timeOut.trim());
         lp = LogProvider.getInstance();
         SimpleDateFormat ft = new SimpleDateFormat("yyyyMMddHHmm");
         SimpleDateFormat fs = new SimpleDateFormat("yyyyMMddHHmmSSS");
@@ -94,7 +98,7 @@ public class Pix {
         send.setPort(port);
 
         send.setEncodedMessage(encodeOut);
-            String response = SendMessageToPix.sendHL7(send, timeOut);
+            String response = SendMessageToPix.sendHL7(send);
             System.out.println(response);
 
         int port2 = 8888;
@@ -102,7 +106,7 @@ public class Pix {
 
 
         send.setEncodedMessage(encodeOut);
-        String response2 = SendMessageToPix.sendHL7(send, timeOut);
+        String response2 = SendMessageToPix.sendHL7(send);
         System.out.println(response2);
 
         String out = response + "*****" + response2;

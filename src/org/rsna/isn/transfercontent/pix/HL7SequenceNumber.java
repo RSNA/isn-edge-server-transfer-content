@@ -25,7 +25,7 @@ public class HL7SequenceNumber {
 
     public static int sequenceNum() throws FileNotFoundException, IOException {
         Properties props = new Properties();
-        props.load(new FileInputStream("c:/mtom/rsna.properties"));
+        props.load(new FileInputStream("/rsna/properties/rsna.properties"));
         String sequencenum = props.getProperty("sequencenum");
         String seq = readFromFile(sequencenum);
         System.out.println(seq  +  "Femi") ;
@@ -34,13 +34,6 @@ public class HL7SequenceNumber {
          N = new Integer(N.intValue() + 1);
         String newNum = Integer.toString(N);
         writeFile(sequencenum, newNum);
-      
-
-
-
-
-
-      
         return N;
     }
     private DataOutputStream dos;

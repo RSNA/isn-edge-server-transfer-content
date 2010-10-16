@@ -44,12 +44,6 @@ public class SendMessageToPix {
     public static PixMessageType createAdt01(PixMessageType pixmsg) throws Exception {
 
         try {
-            Properties props = new Properties();
-            props.load(new FileInputStream("c:/mtom/rsna.properties"));
-            String sequencenum = props.getProperty("sequencenum");
-            String timeOut = props.getProperty("hl7timeout");
-            hl7TimeOut = Integer.parseInt(timeOut.trim());
-
 
             ADT_A01 adt = new ADT_A01();
             SimpleDateFormat ft = new SimpleDateFormat("yyyyMMddHHmm");
@@ -94,25 +88,15 @@ public class SendMessageToPix {
             mshSegment.getMessageType().getTriggerEvent().setValue(TriggerEvent);
             mshSegment.getMessageType().getMessageStructure().setValue(MessageStructure);
 
-
-
-
              
             PID pid = adt.getPID();
             pid.getPatientName(0).getFamilyName().getSurname().setValue(FamilyName);
             pid.getPatientName(0).getGivenName().setValue(GivenName);
             pid.getPatientIdentifierList(0).getID().setValue(PatientID);
 
-
-
-           
-
-
             ca.uhn.hl7v2.model.v24.segment.EVN evn = adt.getEVN();
             evn.getEventTypeCode().setValue("A01");
             evn.getRecordedDateTime().getTimeOfAnEvent().setValue(ft.format(d));
-
-
 
 
             ca.uhn.hl7v2.model.v24.segment.PV1 pv1 = adt.getPV1();
@@ -128,12 +112,6 @@ public class SendMessageToPix {
             pixmsg.setEncodedMessage(encodedMessage);
 
 
-
-
-
-
-
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -141,9 +119,14 @@ public class SendMessageToPix {
 
     }
 
-    public static String sendHL7(PixMessageType pixmsg, int hl7TimeOut) throws Exception {
+    public static String sendHL7(PixMessageType pixmsg) throws Exception {
 
         try {
+            Properties props = new Properties();
+            props.load(new FileInputStream("c:/mtom/rsna.properties"));
+            String sequencenum = props.getProperty("sequencenum");
+            String timeOut = props.getProperty("hl7timeout");
+            hl7TimeOut = Integer.parseInt(timeOut.trim());
             ca.uhn.hl7v2.parser.PipeParser parser = new ca.uhn.hl7v2.parser.PipeParser();
 
             Parser p = new GenericParser();

@@ -19,6 +19,7 @@ import java.util.List;
 import org.dcm4che2.data.BasicDicomObject;
 import org.dcm4che2.data.VR;
 import org.dcm4che2.io.DicomOutputStream;
+import org.dcm4che2.util.UIDUtils;
 import org.rsna.isn.transfercontent.exception.TransferContentException;
 import org.rsna.isn.transfercontent.logging.LogProvider;
 
@@ -43,6 +44,7 @@ public class WriteKOS {
     private static String errorMsg;
     private static String fileMetaInformationVersion;
     private static String mediaStorageSOPClassUID;
+    private static String mediaStorageSOPInstanceUID;
     private static String transferSyntaxUID;
     private static String implementationClassUID;
     private static String implementationVersionName;
@@ -52,7 +54,7 @@ public class WriteKOS {
     private static String seriesInstanceUID;
     private static String organizationalOID = "1.3.6.1.4.1.21367.100";
 
-    private static boolean firstFlag = true;
+    private static boolean firstFlag;
     private static String savedSeriesInstanceUID = "";
 
     private static LogProvider lp;
@@ -79,12 +81,13 @@ public class WriteKOS {
 //        RunnableThread copyThread = new RunnableThread("WriteKOS");
 //        copyThread.run();
         lp =LogProvider.getInstance();
+        firstFlag = true;
 
         fs = new File(source);
         fd = new File(source + File.separatorChar + "KOS.dcm");
         
         mediaStorageSOPClassUID = "1.2.840.10008.5.1.4.1.1.88.59";
-        SOPInstanceUID = org.dcm4che2.util.UIDUtils.createUID(organizationalOID);
+        mediaStorageSOPInstanceUID = UIDUtils.createUID(organizationalOID);
 
         try {
             fos = new FileOutputStream(fd);
@@ -344,7 +347,7 @@ public class WriteKOS {
 //        SOPInstanceUID = org.dcm4che2.util.UIDUtils.createUID();
 
         try {
-            dcmObj.initFileMetaInformation(mediaStorageSOPClassUID, SOPInstanceUID, transferSyntaxUID);
+            dcmObj.initFileMetaInformation(mediaStorageSOPClassUID, mediaStorageSOPInstanceUID, transferSyntaxUID);
 //            dcmObj.putString(Tag.FileMetaInformationVersion, VR.OB, fileMetaInformationVersion);
             dcmObj.putString(Tag.SpecificCharacterSet, VR.CS, specificCharacterSet);
             dcmObj.putString(Tag.SOPClassUID, VR.UI, mediaStorageSOPClassUID);

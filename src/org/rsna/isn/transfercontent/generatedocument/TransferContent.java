@@ -31,7 +31,7 @@ public class TransferContent {
     private static String destination;
     private static String inDir;
     private static String outDir;
-    private static ArrayList<String> outgoingDir = new ArrayList<String>();
+    private static ArrayList<String> outgoingDir;
     private static LogProvider lp;
     private static int submitStatus = 0;
     private static int updateStatus = 0;
@@ -45,6 +45,8 @@ public class TransferContent {
     public static synchronized void PrepareandTransfer(int jobID) throws InterruptedException, IOException, FileNotFoundException, Exception {
         RunnableThread prepareandTransfer = new RunnableThread("PrepareandTransfer");
         prepareandTransfer.run();
+
+        outgoingDir = new ArrayList<String>();
 
         lp = LogProvider.getInstance();
 
@@ -104,7 +106,7 @@ public class TransferContent {
                 if (!delDirSuccess) {
                     lp.getLog().error("Could not delete directory " + source + File.separatorChar + mrn);
                 }
-                if (outgoingDir != null) {
+                if (!outgoingDir.isEmpty()) {
                     itr = outgoingDir.iterator();
                     while (itr.hasNext()) {
                         lp.getLog().info("Copied files for exam ID = " + examID);

@@ -19,18 +19,11 @@ public class GetADTMsgToRegistryandPIX {
     private static int controlID;
     private static String ack01;
     private static String ack04;
-    private static int hl7TimeOut;
 
     public static String getAdt01(String fieldseparator, String encncodingcharacter, String sendingfacilitynamespaceID, String receivingapplicatnamespaceID, String receivingfacilitynamespaceID, String messagetype,String triggerevent, String messagestructure,String processingID,String versionID,String rsnaID, String universalID,String universalidtype,String patientfamilyname,String patientgivenname,String patientvisitclass,String pidnamespaceID,String registryhl7Server, String pixhl7Server,int registryport, int pixport ) throws Exception {
 
         try {
 
-        Properties props = new Properties();
-
-        props.load(new FileInputStream("c:/mtom/rsna.properties"));
-        String sequencenum = props.getProperty("sequencenum");
-        String timeOut = props.getProperty("hl7timeout");
-        hl7TimeOut = Integer.parseInt(timeOut.trim());
         SimpleDateFormat ft = new SimpleDateFormat("yyyyMMddHHmm");
         SimpleDateFormat fs = new SimpleDateFormat("yyyyMMddHHmmSSS");
         Date d = new Date();
@@ -85,7 +78,7 @@ public class GetADTMsgToRegistryandPIX {
         send.setPort(port);
 
         send.setEncodedMessage(encodeOut);
-        String response = SendMessageToPix.sendHL7(send,hl7TimeOut);
+        String response = SendMessageToPix.sendHL7(send);
         System.out.println(response);
 
         PixMessageType send2 = new PixMessageType();
@@ -97,7 +90,7 @@ public class GetADTMsgToRegistryandPIX {
 
 
         send2.setEncodedMessage(encodeOut);
-        String response2 = SendMessageToPix.sendHL7(send2,hl7TimeOut);
+        String response2 = SendMessageToPix.sendHL7(send2);
 
 
          ack01 = "Registry:::" + response + "Pix:::" + response2 ;
@@ -119,8 +112,7 @@ public class GetADTMsgToRegistryandPIX {
 
         Properties props = new Properties();
 
-        props.load(new FileInputStream("c:/mtom/rsna.properties"));
-        String sequencenum = props.getProperty("sequencenum");
+        props.load(new FileInputStream("/rsna/properties/rsna.properties"));
         SimpleDateFormat ft = new SimpleDateFormat("yyyyMMddHHmm");
         SimpleDateFormat fs = new SimpleDateFormat("yyyyMMddHHmmSSS");
         Date d = new Date();
@@ -175,7 +167,7 @@ public class GetADTMsgToRegistryandPIX {
         send.setPort(port);
 
         send.setEncodedMessage(encodeOut);
-        String response = SendMessageToPix.sendHL7(send, hl7TimeOut);
+        String response = SendMessageToPix.sendHL7(send);
         System.out.println(response);
 
         PixMessageType send2 = new PixMessageType();
@@ -187,7 +179,7 @@ public class GetADTMsgToRegistryandPIX {
 
 
         send2.setEncodedMessage(encodeOut);
-        String response2 = SendMessageToPix.sendHL7(send2, hl7TimeOut);
+        String response2 = SendMessageToPix.sendHL7(send2);
 
 
          ack04 = "Registry:::" + response + "Pix:::" + response2 ;
