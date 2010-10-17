@@ -31,7 +31,7 @@ public class DocumentEntryGenerator {
     public DocumentEntryGenerator() {
     }
 
-        public static void CreateDocumentEntry(int jobID, String studyDesc, String sopClassUID, String sopInstanceUID, File destination) throws TransferContentException {
+        public static void CreateDocumentEntry(int jobID, String studyDesc, String sopClassUID, String sopInstanceUID, File destination) throws ChainedException {
         try {
             /////////////////////////////
             //Creating an empty XML Document
@@ -365,7 +365,7 @@ public class DocumentEntryGenerator {
         } catch (Exception e) {
             System.out.println("Document Entry Generator: " + e.getMessage());
             e.printStackTrace();
-            throw new TransferContentException("Error in creating DocumentEntry", DocumentEntryGenerator.class.getName());
+            throw new TransferContentException("DocumentEntryGenerator: Error in creating DocumentEntry", e);
         }
     }
 

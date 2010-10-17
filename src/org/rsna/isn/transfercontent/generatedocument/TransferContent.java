@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
 import org.rsna.isn.transfercontent.dao.*;
+import org.rsna.isn.transfercontent.exception.*;
 import org.rsna.isn.transfercontent.logging.LogProvider;
 import org.rsna.isn.transfercontent.provideandregister.*;
 import org.rsna.isn.transfercontent.pix.*;
@@ -75,13 +76,14 @@ public class TransferContent {
 
         boolean isRegistered = patientRSNAIDs.isRegistered();
 
-        if (!patientRSNAIDs.isRegistered()) {
+        if (!isRegistered) {
             hl7Result = Pix.RegisterPatient(jobID);
-            if (!hl7Result.contains("Error")) {
+            if (!hl7Result.contains("Error")  && !hl7Result.contains("Exception")) {
                 updateStatus = SQLUpdates.UpdateRegistered(patientID, true);
                 lp.getLog().info("Registered patient with patient ID = " + patientID);
             } else {
-                lp.getLog().error(hl7Result);
+                lp.getLog().error("HL7 Timeout: " + hl7Result);
+                throw new TransferContentException("HL7 Timeout: " + hl7Result);
             }
         }
 
@@ -95,13 +97,13 @@ public class TransferContent {
                 }
             } catch (Exception e){//Catch exception if any
                 System.err.println("Error: " + e.getMessage());
-                return;
+                throw new TransferContentException("TransferContent Error: ", e);
             }
 
             try {
                 java.sql.Timestamp modifiedDateTime = new java.sql.Timestamp(System.currentTimeMillis());
                 updateTransactionStatus = SQLUpdates.UpdateTransactionStatus(jobID, 3, "Preparing content for transfer to clearinghouse", modifiedDateTime);
-                outgoingDir = CopyDicomFiles.CopyAllFiles(inDir, outDir, mrn, accessionNumber, examID);
+                outgoingDir = CopyDicomFiles.TransferContentException(inDir, outDir, mrn, accessionNumber, examID);
                 delDirSuccess = DeleteDir.deleteDir(new File(source + File.separatorChar + mrn));
                 if (!delDirSuccess) {
                     lp.getLog().error("Could not delete directory " + source + File.separatorChar + mrn);

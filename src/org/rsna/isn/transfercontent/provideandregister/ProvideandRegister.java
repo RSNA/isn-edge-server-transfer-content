@@ -13,7 +13,7 @@ import org.openhealthtools.ihe.xds.document.DocumentDescriptor;
 import org.rsna.isn.transfercontent.dao.*;
 import org.rsna.isn.transfercontent.generatedocument.*;
 import java.util.UUID;
-import org.rsna.isn.transfercontent.exception.TransferContentException;
+import org.rsna.isn.transfercontent.exception.*;
 import org.rsna.isn.transfercontent.logging.LogProvider;
 import org.rsna.isn.transfercontent.runnable.RunnableThread;
 
@@ -31,7 +31,7 @@ public class ProvideandRegister {
     /**
      * @param args the command line arguments
      */
-    public static int SubmitDocument(int jobID, int examID, String inputFolder) throws TransferContentException{
+    public static int SubmitDocument(int jobID, int examID, String inputFolder) throws ChainedException{
         returnResult = 0;
         SubmitDocumentSet s = new SubmitDocumentSet();
         lp = LogProvider.getInstance();
@@ -112,8 +112,8 @@ public class ProvideandRegister {
         } catch (Exception e) {
             System.out.println("Error in Submit Document " + e.getMessage());
             e.printStackTrace();
-            lp.getLog().error("Error in Submit Document " + e.getMessage());
-            throw new TransferContentException("Error in in Submit Document", ProvideandRegister.class.getName());
+            lp.getLog().error("Error in Submit Document ", e);
+            throw new TransferContentException("Error in in Submit Document", e);
         }
         return returnResult;
     }

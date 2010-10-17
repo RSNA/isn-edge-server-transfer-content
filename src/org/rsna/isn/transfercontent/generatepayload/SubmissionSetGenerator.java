@@ -25,7 +25,7 @@ public class SubmissionSetGenerator {
     public SubmissionSetGenerator() {
     }
 
-    public static void CreateSubmissionSet(int jobID, String documentUUID, File destination) throws TransferContentException {
+    public static void CreateSubmissionSet(int jobID, String documentUUID, File destination) throws ChainedException {
         try {
             /////////////////////////////
             //Creating an empty XML Document
@@ -169,7 +169,7 @@ public class SubmissionSetGenerator {
         } catch (Exception e) {
             System.out.println("Submission Set Generator: " + e.getMessage());
             System.out.println(e);
-            throw new TransferContentException("Error in creating SubmissionSet", SubmissionSetGenerator.class.getName());
+            throw new TransferContentException("SubmissionSetGenerator: Error in creating SubmissionSet", e);
         }
     }
 }

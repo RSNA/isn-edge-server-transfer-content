@@ -20,7 +20,7 @@ import java.nio.channels.FileLock;
 import java.text.Format;
 import java.util.ArrayList;
 import org.rsna.isn.transfercontent.dao.SQLUpdates;
-import org.rsna.isn.transfercontent.exception.TransferContentException;
+import org.rsna.isn.transfercontent.exception.*;
 import org.rsna.isn.transfercontent.logging.LogProvider;
 import org.rsna.isn.transfercontent.runnable.RunnableThread;
 
@@ -56,7 +56,7 @@ public class CopyDicomFiles {
     public CopyDicomFiles() {
     }
 
-    public static ArrayList<String> CopyAllFiles(String source, String destination, String mrn, String accessionNumber, int examID) throws FileNotFoundException, IOException, InterruptedException, TransferContentException, Exception {
+    public static ArrayList<String> TransferContentException(String source, String destination, String mrn, String accessionNumber, int examID) throws FileNotFoundException, IOException, InterruptedException, ChainedException, Exception {
         RunnableThread copyThread = new RunnableThread("CopyDirectory");
         copyThread.run();
 
@@ -161,12 +161,12 @@ public class CopyDicomFiles {
 
             pID = dcmObj.getString(Tag.PatientID);
             if (!pID.equals(mrn)) {
-                throw new TransferContentException("Patient ID does not match!", CopyDicomFiles.class.getName());
+                throw new TransferContentException("Patient ID does not match!");
             }
 
             an = dcmObj.getString(Tag.AccessionNumber);
             if (!an.equals(accessionNumber)) {
-                throw new TransferContentException("Patient Accession number does not match!", CopyDicomFiles.class.getName());
+                throw new TransferContentException("Patient Accession number does not match!");
             }
 
             sopInstanceUID = dcmObj.getString(Tag.SOPInstanceUID);
@@ -185,7 +185,7 @@ public class CopyDicomFiles {
                 e.printStackTrace();
                 System.out.println("CopyDicomFiles: Error in closing DICOM input stream");
                 lp.getLog().error("CopyDicomFiles: Error in closing DICOM input stream for " + fileName);
-                throw new TransferContentException("CopyDicomFiles: Error in closing DICOM input stream for " + fileName, CopyDicomFiles.class.getName());
+                throw new TransferContentException("CopyDicomFiles: Error in closing DICOM input stream for " + fileName, e);
             }
 
             newsUIDDirPath = destination + File.separatorChar + studyUID;
@@ -199,7 +199,7 @@ public class CopyDicomFiles {
                 } else {
                     System.out.println("Error creating filefolder " + newsUIDDirPath);
                     lp.getLog().error("Exception in CopyFile: Error creating filefolder " + newsUIDDirPath);
-                    throw new TransferContentException("Error creating filefolder " + newsUIDDirPath, CopyDicomFiles.class.getName());
+                    throw new TransferContentException("CopyDicomFiles: Error creating filefolder " + newsUIDDirPath);
                 }
             }
 
@@ -211,7 +211,7 @@ public class CopyDicomFiles {
                 if (!success3) {
                     System.out.println("Delete of " + fileName + " in CopyDirFile failed!");
                     lp.getLog().error("Exception in CopyDir File: Delete of Duplicate file " + fileName+ "failed");
-                    throw new TransferContentException("Delete of " + fileName + " in CopyDirFile failed!", CopyDicomFiles.class.getName());
+                    throw new TransferContentException("CopyDicomFiles: Delete of " + fileName + " in CopyDirFile failed!");
                 }
             }
 
@@ -224,7 +224,7 @@ public class CopyDicomFiles {
                 System.out.println("CopyDicomFiles Error" + e.getMessage());
                 lp.getLog().error("CopyDicomFiles Error" + e.getMessage());
                 e.printStackTrace();
-                throw new TransferContentException("CopyDicomFiles Error" + e.getMessage(), CopyDicomFiles.class.getName());
+                throw new TransferContentException("CopyDicomFiles Error" , e);
             }
 
              System.out.println("Moved " + fileName + " to directory " + newsUIDDirPath);
@@ -241,11 +241,11 @@ public class CopyDicomFiles {
         } catch (IOException e) {
             lp.getLog().error("CopyDir File: IO Error");
             e.printStackTrace();
-            throw new TransferContentException("CopyDir File: IO Error", CopyDicomFiles.class.getName());
+            throw new TransferContentException("CopyDir File: IO Error", e);
         } catch (Exception e) {
             lp.getLog().error("CopyDir File: Error");
             e.printStackTrace();
-            throw new TransferContentException("CopyDir File: Error", CopyDicomFiles.class.getName());
+            throw new TransferContentException("CopyDir File: Error", e);
         }
     }
 
