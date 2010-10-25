@@ -20,14 +20,14 @@
       </displayName>
       <schemeName>contentTypeCode DisplayName</schemeName>
     </contentTypeCode>
-    <entryUUID>urn:uuid:7ac7b030-1ac6-7418-d42d-0a75a8ddf115</entryUUID>
+    <entryUUID>urn:uuid:3de6ff4a-7de0-747c-bf6b-351353864155</entryUUID>
     <patientId>
-      <idNumber>0001-00019-kjhlkj</idNumber>
+      <idNumber>0001-00042-123456</idNumber>
       <assigningAuthorityUniversalId>1.3.6.1.4.1.21367.2009.1.2.300</assigningAuthorityUniversalId>
       <assigningAuthorityUniversalIdType>ISO^^RSNA</assigningAuthorityUniversalIdType>
     </patientId>
-    <submissionTime>20101011171211</submissionTime>
-    <uniqueId>1.3.6.1.4.1.21367.100.135006166009282039.1286817131561</uniqueId>
+    <submissionTime>20101013152351</submissionTime>
+    <uniqueId>1.3.6.1.4.1.21367.100.131007144009186124.1286983431046</uniqueId>
   </submissionSet>
   <documentEntry>
     <author>
@@ -49,12 +49,12 @@
       </displayName>
       <schemeName>classCode DisplayName</schemeName>
     </classCode>
-    <creationTime>20101011121208</creationTime>
-    <entryUUID>urn:uuid:7ac7b81e-1ac6-7418-e39e-e563c010f688</entryUUID>
+    <creationTime>20101013102347</creationTime>
+    <entryUUID>urn:uuid:3de70094-7de0-747c-6166-0899f116d988</entryUUID>
     <formatCode>
-      <code>1.2.840.10008.5.1.4.1.1.1</code>
+      <code>1.2.840.10008.5.1.4.1.1.2</code>
       <displayName>
-        <LocalizedString value="1.2.840.10008.5.1.4.1.1.1"/>
+        <LocalizedString value="1.2.840.10008.5.1.4.1.1.2"/>
       </displayName>
       <schemeName>formatCode DisplayName</schemeName>
     </formatCode>
@@ -68,7 +68,7 @@
     <languageCode>en-US</languageCode>
     <mimeType>application/dicom</mimeType>
     <patientId>
-      <idNumber>0001-00019-kjhlkj</idNumber>
+      <idNumber>0001-00042-123456</idNumber>
       <assigningAuthorityUniversalId>1.3.6.1.4.1.21367.2010.1.2.300</assigningAuthorityUniversalId>
       <assigningAuthorityUniversalIdType>ISO^^RSNA</assigningAuthorityUniversalIdType>
     </patientId>
@@ -80,13 +80,13 @@
       <schemeName>practiceSettingCode DisplayName</schemeName>
     </practiceSettingCode>
     <sourcePatientId>
-      <idNumber>0001-00019-kjhlkj</idNumber>
+      <idNumber>0001-00042-123456</idNumber>
       <assigningAuthorityUniversalId>1.3.6.1.4.1.21367.2010.1.2.300</assigningAuthorityUniversalId>
       <assigningAuthorityUniversalIdType>ISO^^RSNA</assigningAuthorityUniversalIdType>
     </sourcePatientId>
     <sourcePatientInfo>
       <patientIdentifier>
-        <idNumber>0001-00019-kjhlkj</idNumber>
+        <idNumber>0001-00042-123456</idNumber>
         <assigningAuthorityUniversalId>1.3.6.1.4.1.21367.2009.1.2.300</assigningAuthorityUniversalId>
         <assigningAuthorityUniversalIdType>ISO^^RSNA</assigningAuthorityUniversalIdType>
       </patientIdentifier>
@@ -94,12 +94,12 @@
         <familyName>last</familyName>
         <givenName>first</givenName>
       </patientName>
-      <patientDateOfBirth>20101011</patientDateOfBirth>
+      <patientDateOfBirth>20101013</patientDateOfBirth>
       <patientSex>O</patientSex>
       <patientAddress>
         <streetAddress>STREET  CITY  STATE  ZIP  COUNTRY</streetAddress>
       </patientAddress>
     </sourcePatientInfo>
-    <uniqueId>1.3.6.1.4.1.21367.100.114008040011302134.1286817131524</uniqueId>
+    <uniqueId>1.3.6.1.4.1.21367.100.160006072003081020.1286983430979</uniqueId>
   </documentEntry>
 </metadata:ProvideAndRegisterDocumentSet>

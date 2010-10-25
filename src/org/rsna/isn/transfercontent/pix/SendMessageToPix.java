@@ -24,8 +24,10 @@ import ca.uhn.hl7v2.model.v24.segment.PID;
 import ca.uhn.hl7v2.parser.Parser;
 import ca.uhn.hl7v2.parser.PipeParser;
 import ca.uhn.hl7v2.validation.impl.NoValidation;
+import java.io.FileInputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Properties;
 import org.rsna.isn.transfercontent.dao.*;
 
 /**
@@ -37,12 +39,11 @@ public class SendMessageToPix {
     private static String responseString;
     private static String encodedMessage;
     static TimeStamp stamp = new TimeStamp();
-    private String tstamp;
+    private static int hl7TimeOut;
 
     public static PixMessageType createAdt01(PixMessageType pixmsg) throws Exception {
 
         try {
-
 
             ADT_A01 adt = new ADT_A01();
             SimpleDateFormat ft = new SimpleDateFormat("yyyyMMddHHmm");
@@ -87,25 +88,15 @@ public class SendMessageToPix {
             mshSegment.getMessageType().getTriggerEvent().setValue(TriggerEvent);
             mshSegment.getMessageType().getMessageStructure().setValue(MessageStructure);
 
-
-
-
              
             PID pid = adt.getPID();
             pid.getPatientName(0).getFamilyName().getSurname().setValue(FamilyName);
             pid.getPatientName(0).getGivenName().setValue(GivenName);
             pid.getPatientIdentifierList(0).getID().setValue(PatientID);
 
-
-
-           
-
-
             ca.uhn.hl7v2.model.v24.segment.EVN evn = adt.getEVN();
             evn.getEventTypeCode().setValue("A01");
             evn.getRecordedDateTime().getTimeOfAnEvent().setValue(ft.format(d));
-
-
 
 
             ca.uhn.hl7v2.model.v24.segment.PV1 pv1 = adt.getPV1();
@@ -121,12 +112,6 @@ public class SendMessageToPix {
             pixmsg.setEncodedMessage(encodedMessage);
 
 
-
-
-
-
-
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -137,6 +122,11 @@ public class SendMessageToPix {
     public static String sendHL7(PixMessageType pixmsg) throws Exception {
 
         try {
+            Properties props = new Properties();
+            props.load(new FileInputStream("/rsna/properties/rsna.properties"));
+            String sequencenum = props.getProperty("sequencenum");
+            String timeOut = props.getProperty("hl7timeout");
+            hl7TimeOut = Integer.parseInt(timeOut.trim());
             ca.uhn.hl7v2.parser.PipeParser parser = new ca.uhn.hl7v2.parser.PipeParser();
 
             Parser p = new GenericParser();
@@ -156,7 +146,7 @@ public class SendMessageToPix {
 
             Connection connection = connectionHub.attach(hostname, port, new PipeParser(), MinLowerLayerProtocol.class);
             Initiator initiator = connection.getInitiator();
-            //  initiator.setTimeoutMillis(100000000);
+            initiator.setTimeoutMillis(hl7TimeOut);
             Message response = initiator.sendAndReceive(adt);
 
             responseString = parser.encode(response);

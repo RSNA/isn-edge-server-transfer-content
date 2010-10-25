@@ -9,7 +9,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import org.rsna.isn.transfercontent.dao.*;
-import org.rsna.isn.transfercontent.exception.TransferContentException;
+import org.rsna.isn.transfercontent.exception.*;
 import org.rsna.isn.transfercontent.logging.LogProvider;
 
 /**
@@ -23,7 +23,7 @@ public class WriteReport {
     public WriteReport() {
     }
 
-    public static void WritetoFile(String destination, int jobID) throws TransferContentException {
+    public static void WritetoFile(String destination, int jobID) throws ChainedException {
         lp = LogProvider.getInstance();
 
         try{
@@ -39,7 +39,7 @@ public class WriteReport {
         }catch (Exception e){//Catch exception if any
             lp.getLog().error("WritetoFile Error: " + e.getMessage());
             System.err.println("WritetoFile Error: " + e.getMessage());
-            throw new TransferContentException("WritetoFile Error: " + e.getMessage(), WriteReport.class.getName());
+            throw new TransferContentException("WritetoFile Error: " + e.getMessage(), e);
         }
       }
 

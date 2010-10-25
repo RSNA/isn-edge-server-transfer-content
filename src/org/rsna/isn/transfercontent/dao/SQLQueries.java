@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
+import org.rsna.isn.transfercontent.runnable.RunnableThread;
 
 public class SQLQueries {
 
@@ -339,8 +340,8 @@ public class SQLQueries {
      */
     public static ArrayList<TransferContentJobStatus> GetTransferContentJobStatus(int status) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
-        RunnableThread GetTransferContentJobStatus = new RunnableThread("GetTransferContentJobStatus");
-        GetTransferContentJobStatus.run();
+        RunnableThread getTransferContentJobStatus = new RunnableThread("GetTransferContentJobStatus");
+        getTransferContentJobStatus.run();
 
         GetDBCredentials db = new GetDBCredentials();
         UserName = GetDBCredentials.Credentials().getUsername();
@@ -357,9 +358,9 @@ public class SQLQueries {
             Statement s = con.createStatement();
             s.executeQuery("SELECT * from v_job_status where status = '" + status + "' ");
             ResultSet rs = s.getResultSet();
-            tcjs = new TransferContentJobStatus();
 
             while (rs.next()) {
+                tcjs = new TransferContentJobStatus();
                 tcjs.setJob_id(rs.getInt("job_id"));
                 tcjs.setExam_id(rs.getInt("exam_id"));
                 tcjs.setDelay_in_hrs(rs.getInt("delay_in_hrs"));
@@ -391,8 +392,8 @@ public class SQLQueries {
 
 
     public static SubmissionSetSqlQueryData GetSubmisionSetData(int jobid) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
-        RunnableThread GetTransferContentJobStatus = new RunnableThread("GetTransferContentJobStatus");
-        GetTransferContentJobStatus.run();
+        RunnableThread getSubmisionSetData = new RunnableThread("GetSubmisionSetData");
+        getSubmisionSetData.run();
         GetDBCredentials db = new GetDBCredentials();
         UserName = GetDBCredentials.Credentials().getUsername();
         PassWord = GetDBCredentials.Credentials().getPassword();
@@ -452,8 +453,8 @@ public class SQLQueries {
 
     public static ExamContentView GetTransferContentExamByStatus(int status) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
-        RunnableThread GetTransferContentExamByStatus = new RunnableThread("GetTransferContentExamByStatus");
-        GetTransferContentExamByStatus.run();
+        RunnableThread getTransferContentExamByStatus = new RunnableThread("GetTransferContentExamByStatus");
+        getTransferContentExamByStatus.run();
         GetDBCredentials db = new GetDBCredentials();
         UserName = GetDBCredentials.Credentials().getUsername();
         PassWord = GetDBCredentials.Credentials().getPassword();
@@ -516,8 +517,8 @@ public class SQLQueries {
 
     public static ExamContentView GetTransferContentExamByMRN(String MRN) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
-        RunnableThread GetTransferContentExamByExamID = new RunnableThread("GetTransferContentExamByExamID");
-        GetTransferContentExamByExamID.run();
+        RunnableThread getTransferContentExamByMRN = new RunnableThread("GetTransferContentExamByMRN");
+        getTransferContentExamByMRN.run();
         GetDBCredentials db = new GetDBCredentials();
         UserName = GetDBCredentials.Credentials().getUsername();
         PassWord = GetDBCredentials.Credentials().getPassword();
@@ -659,8 +660,8 @@ public class SQLQueries {
 
     public static String FindPatientMRN(String mrn) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
-        RunnableThread FindPatientID = new RunnableThread("FindPatientID");
-        FindPatientID.run();
+        RunnableThread findPatientMRN = new RunnableThread("FindPatientMRN");
+        findPatientMRN.run();
 
 
         GetDBCredentials db = new GetDBCredentials();
@@ -718,9 +719,8 @@ public class SQLQueries {
 
     public static int PatientUpdate(String mrn, String patient_name, java.sql.Timestamp dob, String sex, String street, String city, String state, String zip_code, java.sql.Timestamp modified_date) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
-        RunnableThread InsertPatient = new RunnableThread("InsertPatient");
-        InsertPatient.run();
-
+        RunnableThread patientUpdate = new RunnableThread("PatientUpdate");
+        patientUpdate.run();
 
         GetDBCredentials db = new GetDBCredentials();
         UserName = GetDBCredentials.Credentials().getUsername();
@@ -781,10 +781,10 @@ public class SQLQueries {
         return pupMRNStatus;
     }
 
-    public static int insertReport(int exam_id, String proc_code, String status, Timestamp status_timestamp, String report_text, String signer, String dictator, String transcriber, Timestamp modified_date) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
+    public static int InsertReport(int exam_id, String proc_code, String status, Timestamp status_timestamp, String report_text, String signer, String dictator, String transcriber, Timestamp modified_date) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
-        RunnableThread InsertReport = new RunnableThread("InsertReport");
-        InsertReport.run();
+        RunnableThread insertReport = new RunnableThread("InsertReport");
+        insertReport.run();
         GetDBCredentials db = new GetDBCredentials();
         UserName = GetDBCredentials.Credentials().getUsername();
         PassWord = GetDBCredentials.Credentials().getPassword();
@@ -853,9 +853,9 @@ public class SQLQueries {
 
     }
 
-    public static int updateReport(int exam_id, String proc_code, String status, Timestamp status_timestamp, String report_text, String signer, String dictator, String transcriber, Timestamp modified_date) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
+    public static int UpdateReport(int exam_id, String proc_code, String status, Timestamp status_timestamp, String report_text, String signer, String dictator, String transcriber, Timestamp modified_date) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
-        RunnableThread updateReport = new RunnableThread("updateReport");
+        RunnableThread updateReport = new RunnableThread("UpdateReport");
         updateReport.run();
 
 
@@ -915,10 +915,10 @@ public class SQLQueries {
         return tranUp;
     }
 
-    public static int insertTransaction(int jobID, int status, String statusMessage, java.sql.Timestamp modifiedDate) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
+    public static int InsertTransaction(int jobID, int status, String statusMessage, java.sql.Timestamp modifiedDate) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
-        RunnableThread InsertReport = new RunnableThread("InsertReport");
-        InsertReport.run();
+        RunnableThread insertTransaction = new RunnableThread("InsertTransaction");
+        insertTransaction.run();
         GetDBCredentials db = new GetDBCredentials();
         UserName = GetDBCredentials.Credentials().getUsername();
         PassWord = GetDBCredentials.Credentials().getPassword();
@@ -927,7 +927,7 @@ public class SQLQueries {
         URL = "jdbc:postgresql://" + SqlHost + "/" + RSNADB;
         DBConnection conn = new DBConnection();
         System.out.println("Database connection established");
-        String insertTransaction = "insert into transactions(job_id ,status ,status_message, modified_date) values ( ?, ?, ?, ? ) ";
+        String insertTrans = "insert into transactions(job_id ,status ,status_message, modified_date) values ( ?, ?, ?, ? ) ";
         PreparedStatement ps = null;
 
 
@@ -935,7 +935,7 @@ public class SQLQueries {
             con = DriverManager.getConnection(URL, UserName, PassWord);
             System.out.println("Database connection established");
             con.setAutoCommit(false);
-            ps = con.prepareStatement(insertTransaction);
+            ps = con.prepareStatement(insertTrans);
 
 
 
@@ -993,7 +993,7 @@ public class SQLQueries {
         URL = "jdbc:postgresql://" + SqlHost + "/" + RSNADB;
 
         DBConnection conn = new DBConnection();
-        Exam exam = new Exam();
+        exam = new Exam();
         con = conn.runConnect(SqlHost, RSNADB, UserName, PassWord);
         System.out.println("Database connection established");
 
@@ -1143,7 +1143,7 @@ public class SQLQueries {
 
     }
 
-    public static int insertMrnMergeUpdateEvent(String oldMrn, String newMrn, int oldPID, int newPID, int status, java.sql.Timestamp modifieddate) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
+    public static int InsertMrnMergeUpdateEvent(String oldMrn, String newMrn, int oldPID, int newPID, int status, java.sql.Timestamp modifieddate) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
 
         RunnableThread mrnMergeUpdate = new RunnableThread("mrnMergeUpdate");
@@ -1218,9 +1218,9 @@ public class SQLQueries {
 
     }
 
-    public static int mrnMergePatientUpdate(String oldMrn, String newMrn) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
+    public static int MrnMergePatientUpdate(String oldMrn, String newMrn) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
-        RunnableThread mrnMergePatientUpdate = new RunnableThread("mrnMergePatientUpdate");
+        RunnableThread mrnMergePatientUpdate = new RunnableThread("MrnMergePatientUpdate");
         mrnMergePatientUpdate.run();
 
         GetDBCredentials db = new GetDBCredentials();
@@ -1278,8 +1278,8 @@ public class SQLQueries {
 
     public static ExamContentView GetFinalizedExams(String status) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
-        RunnableThread GetTransferContentExamByStatus = new RunnableThread("GetTransferContentExamByStatus");
-        GetTransferContentExamByStatus.run();
+        RunnableThread getFinalizedExams = new RunnableThread("GetFinalizedExams");
+        getFinalizedExams.run();
         GetDBCredentials db = new GetDBCredentials();
         UserName = GetDBCredentials.Credentials().getUsername();
         PassWord = GetDBCredentials.Credentials().getPassword();
@@ -1340,9 +1340,9 @@ public class SQLQueries {
         return examContentView;
     }
 
-    public static ArrayList getReadyExamID(int jobID) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
+    public static ArrayList GetReadyExamID(int jobID) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
-        RunnableThread getReadyExamID = new RunnableThread("getReadyExamID");
+        RunnableThread getReadyExamID = new RunnableThread("GetReadyExamID");
         getReadyExamID.run();
         GetDBCredentials db = new GetDBCredentials();
         UserName = GetDBCredentials.Credentials().getUsername();
@@ -1390,7 +1390,7 @@ public class SQLQueries {
         return examList;
     }
 
-    public static ArrayList getReadyAccessNum(int examID) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
+    public static ArrayList GetReadyAccessNum(int examID) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
         RunnableThread getReadyAccessNum = new RunnableThread("getReadyAccessNum");
         getReadyAccessNum.run();
@@ -1440,7 +1440,7 @@ public class SQLQueries {
         return accessNumList;
     }
 
-    public static int getReadyJobID(String accessNum) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
+    public static int GetReadyJobID(String accessNum) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
         RunnableThread getReadyAccessNum = new RunnableThread("getReadyAccessNum");
         getReadyAccessNum.run();
@@ -1490,7 +1490,7 @@ public class SQLQueries {
         return jobReady;
     }
 
-    public static String getReadyMrn(String accessNum) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
+    public static String GetReadyMrn(String accessNum) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
         RunnableThread getReadyMrn = new RunnableThread("getReadyMrn");
         getReadyMrn.run();
@@ -1535,7 +1535,7 @@ public class SQLQueries {
         return mrnReady;
     }
 
-    public static int getReportExamID(String accessNum) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
+    public static int GetReportExamID(String accessNum) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
         RunnableThread getRepordExamID = new RunnableThread("getRepordExamID");
         getRepordExamID.run();
@@ -1580,7 +1580,7 @@ public class SQLQueries {
         return examReportID;
     }
 
-    public static int getExamID(String accessNum) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
+    public static int GetExamID(String accessNum) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
         RunnableThread getRepordExamID = new RunnableThread("getRepordExamID");
         getRepordExamID.run();
@@ -1670,9 +1670,9 @@ public class SQLQueries {
         return examID;
     }
 
-    public static ArrayList getReadyJobs() throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
+    public static ArrayList GetReadyJobs() throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
-        RunnableThread getReadyJobs = new RunnableThread("getReadyJobs ");
+        RunnableThread getReadyJobs = new RunnableThread("GetReadyJobs ");
         getReadyJobs.run();
         GetDBCredentials db = new GetDBCredentials();
         UserName = GetDBCredentials.Credentials().getUsername();
@@ -1720,10 +1720,10 @@ public class SQLQueries {
         return jobList;
     }
 
-    public static int updateTransaction(int status, int jobid) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
+    public static int UpdateTransaction(int status, int jobid) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
-        RunnableThread FindPatientID = new RunnableThread("FindPatientID");
-        FindPatientID.run();
+        RunnableThread updateTransaction = new RunnableThread("UpdateTransaction");
+        updateTransaction.run();
 
 
         GetDBCredentials db = new GetDBCredentials();
@@ -1782,9 +1782,9 @@ public class SQLQueries {
     }
     private int jobUP;
 
-    public int updateJobDocID(int jobid, String documentID) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
+    public int UpdateJobDocID(int jobid, String documentID) throws SQLException, InterruptedException, FileNotFoundException, IOException, Exception {
 
-        RunnableThread updateJobDocID = new RunnableThread("updateJobDocID");
+        RunnableThread updateJobDocID = new RunnableThread("UpdateJobDocID");
         updateJobDocID.run();
 
 

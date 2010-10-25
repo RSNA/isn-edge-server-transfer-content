@@ -9,20 +9,14 @@ package org.rsna.isn.transfercontent.exception;
  *
  * @author erackus
  */
-public class TransferContentException extends Exception{
-  private String className = null;
+public class TransferContentException extends ChainedException{
 
-  public TransferContentException() {
-  }
+    public TransferContentException(String msg) {
+        super(msg);
+    }
 
-  public TransferContentException(String msg) { 
-      super(msg);
-  }
-
-  public TransferContentException(String msg, String className) {
-      super(msg);
-      this.className = className;
-  }
+    public TransferContentException(String msg, Throwable cause) {
+        super(msg, cause);
+    }
 
 }
-

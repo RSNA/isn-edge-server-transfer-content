@@ -22,12 +22,21 @@ public class Pix {
   
     private static PixData encodedMsg2;
     private static LogProvider lp;
+    private static int hl7TimeOut;
    
 
     /**
      * @param args the command line arguments
      */
     public static String RegisterPatient(int jobID) throws IOException, Exception {
+        Properties props = new Properties();
+        props.load(new FileInputStream("/rsna/properties/rsna.properties"));
+        String timeOut = props.getProperty("hl7timeout");
+        hl7TimeOut = Integer.parseInt(timeOut.trim());
+        String registryHL7Host = props.getProperty("registryHL7host");
+        Integer ix = new Integer( props.getProperty("registryHL7port") );
+        int    registryHL7Port = ix.intValue();
+
         lp = LogProvider.getInstance();
         SimpleDateFormat ft = new SimpleDateFormat("yyyyMMddHHmm");
         SimpleDateFormat fs = new SimpleDateFormat("yyyyMMddHHmmSSS");
@@ -71,31 +80,29 @@ public class Pix {
         hl7msg01.setPid3_1ID(patientRSNAIDs.getRsnaID());
         //  hl7msg01.setPid3_4_1assigninganothioritynamespaceID("RSNA");
 
-        hl7msg01.setPid3_4_2universalID("1.3.6.1.4.1.21367.2009.1.2.300");
+        hl7msg01.setPid3_4_2universalID("1.3.6.1.4.1.21367.2010.1.2.300");
         hl7msg01.setPid3_4_3universalidtype("ISO");
-        //   hl7msg01.setPid3_2checkdigits("1.3.6.1.4.1.21367.2009.1.2.300") ;
+        //   hl7msg01.setPid3_2checkdigits("1.3.6.1.4.1.21367.2010.1.2.300") ;
         hl7msg01.setPid5_1patientfamilyname(patientRSNAIDs.getPatientAliasLastName());
         hl7msg01.setPid5_2patientgivenname(patientRSNAIDs.getPatientAliasFirstName());
         hl7msg01.setPvi1_2patientvisitclass("I");
-        hl7msg01.setPid_3_6_1namespaceID("RSNA");
+        //hl7msg01.setPid_3_6_1namespaceID("RSNA");
 
         PixData encodedMsg = new PixData();
 
         encodedMsg = SetMessageToPixandRegistry.setAdt01(hl7msg01);
         String encodeOut = encodedMsg.getEncodedMessage();
         PixMessageType send = new PixMessageType();
-        send.setHl7ServerName("216.185.79.26");
-
-         // send.setHl7ServerName("216.185.79.26") ;
-        int port = 8890;
-
-        // int port = 8888 ;
-        send.setPort(port);
+        send.setHl7ServerName(registryHL7Host);
+        send.setPort(registryHL7Port);
 
         send.setEncodedMessage(encodeOut);
-            String response = SendMessageToPix.sendHL7(send);
-            System.out.println(response);
+        String response = SendMessageToPix.sendHL7(send);
+        System.out.println(response);
+        lp.getLog().info(response);
+	return response;
 
+/*
         int port2 = 8888;
         send.setPort(port2);
 
@@ -108,6 +115,7 @@ public class Pix {
         lp.getLog().info(out);
 
         return out;
+*/
        ///adt04 message begins here
 
       //  setMessageToPixandResigtry pixMsgAdt04 = new setMessageToPixandResigtry();
@@ -141,9 +149,9 @@ public class Pix {
       //  hl7msg04.setPid3_1ID("2000");
         //  hl7msg01.setPid3_4_1assigninganothioritynamespaceID("RSNA");
 
-     //   hl7msg04.setPid3_4_2universalID("1.3.6.1.4.1.21367.2009.1.2.300");
+     //   hl7msg04.setPid3_4_2universalID("1.3.6.1.4.1.21367.2010.1.2.300");
     //    hl7msg04.setPid3_4_3universalidtype("ISO");
-        //   hl7msg01.setPid3_2checkdigits("1.3.6.1.4.1.21367.2009.1.2.300") ;
+        //   hl7msg01.setPid3_2checkdigits("1.3.6.1.4.1.21367.2010.1.2.300") ;
      //   hl7msg04.setPid5_1patientfamilyname("Oyesanya");
      //   hl7msg04.setPid5_2patientgivenname("Femi");
      //   hl7msg04.setPvi1_2patientvisitclass("I");
@@ -173,27 +181,5 @@ public class Pix {
       //  send04.setEncodedMessage(encodeOut04);
      //   String response04b = sendMessageToPix.sendHL7(send04);
     //    System.out.println("Femi" + response04b);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-       
-
-
     }
 }

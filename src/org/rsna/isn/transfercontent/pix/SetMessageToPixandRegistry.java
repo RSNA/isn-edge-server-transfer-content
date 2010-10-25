@@ -25,8 +25,10 @@ import ca.uhn.hl7v2.model.v24.segment.PID;
 import ca.uhn.hl7v2.parser.Parser;
 import ca.uhn.hl7v2.parser.PipeParser;
 import ca.uhn.hl7v2.validation.impl.NoValidation;
+import java.io.FileInputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Properties;
 import org.rsna.isn.transfercontent.dao.*;
 
 /**
@@ -38,8 +40,8 @@ public class SetMessageToPixandRegistry {
     private static String responseString;
     private static String encodedMessage;
     static TimeStamp stamp = new TimeStamp();
+    private static int hl7TimeOut;
     private String tstamp;
-
 
 
     public static PixData setAdt01(PixData pixmsg) throws Exception {
@@ -137,6 +139,10 @@ public class SetMessageToPixandRegistry {
     public static PixData setAdt04(PixData pixmsg) throws Exception {
 
         try {
+            Properties props = new Properties();
+            props.load(new FileInputStream("/rsna/properties/rsna.properties"));
+            String timeOut = props.getProperty("hl7timeout");
+            hl7TimeOut = Integer.parseInt(timeOut.trim());
 
             ADT_A04 adt = new ADT_A04();
             SimpleDateFormat ft = new SimpleDateFormat("yyyyMMddHHmm");
@@ -144,9 +150,6 @@ public class SetMessageToPixandRegistry {
             Date d = new Date();
             ca.uhn.hl7v2.model.v231.segment.MSH mshSegment = adt.getMSH();
             String FieldSeparator = pixmsg.getMsh1fieldseparator();
-
-            
-
 
             String EncodingCharacters = pixmsg.getMsh2encncodingcharacter();
             String SendingApplication = pixmsg.getMsh3_1sendingapplicationmaespaceID();
@@ -187,20 +190,7 @@ public class SetMessageToPixandRegistry {
                 throw new Exception ("Field separator character must have a value of |");
             }
 
-
-          
-          
-           
-
-
-
-
             mshSegment.getFieldSeparator().setValue(FieldSeparator);
-
-            
-
-
-
 
             mshSegment.getEncodingCharacters().setValue(EncodingCharacters);
             mshSegment.getSendingApplication().getNamespaceID().setValue(SendingApplication);
@@ -259,34 +249,14 @@ public class SetMessageToPixandRegistry {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     public static String sendHL7(PixMessageType pixmsg) throws Exception {
 
         try {
+            Properties props = new Properties();
+            props.load(new FileInputStream("/rsna/properties/rsna.properties"));
+            String sequencenum = props.getProperty("sequencenum");
+            String timeOut = props.getProperty("hl7timeout");
+            hl7TimeOut = Integer.parseInt(timeOut.trim());
             ca.uhn.hl7v2.parser.PipeParser parser = new ca.uhn.hl7v2.parser.PipeParser();
 
             Parser p = new GenericParser();
@@ -304,7 +274,7 @@ public class SetMessageToPixandRegistry {
 
             Connection connection = connectionHub.attach(hostname, port, new PipeParser(), MinLowerLayerProtocol.class);
             Initiator initiator = connection.getInitiator();
-            //  initiator.setTimeoutMillis(100000000);
+            initiator.setTimeoutMillis(hl7TimeOut);
             Message response = initiator.sendAndReceive(adt);
 
             responseString = parser.encode(response);

@@ -2,11 +2,11 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.rsna.isn.transfercontent.generatedocument;
+package org.rsna.isn.transfercontent.runnable;
 
 import java.lang.Thread.UncaughtExceptionHandler;
 
-class RunnableThread implements Runnable {
+public class RunnableThread implements Runnable {
     long threadID;
     private Thread runner;
     private UncaughtExceptionHandler eh;

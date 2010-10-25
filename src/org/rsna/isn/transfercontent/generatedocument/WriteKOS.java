@@ -1,12 +1,6 @@
 package org.rsna.isn.transfercontent.generatedocument;
 
 import java.io.*;
-//import java.util.logging.ConsoleHandler;
-//import java.util.logging.FileHandler;
-//import java.util.logging.Level;
-//import java.util.logging.Logger;
-
-
 import org.dcm4che2.data.DicomObject;
 import org.dcm4che2.data.Tag;
 import org.dcm4che2.io.DicomInputStream;
@@ -16,11 +10,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import org.dcm4che2.util.UIDUtils;
 import org.dcm4che2.data.BasicDicomObject;
 import org.dcm4che2.data.VR;
 import org.dcm4che2.io.DicomOutputStream;
-import org.rsna.isn.transfercontent.exception.TransferContentException;
-import org.rsna.isn.transfercontent.logging.LogProvider;
 
 public class WriteKOS {
 
@@ -51,11 +44,11 @@ public class WriteKOS {
     private static String patientBirthDate;
     private static String studyInstanceUID;
     private static String seriesInstanceUID;
+    private static String organizationalOID = "1.3.6.1.4.1.21367.100";
 
-    private static boolean firstFlag = true;
+    private static boolean firstFlag;
     private static String savedSeriesInstanceUID = "";
 
-    private static LogProvider lp;
     private static Tree<String> t = new Tree<String>();
     private static Node<String> root;
     private static Node<String> seriesNode;
@@ -75,21 +68,21 @@ public class WriteKOS {
     public WriteKOS() {
     }
 
-    public static void Generate(String source) throws FileNotFoundException, IOException, InterruptedException, Exception, TransferContentException {
-//        RunnableThread copyThread = new RunnableThread("WriteKOS");
+    public static void Generate(String source) throws FileNotFoundException, IOException, InterruptedException, Exception {
+//        RunnableThread copyThread = new RunnableThread("ScanDirectory");
 //        copyThread.run();
-        lp =LogProvider.getInstance();
 
         fs = new File(source);
         fd = new File(source + File.separatorChar + "KOS.dcm");
+        firstFlag = true;
 
         try {
             fos = new FileOutputStream(fd);
             bos = new BufferedOutputStream(fos);
             dos = new DicomOutputStream(bos);
         } catch (Exception e) {
-            lp.getLog().error("WriteKOS error: " + e.getMessage());
-            System.out.println("WriteKOS error: " + e.getMessage());
+            errorMsg = e.getMessage();
+            System.out.println("WriteKOS error: " + errorMsg);
         }
         int FileNum;
         DicomObject dcmObj = new BasicDicomObject();
@@ -102,7 +95,6 @@ public class WriteKOS {
         //  check if source directory is there
         if (!fs.exists()) {
             fs.mkdir();
-            lp.getLog().info("Source Directory or File doesn't exist:" + fs);
             System.out.println("Source Directory or File doesn't exist:" + fs);
         } else {
 
@@ -137,7 +129,7 @@ public class WriteKOS {
                 dos.writeHeader(Tag.CurrentRequestedProcedureEvidenceSequence, VR.SQ, -1);
                 dos.writeHeader(Tag.Item, null, -1);
                 dos.writeHeader(Tag.ReferencedSeriesSequence, VR.SQ, -1);
- 
+
                 root = t.getRootElement();
                 numberofSeries = root.getNumberOfChildren();
                 System.out.println("Number of Series = " + numberofSeries);
@@ -151,6 +143,9 @@ public class WriteKOS {
                     numberofImages = nextSeries.getNumberOfChildren();
                     System.out.println("Number of Images = " + numberofImages);
                     imagesList = nextSeries.getChildren();
+                    dcmObj.putString(Tag.RetrieveAETitle, VR.AE, "PACS");
+                    dos.writeDataset(dcmObj, transferSyntaxUID);
+                    dcmObj.clear();
                     dos.writeHeader(Tag.ReferencedSOPSequence, VR.SQ, -1);
                     for (Iterator<Node<String>> itimages = imagesList.iterator(); itimages.hasNext();) {
                         SOPInstanceUID = itimages.next().getData();
@@ -160,8 +155,8 @@ public class WriteKOS {
                         dos.writeDataset(dcmObj, transferSyntaxUID);
                         dcmObj.clear();
                         dos.writeHeader(Tag.ItemDelimitationItem, null, 0);
-                        dos.writeDataset(dcmObj, transferSyntaxUID);
-                        dcmObj.clear();
+//                        dos.writeDataset(dcmObj, transferSyntaxUID);
+//                        dcmObj.clear();
                         System.out.println("SOP Instance UID = " + SOPInstanceUID);
                     }
                     dos.writeHeader(Tag.SequenceDelimitationItem, null, 0);
@@ -188,37 +183,13 @@ public class WriteKOS {
 
                 dos.writeHeader(Tag.ContentSequence, VR.SQ, -1);
                 dos.writeHeader(Tag.Item, null, -1);
-                dcmObj.putString(Tag.RelationshipType, VR.CS, "HAS CONCEPT MOD");
-                dcmObj.putString(Tag.ValueType, VR.CS, "CODE");
-                dos.writeDataset(dcmObj, transferSyntaxUID);
-                dcmObj.clear();
-                dos.writeHeader(Tag.ConceptNameCodeSequence, VR.SQ, -1);
-                dos.writeHeader(Tag.Item, null, -1);
-                dcmObj.putString(Tag.CodeValue, VR.SH, "121049");
-                dcmObj.putString(Tag.CodingSchemeDesignator, VR.SH, "DCM");
-                dcmObj.putString(Tag.CodeMeaning, VR.LO, "Language of Content Item and Descendants");
-                dos.writeDataset(dcmObj, transferSyntaxUID);
-                dcmObj.clear();
-                dos.writeHeader(Tag.ItemDelimitationItem, null, 0);
-                dos.writeHeader(Tag.SequenceDelimitationItem, null, 0);
-                dos.writeHeader(Tag.ConceptCodeSequence, VR.SQ, -1);
-                dos.writeHeader(Tag.Item, null, -1);
-                dcmObj.putString(Tag.CodeValue, VR.SH, "eng");
-                dcmObj.putString(Tag.CodingSchemeDesignator, VR.SH, "RFC3066");
-                dcmObj.putString(Tag.CodeMeaning, VR.LO, "English");
-                dos.writeDataset(dcmObj, transferSyntaxUID);
-                dcmObj.clear();
-                dos.writeHeader(Tag.ItemDelimitationItem, null, 0);
-                dos.writeHeader(Tag.SequenceDelimitationItem, null, 0);
-                dos.writeHeader(Tag.ItemDelimitationItem, null, 0);
+                dos.writeHeader(Tag.ReferencedSOPSequence, VR.SQ, -1);
 
                 for (Iterator<Node<String>> itseries = seriesList.iterator(); itseries.hasNext();) {
-                    dos.writeHeader(Tag.Item, null, -1);
                     Node<String> nextSeries  = itseries.next();
                     numberofImages = nextSeries.getNumberOfChildren();
                     imagesList = nextSeries.getChildren();
                     for (Iterator<Node<String>> itimages = imagesList.iterator(); itimages.hasNext();) {
-                        dos.writeHeader(Tag.ReferencedSOPSequence, VR.SQ, -1);
                         SOPInstanceUID = itimages.next().getData();
                         dos.writeHeader(Tag.Item, null, -1);
                         dcmObj.putString(Tag.ReferencedSOPClassUID, VR.UI, SOPClassUID);
@@ -226,19 +197,20 @@ public class WriteKOS {
                         dos.writeDataset(dcmObj, transferSyntaxUID);
                         dcmObj.clear();
                         dos.writeHeader(Tag.ItemDelimitationItem, null, 0);
-                        dos.writeHeader(Tag.SequenceDelimitationItem, null, 0);
-                        dcmObj.putString(Tag.RelationshipType, VR.CS, "CONTAINS");
-                        dcmObj.putString(Tag.ValueType, VR.CS, "IMAGE");
-                        dos.writeDataset(dcmObj, transferSyntaxUID);
-                        dcmObj.clear();
-                        dos.writeHeader(Tag.ItemDelimitationItem, null, 0);
                         System.out.println("(2) SOP Instance UID = " + SOPInstanceUID);
                     }
                 }
                 dos.writeHeader(Tag.SequenceDelimitationItem, null, 0);
+                dcmObj.putString(Tag.RelationshipType, VR.CS, "CONTAINS");
+                dcmObj.putString(Tag.ValueType, VR.CS, "IMAGE");
+                dos.writeDataset(dcmObj, transferSyntaxUID);
+                dcmObj.clear();
+
+                dos.writeHeader(Tag.ItemDelimitationItem, null, 0);
+                dos.writeHeader(Tag.SequenceDelimitationItem, null, 0);
                 dos.writeDataset(dcmObj, transferSyntaxUID);
                 dos.close();
-                lp.getLog().info("Finished writing KOS in subdirectory " + source);
+
                 System.out.println("Finished writing KOS in subdirectory " + source);
             }
         }
@@ -311,22 +283,19 @@ public class WriteKOS {
                 din.close();
              } catch (IOException e) {
                 System.out.println("Error in closing DICOM input stream");
-                System.out.println("WriteKOS error: " + e.getMessage());
-                lp.getLog().error("Error in closing DICOM input stream for " + fileName);
-                throw new TransferContentException("WriteKOS error: " + e.getMessage(), WriteKOS.class.getName());
+                errorMsg = e.getMessage();
+                System.out.println("WriteKOS error: " + errorMsg);
              }
         } catch (IOException e) {
-            System.out.println("WriteKOS error: " + e.getMessage());
-            lp.getLog().error("WriteKOS error: " + e.getMessage());
-            throw new TransferContentException("WriteKOS error: " + e.getMessage(), WriteKOS.class.getName());
+            errorMsg = e.getMessage();
+            System.out.println("WriteKOS error: " + errorMsg);
         } catch (Exception e) {
-            System.out.println("WriteKOS error: " + e.getMessage());
-            lp.getLog().error("WriteKOS error: " + e.getMessage());
-            throw new TransferContentException("WriteKOS error: " + e.getMessage(), WriteKOS.class.getName());
+            errorMsg = e.getMessage();
+            System.out.println("WriteKOS error: " + errorMsg);
         }
     }
 
-    private static void WriteKOSHeader(DicomObject dcmObj) throws InterruptedException, TransferContentException {
+    private static void WriteKOSHeader(DicomObject dcmObj) throws InterruptedException {
 
         DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd HHmmss.000");
         Date date = new Date();
@@ -337,7 +306,7 @@ public class WriteKOS {
 
         // Set basic Meta info
         mediaStorageSOPClassUID = "1.2.840.10008.5.1.4.1.1.88.59";
-        mediaStorageSOPInstanceUID = "1.2.528.1.1001.100.25.2645.1933.36321246679.20040824141444562";
+        mediaStorageSOPInstanceUID = UIDUtils.createUID(organizationalOID);
 
         try {
             dcmObj.initFileMetaInformation(mediaStorageSOPClassUID, mediaStorageSOPInstanceUID, transferSyntaxUID);
@@ -361,7 +330,7 @@ public class WriteKOS {
             dos.writeHeader(Tag.SequenceDelimitationItem, null, 0);
             dcmObj.putString(Tag.PatientName, VR.PN, patientName);
             dcmObj.putString(Tag.PatientID, VR.LO, patientID);
-            dcmObj.putString(Tag.IssuerOfPatientID, VR.LO, "UCMC");
+            dcmObj.putString(Tag.IssuerOfPatientID, VR.LO, "&1.3.6.1.4.1.21367.2009.1.2.300&ISO");
             dcmObj.putString(Tag.PatientBirthDate, VR.DA, patientBirthDate);
             dcmObj.putString(Tag.PatientSex, VR.CS, patientSex);
             dcmObj.putString(Tag.StudyInstanceUID, VR.UI, studyInstanceUID);
@@ -372,12 +341,8 @@ public class WriteKOS {
             dos.writeDataset(dcmObj, transferSyntaxUID);
         } catch (IOException e) {
             System.out.println("WriteKOS error: " + e.getMessage());
-            lp.getLog().error("WriteKOS error: " + e.getMessage());
-            throw new TransferContentException("WriteKOS error: " + e.getMessage(), WriteKOS.class.getName());
         } catch (Exception e) {
             System.out.println("WriteKOS error: " + e.getMessage());
-            lp.getLog().error("WriteKOS error: " + e.getMessage());
-            throw new TransferContentException("WriteKOS error: " + e.getMessage(), WriteKOS.class.getName());
         }
     }
 

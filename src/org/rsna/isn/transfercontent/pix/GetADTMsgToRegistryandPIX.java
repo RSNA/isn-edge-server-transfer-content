@@ -24,10 +24,6 @@ public class GetADTMsgToRegistryandPIX {
 
         try {
 
-        Properties props = new Properties();
-
-        props.load(new FileInputStream("c:/mtom/rsna.properties"));
-        String sequencenum = props.getProperty("sequencenum");
         SimpleDateFormat ft = new SimpleDateFormat("yyyyMMddHHmm");
         SimpleDateFormat fs = new SimpleDateFormat("yyyyMMddHHmmSSS");
         Date d = new Date();
@@ -62,7 +58,7 @@ public class GetADTMsgToRegistryandPIX {
 
         hl7msg01.setPid3_4_2universalID(universalID);
         hl7msg01.setPid3_4_3universalidtype(universalidtype);
-        //   hl7msg01.setPid3_2checkdigits("1.3.6.1.4.1.21367.2009.1.2.300") ;
+        //   hl7msg01.setPid3_2checkdigits("1.3.6.1.4.1.21367.2010.1.2.300") ;
         hl7msg01.setPid5_1patientfamilyname(patientfamilyname);
         hl7msg01.setPid5_2patientgivenname(patientgivenname);
         hl7msg01.setPvi1_2patientvisitclass(patientvisitclass);
@@ -99,13 +95,6 @@ public class GetADTMsgToRegistryandPIX {
 
          ack01 = "Registry:::" + response + "Pix:::" + response2 ;
 
-
-
-
-
-
-
-
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -123,8 +112,7 @@ public class GetADTMsgToRegistryandPIX {
 
         Properties props = new Properties();
 
-        props.load(new FileInputStream("c:/mtom/rsna.properties"));
-        String sequencenum = props.getProperty("sequencenum");
+        props.load(new FileInputStream("/rsna/properties/rsna.properties"));
         SimpleDateFormat ft = new SimpleDateFormat("yyyyMMddHHmm");
         SimpleDateFormat fs = new SimpleDateFormat("yyyyMMddHHmmSSS");
         Date d = new Date();
@@ -159,7 +147,7 @@ public class GetADTMsgToRegistryandPIX {
 
         hl7msg04.setPid3_4_2universalID(universalID);
         hl7msg04.setPid3_4_3universalidtype(universalidtype);
-        //   hl7msg01.setPid3_2checkdigits("1.3.6.1.4.1.21367.2009.1.2.300") ;
+        //   hl7msg01.setPid3_2checkdigits("1.3.6.1.4.1.21367.2010.1.2.300") ;
         hl7msg04.setPid5_1patientfamilyname(patientfamilyname);
         hl7msg04.setPid5_2patientgivenname(patientgivenname);
         hl7msg04.setPvi1_2patientvisitclass(patientvisitclass);
