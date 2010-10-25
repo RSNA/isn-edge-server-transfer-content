@@ -15,7 +15,9 @@ import java.util.UUID;
 import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.lang.Class;
 import org.rsna.isn.transfercontent.dao.*;
+import org.rsna.isn.transfercontent.exception.*;
 import org.rsna.isn.transfercontent.generatedocument.*;
 
 /**
@@ -29,19 +31,23 @@ public class DocumentEntryGenerator {
     public DocumentEntryGenerator() {
     }
 
-        public static void CreateSubmissionSet(int jobID, String destination) {
+        public static void CreateDocumentEntry(int jobID, String studyDesc, String sopClassUID, String sopInstanceUID, File destination) throws ChainedException {
         try {
             /////////////////////////////
             //Creating an empty XML Document
             Text text;
+            int patientID;
 
             //We need a Document
             DocumentBuilderFactory dbfac = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder = dbfac.newDocumentBuilder();
             Document doc = docBuilder.newDocument();
             SubmissionSetSqlQueryData ssQueryData = new SubmissionSetSqlQueryData();
+            PatientRSNAIDs patientRSNAIDs = new PatientRSNAIDs();
 
             ssQueryData = SQLQueries.GetSubmisionSetData(jobID);
+            patientID = ssQueryData.getPatientid();
+            patientRSNAIDs = SQLQueries.GetRSNAIDfromPatientID(patientID);
 
             ////////////////////////
             //Creating the XML tree
@@ -54,8 +60,8 @@ public class DocumentEntryGenerator {
             root.setAttribute("xmlns:hl7v2", "urn:org:openhealthtools:ihe:common:hl7v2");
             root.setAttribute("xmlns:p0","htt//www.w3.org/XML/1998/namespace");
             root.setAttribute("xmlns:tns","urn:org:openhealthtools:ihe:xds:metadata");
-            root.setAttribute("xmlns:xdsdemo","htt//istc.rsna.org/xdsdemo");
-            root.setAttribute("xmlns:xsi","http://www.w3.org/2001/XMLSchema-instance");
+            root.setAttribute("xmlns:xdsdemo","http://mirc.rsna.org/xdsdemo");
+            root.setAttribute("xmlns:xsi","htt//www.w3.org/2001/XMLSchema-instance");
             root.setAttribute("xsi:schemaLocation","urn:org:openhealthtools:ihe:xds:metadata metadata.xsd urn:org:openhealthtools:ihe:common:hl7v2 ../../../org.openhealthtools.ihe.common.hl7v2/resources/schema/hl7v2_wrapper.xsd htt//www.w3.org/XML/1998/namespace htt//www.w3.org/2001/xml.xsd ");
 
             //create a comment and put it in the root element
@@ -77,25 +83,19 @@ public class DocumentEntryGenerator {
             Element authorPerson = doc.createElement("authorPerson");
             author.appendChild(authorPerson);
 
-            String signer = ssQueryData.getSigner();
-            String[] signerInfo = SplitDoctorName.find(signer);
-            String signerIDNumber = signerInfo[1];
-            String signerLastName = signerInfo[2];
-            String signerFirstName = signerInfo[3];
-
             Element idNumber = doc.createElement("idNumber");
             authorPerson.appendChild(idNumber);
-            text = doc.createTextNode(signerIDNumber);
+            text = doc.createTextNode("Signer ID");
             idNumber.appendChild(text);
 
             Element familyName = doc.createElement("familyName");
             authorPerson.appendChild(familyName);
-            text = doc.createTextNode(signerLastName);
+            text = doc.createTextNode("Signer Last Name");
             familyName.appendChild(text);
 
             Element givenName = doc.createElement("givenName");
             authorPerson.appendChild(givenName);
-            text = doc.createTextNode(signerFirstName);
+            text = doc.createTextNode("Signer First Name");
             givenName.appendChild(text);
 
             Element assigningAuthorityUniversalId = doc.createElement("assigningAuthorityUniversalId");
@@ -113,7 +113,7 @@ public class DocumentEntryGenerator {
 
             Element code = doc.createElement("code");
             classCode.appendChild(code);
-            text = doc.createTextNode("Radiology Exam");
+            text = doc.createTextNode("Imaging Exam Result");
             code.appendChild(text);
 
             Element displayName = doc.createElement("displayName");
@@ -121,11 +121,11 @@ public class DocumentEntryGenerator {
 
             Element localizedString = doc.createElement("LocalizedString");
             displayName.appendChild(localizedString);
-            localizedString.setAttribute("value", "Radiology Exam");
+            localizedString.setAttribute("value", "Imaging Exam Result");
 
             Element schemeName = doc.createElement("schemeName");
             classCode.appendChild(schemeName);
-            text = doc.createTextNode("Connect-a-thon classCodes");
+            text = doc.createTextNode("classCode DisplayName");
             schemeName.appendChild(text);
 
             Element confidentialityCode = doc.createElement("confidentialityCode");
@@ -133,7 +133,7 @@ public class DocumentEntryGenerator {
 
             code = doc.createElement("code");
             confidentialityCode.appendChild(code);
-            text = doc.createTextNode("N");
+            text = doc.createTextNode("GRANT");
             code.appendChild(text);
 
             displayName = doc.createElement("displayName");
@@ -141,11 +141,11 @@ public class DocumentEntryGenerator {
 
             localizedString = doc.createElement("LocalizedString");
             displayName.appendChild(localizedString);
-            localizedString.setAttribute("value", "Normal");
+            localizedString.setAttribute("value", "GRANT");
 
             schemeName = doc.createElement("schemeName");
             confidentialityCode.appendChild(schemeName);
-            text = doc.createTextNode("Connect-a-thon confidentialityCodes");
+            text = doc.createTextNode("confidentialityCode DisplayName");
             schemeName.appendChild(text);
 
             Date date = new Date();
@@ -162,7 +162,7 @@ public class DocumentEntryGenerator {
 
             code = doc.createElement("code");
             formatCode.appendChild(code);
-            text = doc.createTextNode("CDAR2/IHE 1.0");
+            text = doc.createTextNode(sopClassUID);
             code.appendChild(text);
 
             displayName = doc.createElement("displayName");
@@ -170,11 +170,11 @@ public class DocumentEntryGenerator {
 
             localizedString = doc.createElement("LocalizedString");
             displayName.appendChild(localizedString);
-            localizedString.setAttribute("value", "CDAR2/IHE 1.0");
+            localizedString.setAttribute("value", sopClassUID);
 
             schemeName = doc.createElement("schemeName");
             formatCode.appendChild(schemeName);
-            text = doc.createTextNode("Connect-a-thon formatCodes");
+            text = doc.createTextNode("formatCode DisplayName");
             schemeName.appendChild(text);
 
             Element healthCareFacilityTypeCode = doc.createElement("healthCareFacilityTypeCode");
@@ -182,7 +182,7 @@ public class DocumentEntryGenerator {
 
             code = doc.createElement("code");
             healthCareFacilityTypeCode.appendChild(code);
-            text = doc.createTextNode("Outpatient");
+            text = doc.createTextNode("GEN");
             code.appendChild(text);
 
             displayName = doc.createElement("displayName");
@@ -190,16 +190,16 @@ public class DocumentEntryGenerator {
 
             localizedString = doc.createElement("LocalizedString");
             displayName.appendChild(localizedString);
-            localizedString.setAttribute("value", "Outpatient");
+            localizedString.setAttribute("value", "GEN");
 
             schemeName = doc.createElement("schemeName");
             healthCareFacilityTypeCode.appendChild(schemeName);
-            text = doc.createTextNode("Connect-a-thon healthcareFacilityTypeCodes");
+            text = doc.createTextNode("healthcareFacilityTypeCode DisplayName");
             schemeName.appendChild(text);
 
             Element languageCode = doc.createElement("languageCode");
             root.appendChild(languageCode);
-            text = doc.createTextNode("en-us");
+            text = doc.createTextNode("en-US");
             languageCode.appendChild(text);
 
             Element patientId = doc.createElement("patientId");
@@ -207,12 +207,13 @@ public class DocumentEntryGenerator {
 
             idNumber = doc.createElement("idNumber");
             patientId.appendChild(idNumber);
-            text = doc.createTextNode("patient_id");
+            text = doc.createTextNode(patientRSNAIDs.getRsnaID());
+//            text = doc.createTextNode("2000");
             idNumber.appendChild(text);
 
             assigningAuthorityUniversalId = doc.createElement("assigningAuthorityUniversalId");
             patientId.appendChild(assigningAuthorityUniversalId);
-            text = doc.createTextNode("1.2");
+            text = doc.createTextNode("1.3.6.1.4.1.21367.2010.1.2.300");
             assigningAuthorityUniversalId.appendChild(text);
 
             assigningAuthorityUniversalIdType = doc.createElement("assigningAuthorityUniversalIdType");
@@ -237,7 +238,7 @@ public class DocumentEntryGenerator {
 
             schemeName = doc.createElement("schemeName");
             practiceSettingCode.appendChild(schemeName);
-            text = doc.createTextNode("Connect-a-thon practiceSettingCodes");
+            text = doc.createTextNode("practiceSettingCode DisplayName");
             schemeName.appendChild(text);
 
             Element sourcePatientId = doc.createElement("sourcePatientId");
@@ -245,12 +246,12 @@ public class DocumentEntryGenerator {
 
             idNumber = doc.createElement("idNumber");
             sourcePatientId.appendChild(idNumber);
-            text = doc.createTextNode("patient_id");
+            text = doc.createTextNode(patientRSNAIDs.getRsnaID());
             idNumber.appendChild(text);
 
             assigningAuthorityUniversalId = doc.createElement("assigningAuthorityUniversalId");
             sourcePatientId.appendChild(assigningAuthorityUniversalId);
-            text = doc.createTextNode("1.2");
+            text = doc.createTextNode("1.3.6.1.4.1.21367.2010.1.2.300");
             assigningAuthorityUniversalId.appendChild(text);
 
             assigningAuthorityUniversalIdType = doc.createElement("assigningAuthorityUniversalIdType");
@@ -266,12 +267,12 @@ public class DocumentEntryGenerator {
 
             idNumber = doc.createElement("idNumber");
             patientIdentifier.appendChild(idNumber);
-            text = doc.createTextNode("patient_id");
+            text = doc.createTextNode(patientRSNAIDs.getRsnaID());
             idNumber.appendChild(text);
 
             assigningAuthorityUniversalId = doc.createElement("assigningAuthorityUniversalId");
             patientIdentifier.appendChild(assigningAuthorityUniversalId);
-            text = doc.createTextNode("1.2");
+            text = doc.createTextNode("1.3.6.1.4.1.21367.2010.1.2.300");
             assigningAuthorityUniversalId.appendChild(text);
 
             assigningAuthorityUniversalIdType = doc.createElement("assigningAuthorityUniversalIdType");
@@ -282,39 +283,36 @@ public class DocumentEntryGenerator {
             Element patientName = doc.createElement("patientName");
             sourcePatientInfo.appendChild(patientName);
 
-            String pName = ssQueryData.getPatientname();
-            String[] pInfo = SplitPatientName.find(pName);
-            String patientLastName = pInfo[1];
-            String patientFirstName = pInfo[2];
-
             familyName = doc.createElement("familyName");
             patientName.appendChild(familyName);
-            text = doc.createTextNode(patientLastName);
+            text = doc.createTextNode(patientRSNAIDs.getPatientAliasLastName());
+//            text = doc.createTextNode("Oyesanya");
             familyName.appendChild(text);
 
             givenName = doc.createElement("givenName");
             patientName.appendChild(givenName);
-            text = doc.createTextNode(patientFirstName);
+            text = doc.createTextNode(patientRSNAIDs.getPatientAliasFirstName());
+//            text = doc.createTextNode("Femi");
             givenName.appendChild(text);
 
             Element patientDateOfBirth = doc.createElement("patientDateOfBirth");
             sourcePatientInfo.appendChild(patientDateOfBirth);
             SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyyMMdd");
-            java.sql.Timestamp dateofBirth = ssQueryData.getDob();
-            String dob = dateFormatter.format(dateofBirth);
+            Date now = new Date();
+            String dob = dateFormatter.format(now);
             text = doc.createTextNode(dob);
             patientDateOfBirth.appendChild(text);
 
             Element patientSex = doc.createElement("patientSex");
             sourcePatientInfo.appendChild(patientSex);
-            text = doc.createTextNode(ssQueryData.getSex());
+            text = doc.createTextNode("O");
             patientSex.appendChild(text);
 
             Element patientAddress = doc.createElement("patientAddress");
             sourcePatientInfo.appendChild(patientAddress);
             Element streetAddress = doc.createElement("streetAddress");
             patientAddress.appendChild(streetAddress);
-            String fullAddress = ssQueryData.getStreet() + " " + ssQueryData.getCity() + " " + ssQueryData.getState() + " " + ssQueryData.getZip_code();
+            String fullAddress = "STREET  CITY  STATE  ZIP  COUNTRY";
             text = doc.createTextNode(fullAddress);
             streetAddress.appendChild(text);
 
@@ -323,7 +321,7 @@ public class DocumentEntryGenerator {
 
             code = doc.createElement("code");
             typeCode.appendChild(code);
-            text = doc.createTextNode("11488-4");
+            text = doc.createTextNode(studyDesc);
             code.appendChild(text);
 
             displayName = doc.createElement("displayName");
@@ -331,12 +329,17 @@ public class DocumentEntryGenerator {
 
             localizedString = doc.createElement("LocalizedString");
             displayName.appendChild(localizedString);
-            localizedString.setAttribute("value", "Consultation Note");
+            localizedString.setAttribute("value", studyDesc);
 
             schemeName = doc.createElement("schemeName");
             typeCode.appendChild(schemeName);
-            text = doc.createTextNode("LOINC");
+            text = doc.createTextNode("typeCode DisplayName");
             schemeName.appendChild(text);
+
+            Element uniqueID = doc.createElement("uniqueId");
+            root.appendChild(uniqueID);
+            text = doc.createTextNode(sopInstanceUID);
+            uniqueID.appendChild(text);
 
             //set up a transformer
             TransformerFactory transfac = TransformerFactory.newInstance();
@@ -346,10 +349,10 @@ public class DocumentEntryGenerator {
 
             //create string from xml tree
             StringWriter sw = new StringWriter();
-            File outFile = new File(destination + "\\DocumentEntry.xml");
+            // File outFile = new File(destination + "\\DocumentEntry.xml");
 
 //            StreamResult result = new StreamResult(sw);
-            StreamResult result = new StreamResult(outFile);
+            StreamResult result = new StreamResult(destination);
             DOMSource source = new DOMSource(doc);
             trans.transform(source, result);
             result = new StreamResult(sw);
@@ -362,6 +365,7 @@ public class DocumentEntryGenerator {
         } catch (Exception e) {
             System.out.println("Document Entry Generator: " + e.getMessage());
             e.printStackTrace();
+            throw new TransferContentException("DocumentEntryGenerator: Error in creating DocumentEntry", e);
         }
     }
 

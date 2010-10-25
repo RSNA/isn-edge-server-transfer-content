@@ -6,28 +6,28 @@
         <organizationName>University Hospital</organizationName>
       </authorInstitution>
       <authorPerson>
-        <idNumber>1234</idNumber>
-        <familyName>CASEY</familyName>
-        <givenName>BEN</givenName>
+        <idNumber>signerIDNumber</idNumber>
+        <familyName>signerLastName</familyName>
+        <givenName>signerFirstName</givenName>
         <assigningAuthorityUniversalId>2.16.840.1.113883.3.933</assigningAuthorityUniversalId>
-        <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
+        <assigningAuthorityUniversalIdType>ISO^^RSNA</assigningAuthorityUniversalIdType>
       </authorPerson>
     </author>
     <contentTypeCode>
-      <code>Radiology Exam</code>
+      <code>Imaging Exam</code>
       <displayName>
-        <LocalizedString value="Radiology Exam"/>
+        <LocalizedString value="Imaging Exam"/>
       </displayName>
-      <schemeName>Connect-a-thon contentTypeCodes</schemeName>
+      <schemeName>contentTypeCode DisplayName</schemeName>
     </contentTypeCode>
-    <entryUUID>urn:uuid:10e6595a-b0e0-6eaa-ee8e-0019bbdcbe0a</entryUUID>
+    <entryUUID>urn:uuid:3de6ff4a-7de0-747c-bf6b-351353864155</entryUUID>
     <patientId>
-      <idNumber>50000678</idNumber>
+      <idNumber>0001-00042-123456</idNumber>
       <assigningAuthorityUniversalId>1.3.6.1.4.1.21367.2009.1.2.300</assigningAuthorityUniversalId>
-      <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
+      <assigningAuthorityUniversalIdType>ISO^^RSNA</assigningAuthorityUniversalIdType>
     </patientId>
-    <submissionTime>20100914192011</submissionTime>
-    <uniqueId>1.3.6.1.4.1.21367.100.142050233018142045.1284492011731</uniqueId>
+    <submissionTime>20101013152351</submissionTime>
+    <uniqueId>1.3.6.1.4.1.21367.100.131007144009186124.1286983431046</uniqueId>
   </submissionSet>
   <documentEntry>
     <author>
@@ -35,71 +35,71 @@
         <organizationName>University Hospital</organizationName>
       </authorInstitution>
       <authorPerson>
-        <idNumber>1234</idNumber>
-        <familyName>CASEY</familyName>
-        <givenName>BEN</givenName>
+        <idNumber>Signer ID</idNumber>
+        <familyName>Signer Last Name</familyName>
+        <givenName>Signer First Name</givenName>
         <assigningAuthorityUniversalId>2.16.840.1.113883.3.933</assigningAuthorityUniversalId>
-        <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
+        <assigningAuthorityUniversalIdType>ISO^^RSNA</assigningAuthorityUniversalIdType>
       </authorPerson>
     </author>
     <classCode>
-      <code>Radiology Exam</code>
+      <code>Imaging Exam Result</code>
       <displayName>
-        <LocalizedString value="Radiology Exam"/>
+        <LocalizedString value="Imaging Exam Result"/>
       </displayName>
-      <schemeName>Connect-a-thon classCodes</schemeName>
+      <schemeName>classCode DisplayName</schemeName>
     </classCode>
-    <creationTime>20100914142004</creationTime>
-    <entryUUID>urn:uuid:10e69708-b0e0-6eaa-1be1-0019bbdcbe0a</entryUUID>
+    <creationTime>20101013102347</creationTime>
+    <entryUUID>urn:uuid:3de70094-7de0-747c-6166-0899f116d988</entryUUID>
     <formatCode>
-      <code>CDAR2/IHE 1.0</code>
+      <code>1.2.840.10008.5.1.4.1.1.2</code>
       <displayName>
-        <LocalizedString value="CDAR2/IHE 1.0"/>
+        <LocalizedString value="1.2.840.10008.5.1.4.1.1.2"/>
       </displayName>
-      <schemeName>Connect-a-thon formatCodes</schemeName>
+      <schemeName>formatCode DisplayName</schemeName>
     </formatCode>
     <healthCareFacilityTypeCode>
-      <code>Outpatient</code>
+      <code>GEN</code>
       <displayName>
-        <LocalizedString value="Outpatient"/>
+        <LocalizedString value="GEN"/>
       </displayName>
-      <schemeName>Connect-a-thon healthcareFacilityTypeCodes</schemeName>
+      <schemeName>healthcareFacilityTypeCode DisplayName</schemeName>
     </healthCareFacilityTypeCode>
-    <languageCode>en-us</languageCode>
+    <languageCode>en-US</languageCode>
     <mimeType>application/dicom</mimeType>
     <patientId>
-      <idNumber>50000678</idNumber>
-      <assigningAuthorityUniversalId>1.2</assigningAuthorityUniversalId>
-      <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
+      <idNumber>0001-00042-123456</idNumber>
+      <assigningAuthorityUniversalId>1.3.6.1.4.1.21367.2010.1.2.300</assigningAuthorityUniversalId>
+      <assigningAuthorityUniversalIdType>ISO^^RSNA</assigningAuthorityUniversalIdType>
     </patientId>
     <practiceSettingCode>
       <code>Radiology</code>
       <displayName>
         <LocalizedString value="Radiology"/>
       </displayName>
-      <schemeName>Connect-a-thon practiceSettingCodes</schemeName>
+      <schemeName>practiceSettingCode DisplayName</schemeName>
     </practiceSettingCode>
     <sourcePatientId>
-      <idNumber>50000678</idNumber>
-      <assigningAuthorityUniversalId>1.2</assigningAuthorityUniversalId>
-      <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
+      <idNumber>0001-00042-123456</idNumber>
+      <assigningAuthorityUniversalId>1.3.6.1.4.1.21367.2010.1.2.300</assigningAuthorityUniversalId>
+      <assigningAuthorityUniversalIdType>ISO^^RSNA</assigningAuthorityUniversalIdType>
     </sourcePatientId>
     <sourcePatientInfo>
       <patientIdentifier>
-        <idNumber>50000678</idNumber>
-        <assigningAuthorityUniversalId>1.2</assigningAuthorityUniversalId>
-        <assigningAuthorityUniversalIdType>ISO</assigningAuthorityUniversalIdType>
+        <idNumber>0001-00042-123456</idNumber>
+        <assigningAuthorityUniversalId>1.3.6.1.4.1.21367.2009.1.2.300</assigningAuthorityUniversalId>
+        <assigningAuthorityUniversalIdType>ISO^^RSNA</assigningAuthorityUniversalIdType>
       </patientIdentifier>
       <patientName>
-        <familyName>TEST</familyName>
-        <givenName>RSNA</givenName>
+        <familyName>last</familyName>
+        <givenName>first</givenName>
       </patientName>
-      <patientDateOfBirth>19500101</patientDateOfBirth>
-      <patientSex>M</patientSex>
+      <patientDateOfBirth>20101013</patientDateOfBirth>
+      <patientSex>O</patientSex>
       <patientAddress>
-        <streetAddress>7255 S. KEDZIE CHICAGO IL 60629</streetAddress>
+        <streetAddress>STREET  CITY  STATE  ZIP  COUNTRY</streetAddress>
       </patientAddress>
     </sourcePatientInfo>
-    <uniqueId>1.3.6.1.4.1.21367.100.105013172006285011.1284492011700</uniqueId>
+    <uniqueId>1.3.6.1.4.1.21367.100.160006072003081020.1286983430979</uniqueId>
   </documentEntry>
 </metadata:ProvideAndRegisterDocumentSet>
