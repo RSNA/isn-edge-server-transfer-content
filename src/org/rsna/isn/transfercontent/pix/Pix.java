@@ -33,6 +33,10 @@ public class Pix {
         props.load(new FileInputStream("/rsna/properties/rsna.properties"));
         String timeOut = props.getProperty("hl7timeout");
         hl7TimeOut = Integer.parseInt(timeOut.trim());
+        String registryHL7Host = props.getProperty("registryHL7host");
+        Integer ix = new Integer( props.getProperty("registryHL7port") );
+        int    registryHL7Port = ix.intValue();
+
         lp = LogProvider.getInstance();
         SimpleDateFormat ft = new SimpleDateFormat("yyyyMMddHHmm");
         SimpleDateFormat fs = new SimpleDateFormat("yyyyMMddHHmmSSS");
@@ -89,18 +93,16 @@ public class Pix {
         encodedMsg = SetMessageToPixandRegistry.setAdt01(hl7msg01);
         String encodeOut = encodedMsg.getEncodedMessage();
         PixMessageType send = new PixMessageType();
-        send.setHl7ServerName("216.185.79.26");
-
-         // send.setHl7ServerName("216.185.79.26") ;
-        int port = 8890;
-
-        // int port = 8888 ;
-        send.setPort(port);
+        send.setHl7ServerName(registryHL7Host);
+        send.setPort(registryHL7Port);
 
         send.setEncodedMessage(encodeOut);
-            String response = SendMessageToPix.sendHL7(send);
-            System.out.println(response);
+        String response = SendMessageToPix.sendHL7(send);
+        System.out.println(response);
+        lp.getLog().info(response);
+	return response;
 
+/*
         int port2 = 8888;
         send.setPort(port2);
 
@@ -113,6 +115,7 @@ public class Pix {
         lp.getLog().info(out);
 
         return out;
+*/
        ///adt04 message begins here
 
       //  setMessageToPixandResigtry pixMsgAdt04 = new setMessageToPixandResigtry();
@@ -178,27 +181,5 @@ public class Pix {
       //  send04.setEncodedMessage(encodeOut04);
      //   String response04b = sendMessageToPix.sendHL7(send04);
     //    System.out.println("Femi" + response04b);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-       
-
-
     }
 }

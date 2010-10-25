@@ -253,7 +253,7 @@ public class SetMessageToPixandRegistry {
 
         try {
             Properties props = new Properties();
-            props.load(new FileInputStream("c:/mtom/rsna.properties"));
+            props.load(new FileInputStream("/rsna/properties/rsna.properties"));
             String sequencenum = props.getProperty("sequencenum");
             String timeOut = props.getProperty("hl7timeout");
             hl7TimeOut = Integer.parseInt(timeOut.trim());
