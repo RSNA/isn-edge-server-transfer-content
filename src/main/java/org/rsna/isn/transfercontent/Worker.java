@@ -56,7 +56,7 @@ public class Worker extends Thread
 				Map<String, DicomStudy> studies = Collections.EMPTY_MAP;
 				try
 				{
-					dao.updateStatus(job, Job.STARTED_KOS_GENERATION, "");
+					dao.updateStatus(job, Job.STARTED_KOS_GENERATION);
 
 					KosGenerator gen = new KosGenerator(job);
 					studies = gen.processFiles();
@@ -78,7 +78,7 @@ public class Worker extends Thread
 				//
 				try
 				{
-					dao.updateStatus(job, Job.STARTED_PATIENT_REGISTRATION, "");
+					dao.updateStatus(job, Job.STARTED_PATIENT_REGISTRATION);
 
 					Iti8 iti8 = new Iti8(exam);
 					iti8.registerPatient();
@@ -97,7 +97,7 @@ public class Worker extends Thread
 				//
 				try
 				{
-					dao.updateStatus(job, Job.STARTED_DOCUMENT_SUBMISSION, "");
+					dao.updateStatus(job, Job.STARTED_DOCUMENT_SUBMISSION);
 
 					for(DicomStudy study : studies.values())
 					{
@@ -116,7 +116,7 @@ public class Worker extends Thread
 
 
 
-				dao.updateStatus(job, Job.COMPLETED_TRANSFER_TO_CLEARINGHOUSE, "");
+				dao.updateStatus(job, Job.COMPLETED_TRANSFER_TO_CLEARINGHOUSE);
 
 				logger.info("Successfully transfer content to clearinghouse for " + job);
 			}
