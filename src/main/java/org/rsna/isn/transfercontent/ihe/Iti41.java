@@ -138,7 +138,7 @@ public class Iti41
 			throw new IllegalArgumentException("No RSNA ID associated with patient: " + exam.getMrn());
 	}
 
-	public void submitDocuments() throws Exception
+	public void submitDocuments(File debugFile) throws Exception
 	{
 		SubmitTransactionData tx = new SubmitTransactionData();
 
@@ -264,7 +264,8 @@ public class Iti41
 		subSet.setTitle(inStr(study.getStudyDescription()));
 		subSet.setUniqueId(UIDUtils.createUID());
 
-		//tx.saveMetadataToFile("D:\\submission set.xml");
+		if(debugFile != null)
+		  tx.saveMetadataToFile(debugFile.getCanonicalPath());
 
 
 		B_Source reg = new B_Source(endpoint);

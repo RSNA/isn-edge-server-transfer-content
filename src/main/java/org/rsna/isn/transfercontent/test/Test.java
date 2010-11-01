@@ -36,7 +36,7 @@ public class Test
 		for (DicomStudy study : studies.values())
 		{
 			Iti41 iti41 = new Iti41(study);
-			iti41.submitDocuments();
+			iti41.submitDocuments(null);
 		}
 	}
 

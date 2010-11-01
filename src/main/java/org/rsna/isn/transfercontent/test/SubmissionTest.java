@@ -32,13 +32,16 @@ public class SubmissionTest
 		{
 			KosGenerator gen = new KosGenerator(job);
 
-
+			File homeDir = new File(System.getProperty("user.home"));
+			File debugFile = new File(homeDir, "submission-set.xml");
 
 			for (DicomStudy study : gen.processFiles().values())
 			{
 				Iti41 iti41 = new Iti41(study);
 
-				iti41.submitDocuments();
+				iti41.submitDocuments(debugFile);
+
+				break;
 			}
 
 		}

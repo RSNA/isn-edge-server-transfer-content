@@ -8,7 +8,6 @@ import java.io.File;
 import java.util.Set;
 import org.apache.log4j.Logger;
 import org.rsna.isn.dao.JobDao;
-import org.rsna.isn.domain.Exam;
 import org.rsna.isn.domain.Job;
 import org.rsna.isn.util.Environment;
 
@@ -57,7 +56,7 @@ public class Monitor extends Thread
 						if (group.activeCount() >= 5)
 							break;
 
-						dao.updateStatus(job, Job.STARTED_TRANSFER_CONTENT, "");
+						dao.updateStatus(job, Job.STARTED_TRANSFER_CONTENT);
 
 						Worker worker = new Worker(group, job);
 						worker.start();
