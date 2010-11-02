@@ -129,9 +129,9 @@ public class Worker extends Thread
 				}
 				catch (Exception ex)
 				{
-					logger.error("Unable to register patient for " + job + ". ", ex);
+					logger.error("Unable to submit documents for " + job + ". ", ex);
 
-					dao.updateStatus(job, Job.FAILED_TO_REGISTER_PATIENT, ex);
+					dao.updateStatus(job, Job.FAILED_TO_SUBMIT_DOCUMENTS, ex);
 
 					return;
 				}
