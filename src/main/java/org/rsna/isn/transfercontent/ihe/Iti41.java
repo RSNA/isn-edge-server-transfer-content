@@ -278,7 +278,7 @@ public class Iti41
 		{
 			throw new IHEException("Unable to submit documents for study "
 					+ study.getStudyUid()
-					+ ". Remote site return error: " + status.getLiteral());
+					+ ". Remote site returned error: " + status.getLiteral());
 
 		}
 	}
