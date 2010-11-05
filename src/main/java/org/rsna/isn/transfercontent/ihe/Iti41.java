@@ -325,7 +325,6 @@ public class Iti41
 	{
 		CX rsnaId = hl7Factory.createCX();
 		rsnaId.setIdNumber(rsna.getId());
-		rsnaId.setAssigningAuthorityName(Constants.NAMESPACE_ID);
 		rsnaId.setAssigningAuthorityUniversalId(Constants.UNIVERSAL_ID);
 		rsnaId.setAssigningAuthorityUniversalIdType(Constants.UNIVERSAL_ID_TYPE);
 

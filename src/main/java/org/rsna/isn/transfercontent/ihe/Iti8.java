@@ -102,7 +102,7 @@ public class Iti8
 
 		PixMsgRegisterOutpatient msg = new PixMsgRegisterOutpatient(manager,
 				null, rsna.getId(),
-				Constants.NAMESPACE_ID, Constants.UNIVERSAL_ID,
+				null, Constants.UNIVERSAL_ID,
 				Constants.UNIVERSAL_ID_TYPE);
 		msg.addOptionalPatientNameFamilyName(rsna.getLastName());
 		msg.addOptionalPatientNameGivenName(rsna.getFirstName());
