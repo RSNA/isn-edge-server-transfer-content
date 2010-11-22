@@ -49,11 +49,11 @@ import org.rsna.isn.domain.Job;
 import org.rsna.isn.util.Environment;
 
 /**
+ * Utility class for generating KOS manifests.
  *
  * @author Wyatt Tellis
  * @version 1.2.0
  *
- * Purpose: Utility class for generating KOS manifests.
  */
 public class KosGenerator
 {

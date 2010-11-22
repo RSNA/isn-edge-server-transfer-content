@@ -40,11 +40,10 @@ import org.rsna.isn.transfercontent.ihe.Iti8;
 import org.rsna.isn.util.Environment;
 
 /**
- *
+ * Worker thread that processes jobs.
+ * 
  * @author Wyatt Tellis
  * @version 1.2.0
- *
- * Purpose: Worker thread that processes jobs.
  */
 class Worker extends Thread
 {
@@ -83,7 +82,7 @@ class Worker extends Thread
 				Map<String, DicomStudy> studies = Collections.EMPTY_MAP;
 				try
 				{
-					dao.updateStatus(job, Job.STARTED_KOS_GENERATION);
+					dao.updateStatus(job, Job.RSNA_STARTED_KOS_GENERATION);
 
 					logger.info("Started KOS generation for " + job);
 
@@ -96,7 +95,7 @@ class Worker extends Thread
 				{
 					logger.error("Unable to generate KOS for " + job + ". ", ex);
 
-					dao.updateStatus(job, Job.FAILED_TO_GENERATE_KOS, ex);
+					dao.updateStatus(job, Job.RSNA_FAILED_TO_GENERATE_KOS, ex);
 
 					return;
 				}
@@ -109,7 +108,7 @@ class Worker extends Thread
 				//
 				try
 				{
-					dao.updateStatus(job, Job.STARTED_PATIENT_REGISTRATION);
+					dao.updateStatus(job, Job.RSNA_STARTED_PATIENT_REGISTRATION);
 
 					logger.info("Started patient registration for " + job);
 					
@@ -122,7 +121,7 @@ class Worker extends Thread
 				{
 					logger.error("Unable to register patient for " + job + ". ", ex);
 
-					dao.updateStatus(job, Job.FAILED_TO_REGISTER_PATIENT, ex);
+					dao.updateStatus(job, Job.RSNA_FAILED_TO_REGISTER_PATIENT, ex);
 
 					return;
 				}
@@ -132,7 +131,7 @@ class Worker extends Thread
 				//
 				try
 				{
-					dao.updateStatus(job, Job.STARTED_DOCUMENT_SUBMISSION);
+					dao.updateStatus(job, Job.RSNA_STARTED_DOCUMENT_SUBMISSION);
 
 					logger.info("Started document submission for " + job);
 
@@ -153,7 +152,7 @@ class Worker extends Thread
 				{
 					logger.error("Unable to submit documents for " + job + ". ", ex);
 
-					dao.updateStatus(job, Job.FAILED_TO_SUBMIT_DOCUMENTS, ex);
+					dao.updateStatus(job, Job.RSNA_FAILED_TO_SUBMIT_DOCUMENTS, ex);
 
 					return;
 				}
@@ -170,7 +169,7 @@ class Worker extends Thread
 				FileUtils.deleteDirectory(examDir);
 				patDir.delete();
 
-				dao.updateStatus(job, Job.COMPLETED_TRANSFER_TO_CLEARINGHOUSE);
+				dao.updateStatus(job, Job.RSNA_COMPLETED_TRANSFER_TO_CLEARINGHOUSE);
 
 				logger.info("Successfully transferred content to clearinghouse for " + job);
 			}
@@ -178,7 +177,7 @@ class Worker extends Thread
 			{
 				logger.error("Uncaught exception while processing job " + job, ex);
 
-				dao.updateStatus(job, Job.FAILED_TO_TRANSFER_TO_CLEARINGHOUSE, ex);
+				dao.updateStatus(job, Job.RSNA_FAILED_TO_TRANSFER_TO_CLEARINGHOUSE, ex);
 			}
 
 

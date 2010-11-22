@@ -31,13 +31,13 @@ import org.openhealthtools.ihe.xds.document.DocumentDescriptor;
 import org.openhealthtools.ihe.xds.document.XDSDocument;
 
 /**
+ * A replacement for XDSDocumentFromFile. The XDSDocumentFromFile class
+ * loads the file into memory first. This class will just provide a
+ * FileInputStream upon invocation of getStream().
  *
  * @author Wyatt Tellis
  * @version 1.2.0
  *
- * Purpose: A replacement for XDSDocumentFromFile. The XDSDocumentFromFile class
- * loads the file into memory first. This class will just provide a
- * FileInputStream upon invocation of getStream().
  */
 class LazyLoadedXdsDocument extends XDSDocument
 {

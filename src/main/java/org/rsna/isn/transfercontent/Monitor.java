@@ -31,13 +31,13 @@ import org.rsna.isn.domain.Job;
 import org.rsna.isn.util.Environment;
 
 /**
+ * This class monitors the RSNA database for new jobs. If it finds a
+ * new job, it will spawn a worker thread to process the job.  Currently a max
+ * of five concurrent worker threads are allowed.
  *
  * @author Wyatt Tellis
  * @version 1.2.0
  *
- * Purpose: This class monitors the RSNA database for new jobs. If it finds a
- * new job, it will spawn a worker thread to process the job.  Currently a max
- * of five concurrent worker threads are allowed.
  */
 class Monitor extends Thread
 {
@@ -72,7 +72,7 @@ class Monitor extends Thread
 			{
 				if (group.activeCount() < 5)
 				{
-					Set<Job> jobs = dao.getJobsByStatus(Job.WAITING_FOR_TRANSFER_CONTENT);
+					Set<Job> jobs = dao.getJobsByStatus(Job.RSNA_WAITING_FOR_TRANSFER_CONTENT);
 
 
 					for (Job job : jobs)
@@ -80,7 +80,7 @@ class Monitor extends Thread
 						if (group.activeCount() >= 5)
 							break;
 
-						dao.updateStatus(job, Job.STARTED_TRANSFER_CONTENT);
+						dao.updateStatus(job, Job.RSNA_STARTED_TRANSFER_CONTENT);
 
 						Worker worker = new Worker(group, job);
 						worker.start();

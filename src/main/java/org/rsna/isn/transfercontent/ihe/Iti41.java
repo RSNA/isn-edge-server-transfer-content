@@ -67,14 +67,14 @@ import org.rsna.isn.util.Constants;
 import org.rsna.isn.util.Environment;
 
 /**
+ * This class implements the ITI-41 (Submit and register document set)
+ * transaction.
+ * Note: the "iti41-repository-unique-id", "iti41-source-id", and "iti41-endpoint-url"
+ * properties must be set in the configurations table of the RSNA database.
  *
  * @author Wyatt Tellis
  * @version 1.2.0
  *
- * Purpose: This class implements the ITI-41 (Submit and register document set)
- * transaction.
- * Note: the "iti41-repository-unique-id", "iti41-source-id", and "iti41-endpoint-url"
- * properties must be set in the configurations table of the RSNA database.
  */
 public class Iti41
 {

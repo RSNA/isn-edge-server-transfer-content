@@ -27,11 +27,10 @@ import org.apache.log4j.Logger;
 import org.rsna.isn.util.Environment;
 
 /**
- *
+ * Main class of tranfser content app.
+ * 
  * @author Wyatt Tellis
  * @version 1.2.0
- *
- * Purpose: Main class of tranfser content app.
  */
 public class App
 {

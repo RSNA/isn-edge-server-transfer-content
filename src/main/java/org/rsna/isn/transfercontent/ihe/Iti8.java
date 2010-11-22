@@ -39,14 +39,13 @@ import org.rsna.isn.domain.RsnaDemographics;
 import org.rsna.isn.util.Constants;
 
 /**
+ * This class implements the ITI-8 (Patient identity feed) transaction.
+ *
+ * Note: the "iti8-pix-host", "iti8-pix-port", "iti8-reg-host" and "iti8-reg-port"
+ * properties must be set in the configurations table of the RSNA database.
  *
  * @author Wyatt Tellis
  * @version 1.2.0
- *
- * Purpose: This class implements the ITI-8 (Patient identity feed) transaction.
- * 
- * Note: the "iti8-pix-host", "iti8-pix-port", "iti8-reg-host" and "iti8-reg-port"
- * properties must be set in the configurations table of the RSNA database.
  */
 public class Iti8
 {
