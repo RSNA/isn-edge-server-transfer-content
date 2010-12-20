@@ -145,7 +145,7 @@ public class KosGenerator
 				if (study == null)
 				{
 					study = new DicomStudy();
-					study.setExam(job.getExam());
+					study.setJob(job);
 
 					study.setPatientName(header.getString(Tag.PatientName));
 					study.setPatientId(header.getString(Tag.PatientID));

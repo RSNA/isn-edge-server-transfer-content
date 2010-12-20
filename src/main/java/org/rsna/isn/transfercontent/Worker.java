@@ -112,7 +112,7 @@ class Worker extends Thread
 
 					logger.info("Started patient registration for " + job);
 					
-					Iti8 iti8 = new Iti8(exam);
+					Iti8 iti8 = new Iti8(job);
 					iti8.registerPatient();
 
 					logger.info("Completed patient registration for " + job);

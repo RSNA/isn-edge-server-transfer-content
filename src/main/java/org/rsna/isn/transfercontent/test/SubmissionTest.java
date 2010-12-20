@@ -46,6 +46,8 @@ public class SubmissionTest
 	 */
 	public static void main(String[] args) throws Exception
 	{
+		Environment.init("transfer");
+                
 		Job job = new JobDao().getJobById(50);
 		try
 		{

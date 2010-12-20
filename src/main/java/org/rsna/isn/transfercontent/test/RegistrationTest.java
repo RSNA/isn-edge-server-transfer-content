@@ -28,6 +28,7 @@ import org.rsna.isn.dao.JobDao;
 import org.rsna.isn.domain.Exam;
 import org.rsna.isn.domain.Job;
 import org.rsna.isn.transfercontent.ihe.Iti8;
+import org.rsna.isn.util.Environment;
 
 /**
  *
@@ -40,11 +41,11 @@ public class RegistrationTest {
      */
     public static void main(String argv[]) throws Exception
 	{
+		Environment.init("transfer");
+        
 		Job job = new JobDao().getJobById(50);
 
-		Exam exam = job.getExam();
-
-		Iti8 reg = new Iti8(exam);
+		Iti8 reg = new Iti8(job);
 		reg.registerPatient();
 	}
 

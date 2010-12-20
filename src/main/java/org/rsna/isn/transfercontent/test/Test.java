@@ -44,12 +44,11 @@ public class Test
 	public static void main(String[] args) throws Exception
 	{
 		Job job = new JobDao().getJobById(50);
-		Exam exam = job.getExam();
 
 		KosGenerator gen = new KosGenerator(job);
 		Map<String, DicomStudy> studies = gen.processFiles();
 
-		Iti8 iti8 = new Iti8(exam);
+		Iti8 iti8 = new Iti8(job);
 		iti8.registerPatient();
 
 		for (DicomStudy study : studies.values())

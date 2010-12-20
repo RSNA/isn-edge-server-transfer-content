@@ -34,8 +34,7 @@ import org.openhealthtools.ihe.pix.source.PixSource;
 import org.openhealthtools.ihe.pix.source.PixSourceResponse;
 import org.openhealthtools.ihe.utils.IHEException;
 import org.rsna.isn.dao.ConfigurationDao;
-import org.rsna.isn.domain.Exam;
-import org.rsna.isn.domain.RsnaDemographics;
+import org.rsna.isn.domain.Job;
 import org.rsna.isn.util.Constants;
 
 /**
@@ -49,130 +48,125 @@ import org.rsna.isn.util.Constants;
  */
 public class Iti8
 {
-	private static final Logger logger = Logger.getLogger(Iti8.class);
 
-	private static final TCPPort pix;
+    private static final Logger logger = Logger.getLogger(Iti8.class);
 
-	private static final TCPPort registry;
+    private static final TCPPort pix;
 
-	private static final MessageManager manager = MessageManager.getFactory();
+    private static final TCPPort registry;
 
-	private final Exam exam;
+    private static final MessageManager manager = MessageManager.getFactory();
 
-	private final RsnaDemographics rsna;
+    private final Job job;
 
-	static
-	{
-		try
-		{
-			ConfigurationDao dao = new ConfigurationDao();
+    static
+    {
+        try
+        {
+            ConfigurationDao dao = new ConfigurationDao();
 
-			String pixHost = dao.getConfiguration("iti8-pix-host");
-			if (StringUtils.isBlank(pixHost))
-				throw new ExceptionInInitializerError("iti8-pix-host is blank");
+            String pixHost = dao.getConfiguration("iti8-pix-host");
+            if (StringUtils.isBlank(pixHost))
+                throw new ExceptionInInitializerError("iti8-pix-host is blank");
 
-			int pixPort = Integer.parseInt(dao.getConfiguration("iti8-pix-port"));
+            int pixPort = Integer.parseInt(dao.getConfiguration("iti8-pix-port"));
 
-			pix = new TCPPort();
-			pix.setTcpHost(pixHost);
-			pix.setTcpPort(pixPort);
-
+            pix = new TCPPort();
+            pix.setTcpHost(pixHost);
+            pix.setTcpPort(pixPort);
 
 
 
 
-			String regHost = dao.getConfiguration("iti8-reg-host");
-			if (StringUtils.isBlank(regHost))
-				throw new ExceptionInInitializerError("iti8-reg-host is blank");
 
-			int regPort = Integer.parseInt(dao.getConfiguration("iti8-reg-port"));
+            String regHost = dao.getConfiguration("iti8-reg-host");
+            if (StringUtils.isBlank(regHost))
+                throw new ExceptionInInitializerError("iti8-reg-host is blank");
 
-			registry = new TCPPort();
-			registry.setTcpHost(regHost);
-			registry.setTcpPort(regPort);
+            int regPort = Integer.parseInt(dao.getConfiguration("iti8-reg-port"));
 
-			PIXSourceAuditor.getAuditor().getConfig().setAuditorEnabled(false);
-		}
-		catch (Exception ex)
-		{
-			throw new ExceptionInInitializerError(ex);
-		}
-	}
+            registry = new TCPPort();
+            registry.setTcpHost(regHost);
+            registry.setTcpPort(regPort);
 
-	/**
-	 * Create an instance of this class.
-	 *
-	 * @param exam An exam instance
-	 * @throws IllegalArgumentException If there is no RSNA id associated with
-	 * the exam
-	 */
-	public Iti8(Exam exam)
-	{
-		this.exam = exam;
+            PIXSourceAuditor.getAuditor().getConfig().setAuditorEnabled(false);
+        }
+        catch (Exception ex)
+        {
+            throw new ExceptionInInitializerError(ex);
+        }
+    }
 
-		this.rsna = exam.getRsnaDemographics();
-		if (rsna == null)
-			throw new IllegalArgumentException("No RNSA id associated with mrn " + exam.getMrn());
-	}
+    /**
+     * Create an instance of this class.
+     *
+     * @param exam An exam instance
+     * @throws IllegalArgumentException If there is no RSNA id associated with
+     * the exam
+     */
+    public Iti8(Job job)
+    {
+        this.job = job;
+    }
 
-	/**
-	 * Register the patient with the PIX and registry.
-	 * 
-	 * @throws IHEException If there was an uncaught exception while attempting
-	 * to register the patient. 
-	 */
-	public void registerPatient() throws IHEException
-	{
-		sendIti8Message(pix);
+    /**
+     * Register the patient with the PIX and registry.
+     *
+     * @throws IHEException If there was an uncaught exception while attempting
+     * to register the patient.
+     */
+    public void registerPatient() throws IHEException
+    {
+        sendIti8Message(pix);
 
-		sendIti8Message(registry);
-	}
+        sendIti8Message(registry);
+    }
 
-	private void sendIti8Message(TCPPort dest) throws IHEException
-	{
-		PixSource feed = new PixSource();
+    private void sendIti8Message(TCPPort dest) throws IHEException
+    {
+        PixSource feed = new PixSource();
 
-		MLLPDestination mllp = new MLLPDestination(dest);
-		MLLPDestination.setUseATNA(false);
-		feed.setMLLPDestination(mllp);
+        MLLPDestination mllp = new MLLPDestination(dest);
+        MLLPDestination.setUseATNA(false);
+        feed.setMLLPDestination(mllp);
 
 
 
 
-		PixMsgRegisterOutpatient msg = new PixMsgRegisterOutpatient(manager,
-				null, rsna.getId(),
-				null, Constants.RSNA_UNIVERSAL_ID,
-				Constants.RSNA_UNIVERSAL_ID_TYPE);
-		msg.addOptionalPatientNameFamilyName(rsna.getLastName());
-		msg.addOptionalPatientNameGivenName(rsna.getFirstName());
+        PixMsgRegisterOutpatient msg = new PixMsgRegisterOutpatient(manager,
+                null, job.getSingleUsePatientId(),
+                null, Constants.RSNA_UNIVERSAL_ID,
+                Constants.RSNA_UNIVERSAL_ID_TYPE);
+        msg.addOptionalPatientNameFamilyName("RSNA ISN");
+        msg.addOptionalPatientNameGivenName("RSNA ISN");
 
 
-		PixSourceResponse rsp = feed.sendRegistration(msg, false);
+        PixSourceResponse rsp = feed.sendRegistration(msg, false);
 
-		String code = rsp.getResponseAckCode(false);
-		String error = rsp.getField("MSA-3");
-		String remote = dest.getTcpHost() + ":" + dest.getTcpPort();
+        String code = rsp.getResponseAckCode(false);
+        String error = rsp.getField("MSA-3");
+        String remote = dest.getTcpHost() + ":" + dest.getTcpPort();
 
-		if ("AE".equals(code))
-		{
-			throw new IHEException("Remote application " + remote
-					+ " responded with error: " + error);
-		}
-		else if ("AR".equals(code))
-		{
+        if ("AE".equals(code))
+        {
+            throw new IHEException("Remote application " + remote
+                    + " responded with error: " + error);
+        }
+        else if ("AR".equals(code))
+        {
 
-			if (error.startsWith("PIX-10000:"))
-			{
-				logger.info("Remote application " + remote
-						+ " reports patient " + rsna.getId()
-						+ " has already been registered.");
-			}
-			else
-			{
-				throw new IHEException("Remote application " + remote
-						+ " rejected message with reason: " + error);
-			}
-		}
-	}
+            if (error.startsWith("PIX-10000:"))
+            {
+                logger.info("Remote application " + remote
+                        + " reports patient id " + job.getSingleUsePatientId()
+                        + " has already been registered.");
+            }
+            else
+            {
+                throw new IHEException("Remote application " + remote
+                        + " rejected message with reason: " + error);
+            }
+        }
+    }
 
 }
