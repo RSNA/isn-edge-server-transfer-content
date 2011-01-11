@@ -44,6 +44,7 @@ import org.openhealthtools.ihe.utils.IHEException;
 import org.openhealthtools.ihe.xds.document.DocumentDescriptor;
 import org.openhealthtools.ihe.xds.document.XDSDocument;
 import org.openhealthtools.ihe.xds.document.XDSDocumentFromByteArray;
+import org.openhealthtools.ihe.xds.document.XDSDocumentFromFile;
 import org.openhealthtools.ihe.xds.metadata.AuthorType;
 import org.openhealthtools.ihe.xds.metadata.CodedMetadataType;
 import org.openhealthtools.ihe.xds.metadata.DocumentEntryType;
@@ -220,7 +221,7 @@ public class Iti41
 
         DicomKos kos = study.getKos();
         File kosFile = kos.getFile();
-        XDSDocument kosDoc = new LazyLoadedXdsDocument(KOS_DESCRIPTOR, kosFile);
+        XDSDocument kosDoc = new XDSDocumentFromFile(KOS_DESCRIPTOR, kosFile); //new LazyLoadedXdsDocument(KOS_DESCRIPTOR, kosFile);
         String kosUuid = tx.addDocument(kosDoc);
         DocumentEntryType kosEntry = tx.getDocumentEntry(kosUuid);
         initDocEntry(kosEntry);
@@ -255,7 +256,7 @@ public class Iti41
             {
                 File dcmFile = object.getFile();
 
-                XDSDocument dcmDoc = new LazyLoadedXdsDocument(DocumentDescriptor.DICOM, dcmFile);
+                XDSDocument dcmDoc = new XDSDocumentFromFile(DocumentDescriptor.DICOM, dcmFile);
                 String dcmUuid = tx.addDocument(dcmDoc);
                 DocumentEntryType dcmEntry = tx.getDocumentEntry(dcmUuid);
                 initDocEntry(dcmEntry);
