@@ -48,7 +48,7 @@ public class SubmissionTest
 	{
 		Environment.init("transfer");
                 
-		Job job = new JobDao().getJobById(50);
+		Job job = new JobDao().getJobById(71);
 		try
 		{
 			KosGenerator gen = new KosGenerator(job);
