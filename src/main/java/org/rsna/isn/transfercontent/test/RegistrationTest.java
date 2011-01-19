@@ -25,7 +25,6 @@
 package org.rsna.isn.transfercontent.test;
 
 import org.rsna.isn.dao.JobDao;
-import org.rsna.isn.domain.Exam;
 import org.rsna.isn.domain.Job;
 import org.rsna.isn.transfercontent.ihe.Iti8;
 import org.rsna.isn.util.Environment;
@@ -43,7 +42,7 @@ public class RegistrationTest {
 	{
 		Environment.init("transfer");
         
-		Job job = new JobDao().getJobById(50);
+		Job job = new JobDao().getJobById(70);
 
 		Iti8 reg = new Iti8(job);
 		reg.registerPatient();

@@ -23,12 +23,12 @@
  */
 package org.rsna.isn.transfercontent.ihe;
 
+import java.net.URI;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.ohf.hl7v2.core.message.MessageManager;
 import org.openhealthtools.ihe.atna.auditor.PIXSourceAuditor;
 import org.openhealthtools.ihe.common.mllp.MLLPDestination;
-import org.openhealthtools.ihe.common.mllp.TCPPort;
 import org.openhealthtools.ihe.pix.source.PixMsgRegisterOutpatient;
 import org.openhealthtools.ihe.pix.source.PixSource;
 import org.openhealthtools.ihe.pix.source.PixSourceResponse;
@@ -51,9 +51,9 @@ public class Iti8
 
     private static final Logger logger = Logger.getLogger(Iti8.class);
 
-    private static final TCPPort pix;
+    private static final URI pix;
 
-    private static final TCPPort registry;
+    private static final URI registry;
 
     private static final MessageManager manager = MessageManager.getFactory();
 
@@ -65,29 +65,21 @@ public class Iti8
         {
             ConfigurationDao dao = new ConfigurationDao();
 
-            String pixHost = dao.getConfiguration("iti8-pix-host");
-            if (StringUtils.isBlank(pixHost))
-                throw new ExceptionInInitializerError("iti8-pix-host is blank");
+            String pixUri = dao.getConfiguration("iti8-pix-uri");
+            if (StringUtils.isBlank(pixUri))
+                throw new ExceptionInInitializerError("iti8-pix-uri is blank");
 
-            int pixPort = Integer.parseInt(dao.getConfiguration("iti8-pix-port"));
-
-            pix = new TCPPort();
-            pix.setTcpHost(pixHost);
-            pix.setTcpPort(pixPort);
+            pix = new URI(pixUri);
 
 
 
 
 
-            String regHost = dao.getConfiguration("iti8-reg-host");
-            if (StringUtils.isBlank(regHost))
-                throw new ExceptionInInitializerError("iti8-reg-host is blank");
+            String regUri = dao.getConfiguration("iti8-reg-uri");
+            if (StringUtils.isBlank(regUri))
+                throw new ExceptionInInitializerError("iti8-reg-uri is blank");
 
-            int regPort = Integer.parseInt(dao.getConfiguration("iti8-reg-port"));
-
-            registry = new TCPPort();
-            registry.setTcpHost(regHost);
-            registry.setTcpPort(regPort);
+            registry = new URI(regUri);
 
             PIXSourceAuditor.getAuditor().getConfig().setAuditorEnabled(false);
         }
@@ -122,15 +114,13 @@ public class Iti8
         sendIti8Message(registry);
     }
 
-    private void sendIti8Message(TCPPort dest) throws IHEException
+    private void sendIti8Message(URI uri) throws IHEException
     {
         PixSource feed = new PixSource();
 
-        MLLPDestination mllp = new MLLPDestination(dest);
+        MLLPDestination mllp = new MLLPDestination(uri);
         MLLPDestination.setUseATNA(false);
         feed.setMLLPDestination(mllp);
-
-
 
 
         PixMsgRegisterOutpatient msg = new PixMsgRegisterOutpatient(manager,
@@ -145,7 +135,7 @@ public class Iti8
 
         String code = rsp.getResponseAckCode(false);
         String error = rsp.getField("MSA-3");
-        String remote = dest.getTcpHost() + ":" + dest.getTcpPort();
+        String remote = uri.getHost() + ":" + uri.getPort();
 
         if ("AE".equals(code))
         {

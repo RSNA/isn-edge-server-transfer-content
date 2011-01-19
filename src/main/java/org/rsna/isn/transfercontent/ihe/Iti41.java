@@ -116,10 +116,10 @@ public class Iti41
             if (StringUtils.isBlank(sourceId))
                 throw new ExceptionInInitializerError("iti41-source-id is blank");
 
-            String url = dao.getConfiguration("iti41-endpoint-url");
-            if (StringUtils.isBlank(url))
-                throw new ExceptionInInitializerError("iti41-endpoint-url");
-            endpoint = new URI(url);
+            String uri = dao.getConfiguration("iti41-endpoint-uri");
+            if (StringUtils.isBlank(uri))
+                throw new ExceptionInInitializerError("iti41-endpoint-uri");
+            endpoint = new URI(uri);
 
 
             XDSAuditor.getAuditor().getConfig().setAuditorEnabled(false);
