@@ -249,14 +249,13 @@ public class Iti41
         //
         // Add entries for images
         //
-
         for (DicomSeries series : study.getSeries().values())
         {
             for (DicomObject object : series.getObjects().values())
             {
                 File dcmFile = object.getFile();
-
-                XDSDocument dcmDoc = new XDSDocumentFromFile(DocumentDescriptor.DICOM, dcmFile);
+                
+                XDSDocument dcmDoc = new LazyLoadedXdsDocument(DocumentDescriptor.DICOM, dcmFile);
                 String dcmUuid = tx.addDocument(dcmDoc);
                 DocumentEntryType dcmEntry = tx.getDocumentEntry(dcmUuid);
                 initDocEntry(dcmEntry);
