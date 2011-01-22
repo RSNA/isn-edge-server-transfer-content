@@ -141,6 +141,12 @@ public class Iti41
             out.close();
 
             System.setProperty("axis2.xml", axis2Xml.getCanonicalPath());
+
+            File soapDir = new File(tmpDir, "soap");
+            soapDir.mkdirs();
+            System.setProperty("ihe.soap.tmpdir", soapDir.getCanonicalPath());
+
+            System.setProperty("use.http.chunking", "true");
         }
         catch (Exception ex)
         {

@@ -26,6 +26,7 @@ package org.rsna.isn.transfercontent.ihe;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import org.apache.commons.io.input.AutoCloseInputStream;
 import org.apache.log4j.Logger;
@@ -42,6 +43,7 @@ import org.openhealthtools.ihe.xds.document.XDSDocument;
  */
 public class LazyLoadedXdsDocument extends XDSDocument
 {
+
     private static final Logger logger = Logger.getLogger(LazyLoadedXdsDocument.class);
 
     public LazyLoadedXdsDocument(DocumentDescriptor descriptor, File file)
@@ -66,16 +68,39 @@ public class LazyLoadedXdsDocument extends XDSDocument
     @Override
     public InputStream getStream()
     {
-        try
-        {
-            return new AutoCloseInputStream(new FileInputStream(file));
-        }
-        catch (FileNotFoundException ex)
-        {
-            logger.error("Unable to open source file", ex);
-
-            return null;
-        }
+        return new AutoCloseInputStream(new LazyOpenFileInputStream(file));
     }
 
+    private class LazyOpenFileInputStream extends InputStream
+    {
+
+        private final File file;
+        private FileInputStream in = null;
+
+        public LazyOpenFileInputStream(File file)
+        {
+            this.file = file;
+        }
+
+        @Override
+        public int read() throws IOException
+        {
+            if(in == null)
+            {
+                in = new FileInputStream(file);
+            }
+
+            return in.read();
+        }
+
+        @Override
+        public void close() throws IOException
+        {
+            if(in != null)
+                in.close();
+        }
+
+
+
+    }
 }
