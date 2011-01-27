@@ -213,7 +213,8 @@ public class Iti41
 
             reportEntry.setMimeType(TEXT_DESCRIPTOR.getMimeType());
 
-            reportEntry.setUniqueId(study.getStudyUid());
+            //reportEntry.setUniqueId(study.getStudyUid());
+            reportEntry.setUniqueId(UIDUtils.createUID());
         }
 
 
