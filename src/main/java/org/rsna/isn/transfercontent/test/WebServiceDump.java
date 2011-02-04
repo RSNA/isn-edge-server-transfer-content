@@ -23,11 +23,13 @@
  */
 package org.rsna.isn.transfercontent.test;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import org.apache.commons.io.IOUtils;
+import org.rsna.isn.util.Environment;
 
 /**
  *
@@ -40,14 +42,19 @@ public class WebServiceDump
 	 */
 	public static void main(String[] args) throws Exception
 	{
-		ServerSocket server = new ServerSocket(80);
+                Environment.init("transfer");
+
+		ServerSocket server = new ServerSocket(8888);
 
 		System.out.println("Started listening...");
-
 		Socket s = server.accept();
+
+                System.out.println("Received connection");
 		InputStream input = s.getInputStream();
 
-		FileOutputStream output = new FileOutputStream("D:\\dump.txt");
+                File tmpDir = Environment.getTmpDir();
+                File dump = new File(tmpDir, "dump.txt");
+		FileOutputStream output = new FileOutputStream(dump);
 
 		long bytes = IOUtils.copy(input, output);
 
