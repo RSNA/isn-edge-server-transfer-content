@@ -252,7 +252,6 @@ public class Iti41
 
 
 
-
         //
         // Add entries for images
         //

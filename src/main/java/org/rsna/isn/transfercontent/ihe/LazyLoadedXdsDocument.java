@@ -75,6 +75,7 @@ public class LazyLoadedXdsDocument extends XDSDocument
     {
 
         private final File file;
+
         private FileInputStream in = null;
 
         public LazyOpenFileInputStream(File file)
@@ -83,9 +84,31 @@ public class LazyLoadedXdsDocument extends XDSDocument
         }
 
         @Override
+        public int read(byte[] b, int off, int len) throws IOException
+        {
+            if (in == null)
+            {
+                in = new FileInputStream(file);
+            }
+
+            return in.read(b, off, len);
+        }
+
+        @Override
+        public int read(byte[] b) throws IOException
+        {
+            if (in == null)
+            {
+                in = new FileInputStream(file);
+            }
+
+            return in.read(b);
+        }
+
+        @Override
         public int read() throws IOException
         {
-            if(in == null)
+            if (in == null)
             {
                 in = new FileInputStream(file);
             }
@@ -94,13 +117,80 @@ public class LazyLoadedXdsDocument extends XDSDocument
         }
 
         @Override
-        public void close() throws IOException
+        public int available() throws IOException
         {
-            if(in != null)
-                in.close();
+            if (in == null)
+            {
+                in = new FileInputStream(file);
+            }
+
+            return in.available();
         }
 
+        @Override
+        public boolean markSupported()
+        {
+            try
+            {
+                if (in == null)
+                {
+                    in = new FileInputStream(file);
+                }
 
+                return in.markSupported();
+            }
+            catch (IOException ex)
+            {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        @Override
+        public synchronized void mark(int readlimit)
+        {
+            try
+            {
+                if (in == null)
+                {
+                    in = new FileInputStream(file);
+                }
+
+                in.mark(readlimit);
+            }
+            catch (IOException ex)
+            {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        @Override
+        public synchronized void reset() throws IOException
+        {
+            if (in == null)
+            {
+                in = new FileInputStream(file);
+            }
+
+            in.reset();
+        }
+
+        @Override
+        public long skip(long n) throws IOException
+        {
+            if (in == null)
+            {
+                in = new FileInputStream(file);
+            }
+
+            return in.skip(n);
+        }
+
+        @Override
+        public void close() throws IOException
+        {
+            if (in != null)
+                in.close();
+        }
 
     }
 }
