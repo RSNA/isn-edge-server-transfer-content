@@ -24,6 +24,7 @@
 package org.rsna.isn.transfercontent;
 
 import org.apache.log4j.Logger;
+import org.rsna.isn.transfercontent.ihe.Iti41;
 import org.rsna.isn.util.Environment;
 
 /**
@@ -45,6 +46,8 @@ public class App
 	public static void main(String[] args) throws Exception
 	{
 		Environment.init("transfer");
+
+                Iti41.init();
 
 
 		Monitor monitor = new Monitor();

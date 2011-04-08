@@ -29,17 +29,22 @@ import java.io.InputStream;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import org.apache.axis2.client.Options;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
 import org.apache.log4j.Logger;
 import org.dcm4che2.data.UID;
 import org.dcm4che2.util.UIDUtils;
+import org.eclipse.emf.common.util.EList;
 import org.openhealthtools.ihe.atna.auditor.XDSAuditor;
 import org.openhealthtools.ihe.common.hl7v2.CX;
 import org.openhealthtools.ihe.common.hl7v2.Hl7v2Factory;
 import org.openhealthtools.ihe.common.hl7v2.SourcePatientInfoType;
 import org.openhealthtools.ihe.common.hl7v2.XCN;
+import org.openhealthtools.ihe.common.hl7v2.XON;
 import org.openhealthtools.ihe.common.hl7v2.XPN;
+import org.openhealthtools.ihe.common.ws.IHESOAP12Sender;
 import org.openhealthtools.ihe.utils.IHEException;
 import org.openhealthtools.ihe.xds.document.DocumentDescriptor;
 import org.openhealthtools.ihe.xds.document.XDSDocument;
@@ -82,8 +87,6 @@ public class Iti41
 
     private static final Logger logger = Logger.getLogger(Iti41.class);
 
-    private static final String sourceId;
-
     private static final MetadataFactory xdsFactory = MetadataFactory.eINSTANCE;
 
     private static final Hl7v2Factory hl7Factory = Hl7v2Factory.eINSTANCE;
@@ -96,7 +99,11 @@ public class Iti41
     private static final DocumentDescriptor TEXT_DESCRIPTOR =
             new DocumentDescriptor("TEXT", "text/plain");
 
-    private static final URI endpoint;
+    private static String sourceId;
+
+    private static URI endpoint;
+
+    private static long timeout;
 
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 
@@ -106,52 +113,59 @@ public class Iti41
 
     private final Job job;
 
-    static
+    public static void init() throws Exception
     {
-        try
-        {
-            ConfigurationDao dao = new ConfigurationDao();
+        ConfigurationDao dao = new ConfigurationDao();
 
-            sourceId = dao.getConfiguration("iti41-source-id");
-            if (StringUtils.isBlank(sourceId))
-                throw new ExceptionInInitializerError("iti41-source-id is blank");
+        sourceId = dao.getConfiguration("iti41-source-id");
+        if (StringUtils.isBlank(sourceId))
+            throw new ExceptionInInitializerError("iti41-source-id is blank");
 
-            String uri = dao.getConfiguration("iti41-endpoint-uri");
-            if (StringUtils.isBlank(uri))
-                throw new ExceptionInInitializerError("iti41-endpoint-uri");
-            endpoint = new URI(uri);
+        logger.info("Source id set to: " + sourceId);
 
 
-            XDSAuditor.getAuditor().getConfig().setAuditorEnabled(false);
-
-            //
-            // Load Axis 2 configuration (there has got be a better way)
-            //
-            Class cls = Iti41.class;
-            String pkg = cls.getPackage().getName().replace('.', '/');
-            String path = "/" + pkg + "/axis2.xml";
-            InputStream in = cls.getResourceAsStream(path);
 
 
-            File tmpDir = Environment.getTmpDir();
-            File axis2Xml = new File(tmpDir, "axis2.xml");
-            FileOutputStream out = new FileOutputStream(axis2Xml);
-            IOUtils.copy(in, out);
-            in.close();
-            out.close();
+        String uri = dao.getConfiguration("iti41-endpoint-uri");
+        if (StringUtils.isBlank(uri))
+            throw new ExceptionInInitializerError("iti41-endpoint-uri");
+        endpoint = new URI(uri);
 
-            System.setProperty("axis2.xml", axis2Xml.getCanonicalPath());
+        logger.info("Endpoint URI set to: " + endpoint);
 
-            File soapDir = new File(tmpDir, "soap");
-            soapDir.mkdirs();
-            System.setProperty("ihe.soap.tmpdir", soapDir.getCanonicalPath());
 
-            System.setProperty("use.http.chunking", "true");
-        }
-        catch (Exception ex)
-        {
-            throw new ExceptionInInitializerError(ex);
-        }
+        String t = dao.getConfiguration("iti41-socket-timeout");
+        timeout = NumberUtils.toLong(t, 120) * 1000;
+
+        logger.info("Timeout set to: " + timeout + " ms");
+
+
+
+        XDSAuditor.getAuditor().getConfig().setAuditorEnabled(false);
+
+        //
+        // Load Axis 2 configuration (there has got be a better way)
+        //
+        Class cls = Iti41.class;
+        String pkg = cls.getPackage().getName().replace('.', '/');
+        String path = "/" + pkg + "/axis2.xml";
+        InputStream in = cls.getResourceAsStream(path);
+
+
+        File tmpDir = Environment.getTmpDir();
+        File axis2Xml = new File(tmpDir, "axis2.xml");
+        FileOutputStream out = new FileOutputStream(axis2Xml);
+        IOUtils.copy(in, out);
+        in.close();
+        out.close();
+
+        System.setProperty("axis2.xml", axis2Xml.getCanonicalPath());
+
+        File soapDir = new File(tmpDir, "soap");
+        soapDir.mkdirs();
+        System.setProperty("ihe.soap.tmpdir", soapDir.getCanonicalPath());
+
+        System.setProperty("use.http.chunking", "true");
     }
 
     /**
@@ -235,8 +249,8 @@ public class Iti41
 
         CodedMetadataType kosFmt = xdsFactory.createCodedMetadataType();
         kosFmt.setCode(UID.KeyObjectSelectionDocumentStorage);
-        kosFmt.setDisplayName(inStr("DICOM"));
-        kosFmt.setSchemeName("DCM");
+        kosFmt.setDisplayName(inStr(UID.KeyObjectSelectionDocumentStorage));
+        kosFmt.setSchemeName(DICOM_UID_REG_UID);
         kosFmt.setSchemeUUID(DICOM_UID_REG_UID);
         kosEntry.setFormatCode(kosFmt);
 
@@ -260,16 +274,17 @@ public class Iti41
             for (DicomObject object : series.getObjects().values())
             {
                 File dcmFile = object.getFile();
-                
+
                 XDSDocument dcmDoc = new LazyLoadedXdsDocument(DocumentDescriptor.DICOM, dcmFile);
                 String dcmUuid = tx.addDocument(dcmDoc);
                 DocumentEntryType dcmEntry = tx.getDocumentEntry(dcmUuid);
                 initDocEntry(dcmEntry);
 
                 CodedMetadataType dcmFmt = xdsFactory.createCodedMetadataType();
-                dcmFmt.setCode(object.getSopClassUid());
-                dcmFmt.setDisplayName(inStr("DICOM"));
-                dcmFmt.setSchemeName("DCM");
+                String sopClass = object.getSopClassUid();
+                dcmFmt.setCode(sopClass);
+                dcmFmt.setDisplayName(inStr(sopClass));
+                dcmFmt.setSchemeName(DICOM_UID_REG_UID);
                 dcmFmt.setSchemeUUID(DICOM_UID_REG_UID);
                 dcmEntry.setFormatCode(dcmFmt);
 
@@ -313,6 +328,11 @@ public class Iti41
 
 
         B_Source reg = new B_Source(endpoint);
+        IHESOAP12Sender sender = (IHESOAP12Sender) reg.getSenderClient().getSender();
+
+        Options options = sender.getAxisServiceClient().getOptions();
+        options.setTimeOutInMilliSeconds(timeout);
+
         XDSResponseType resp = reg.submit(tx);
 
         XDSStatusType status = resp.getStatus();
@@ -333,8 +353,15 @@ public class Iti41
         if (legalAuthenticator != null)
         {
             AuthorType author = xdsFactory.createAuthorType();
-
             author.setAuthorPerson(legalAuthenticator);
+
+
+
+            XON institution= hl7Factory.eINSTANCE.createXON();
+            institution.setOrganizationName("RSNA ISN");
+
+            EList institutions = author.getAuthorInstitution();
+            institutions.add(institution);
 
 
             return author;
@@ -348,24 +375,28 @@ public class Iti41
 
     private XCN getLegalAuthenticator()
     {
-        Author signer = exam.getSigner();
+        Author signer = null; //exam.getSigner();
         if (signer != null)
         {
             XCN legalAuthenticator = hl7Factory.createXCN();
 
-            //legalAuthenticator.setFamilyName(signer.getLastName());
-            //legalAuthenticator.setGivenName(signer.getFirstName());
-            //legalAuthenticator.setIdNumber(signer.getId());
-
-            legalAuthenticator.setFamilyName("RSNA-ISN");
-            legalAuthenticator.setGivenName("RSNA-ISN");
-            legalAuthenticator.setIdNumber("RSNA-ISN");
+            legalAuthenticator.setFamilyName(signer.getLastName());
+            legalAuthenticator.setGivenName(signer.getFirstName());
+            legalAuthenticator.setIdNumber(signer.getId());
+            legalAuthenticator.setAssigningAuthorityUniversalIdType("ISO");
 
             return legalAuthenticator;
         }
         else
         {
-            return null;
+            XCN legalAuthenticator = hl7Factory.createXCN();
+
+            legalAuthenticator.setFamilyName("RSNA ISN");
+            legalAuthenticator.setGivenName("RSNA ISN");
+            legalAuthenticator.setIdNumber("RSNA ISN");
+            legalAuthenticator.setAssigningAuthorityUniversalIdType("ISO");
+
+            return legalAuthenticator;
         }
     }
 
@@ -397,7 +428,7 @@ public class Iti41
         CodedMetadataType classCode = xdsFactory.createCodedMetadataType();
         classCode.setCode("Imaging Exam");
         classCode.setDisplayName(inStr("Imaging Exam"));
-        classCode.setSchemeName("RSNA-ISN");
+        classCode.setSchemeName("RSNA ISN");
 
         return classCode;
     }
@@ -406,7 +437,7 @@ public class Iti41
     {
         CodedMetadataType confidentialityCode = xdsFactory.createCodedMetadataType();
         confidentialityCode.setCode("GRANT");
-        confidentialityCode.setSchemeName("RSNA-ISN");
+        confidentialityCode.setSchemeName("RSNA ISN");
 
         return confidentialityCode;
     }
@@ -469,6 +500,7 @@ public class Iti41
         docEntry.setPatientId(getRsnaId());
         docEntry.setPracticeSettingCode(getPracticeSettingCode());
         docEntry.setServiceStartTime(getGmt(study.getStudyDateTime()));
+        docEntry.setServiceStopTime(getGmt(study.getStudyDateTime()));
         docEntry.setSourcePatientId(getRsnaId());
         docEntry.setSourcePatientInfo(getSrcPatInfo());
         //docEntry.setTitle(inStr(study.getStudyDescription()));
