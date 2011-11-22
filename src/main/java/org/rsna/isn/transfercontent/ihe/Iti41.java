@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import org.apache.axis2.client.Options;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -57,6 +58,8 @@ import org.openhealthtools.ihe.xds.metadata.InternationalStringType;
 import org.openhealthtools.ihe.xds.metadata.LocalizedStringType;
 import org.openhealthtools.ihe.xds.metadata.MetadataFactory;
 import org.openhealthtools.ihe.xds.metadata.SubmissionSetType;
+import org.openhealthtools.ihe.xds.response.XDSErrorListType;
+import org.openhealthtools.ihe.xds.response.XDSErrorType;
 import org.openhealthtools.ihe.xds.response.XDSResponseType;
 import org.openhealthtools.ihe.xds.response.XDSStatusType;
 import org.openhealthtools.ihe.xds.source.B_Source;
@@ -84,440 +87,453 @@ import org.rsna.isn.util.Environment;
  */
 public class Iti41
 {
+	private static final Logger logger = Logger.getLogger(Iti41.class);
 
-    private static final Logger logger = Logger.getLogger(Iti41.class);
+	private static final MetadataFactory xdsFactory = MetadataFactory.eINSTANCE;
 
-    private static final MetadataFactory xdsFactory = MetadataFactory.eINSTANCE;
+	private static final Hl7v2Factory hl7Factory = Hl7v2Factory.eINSTANCE;
 
-    private static final Hl7v2Factory hl7Factory = Hl7v2Factory.eINSTANCE;
+	private static final String DICOM_UID_REG_UID = "1.2.840.10008.2.6.1";
 
-    private static final String DICOM_UID_REG_UID = "1.2.840.10008.2.6.1";
+	private static final DocumentDescriptor KOS_DESCRIPTOR =
+			new DocumentDescriptor("KOS", "application/dicom-kos");
 
-    private static final DocumentDescriptor KOS_DESCRIPTOR =
-            new DocumentDescriptor("KOS", "application/dicom-kos");
+	private static final DocumentDescriptor TEXT_DESCRIPTOR =
+			new DocumentDescriptor("TEXT", "text/plain");
 
-    private static final DocumentDescriptor TEXT_DESCRIPTOR =
-            new DocumentDescriptor("TEXT", "text/plain");
+	private static String sourceId;
 
-    private static String sourceId;
+	private static URI endpoint;
 
-    private static URI endpoint;
+	private static long timeout;
 
-    private static long timeout;
+	private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 
-    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+	private final DicomStudy study;
 
-    private final DicomStudy study;
+	private final Exam exam;
 
-    private final Exam exam;
+	private final Job job;
 
-    private final Job job;
+	public static void init() throws Exception
+	{
+		ConfigurationDao dao = new ConfigurationDao();
 
-    public static void init() throws Exception
-    {
-        ConfigurationDao dao = new ConfigurationDao();
+		sourceId = dao.getConfiguration("iti41-source-id");
+		if (StringUtils.isBlank(sourceId))
+			throw new ExceptionInInitializerError("iti41-source-id is blank");
 
-        sourceId = dao.getConfiguration("iti41-source-id");
-        if (StringUtils.isBlank(sourceId))
-            throw new ExceptionInInitializerError("iti41-source-id is blank");
+		logger.info("Source id set to: " + sourceId);
 
-        logger.info("Source id set to: " + sourceId);
 
 
 
+		String uri = dao.getConfiguration("iti41-endpoint-uri");
+		if (StringUtils.isBlank(uri))
+			throw new ExceptionInInitializerError("iti41-endpoint-uri");
+		endpoint = new URI(uri);
 
-        String uri = dao.getConfiguration("iti41-endpoint-uri");
-        if (StringUtils.isBlank(uri))
-            throw new ExceptionInInitializerError("iti41-endpoint-uri");
-        endpoint = new URI(uri);
+		logger.info("Endpoint URI set to: " + endpoint);
 
-        logger.info("Endpoint URI set to: " + endpoint);
 
+		String t = dao.getConfiguration("iti41-socket-timeout");
+		timeout = NumberUtils.toLong(t, 120) * 1000;
 
-        String t = dao.getConfiguration("iti41-socket-timeout");
-        timeout = NumberUtils.toLong(t, 120) * 1000;
+		logger.info("Timeout set to: " + timeout + " ms");
 
-        logger.info("Timeout set to: " + timeout + " ms");
 
 
+		XDSAuditor.getAuditor().getConfig().setAuditorEnabled(false);
 
-        XDSAuditor.getAuditor().getConfig().setAuditorEnabled(false);
+		//
+		// Load Axis 2 configuration (there has got be a better way)
+		//
+		Class cls = Iti41.class;
+		String pkg = cls.getPackage().getName().replace('.', '/');
+		String path = "/" + pkg + "/axis2.xml";
+		InputStream in = cls.getResourceAsStream(path);
 
-        //
-        // Load Axis 2 configuration (there has got be a better way)
-        //
-        Class cls = Iti41.class;
-        String pkg = cls.getPackage().getName().replace('.', '/');
-        String path = "/" + pkg + "/axis2.xml";
-        InputStream in = cls.getResourceAsStream(path);
 
+		File tmpDir = Environment.getTmpDir();
+		File axis2Xml = new File(tmpDir, "axis2.xml");
+		FileOutputStream out = new FileOutputStream(axis2Xml);
+		IOUtils.copy(in, out);
+		in.close();
+		out.close();
 
-        File tmpDir = Environment.getTmpDir();
-        File axis2Xml = new File(tmpDir, "axis2.xml");
-        FileOutputStream out = new FileOutputStream(axis2Xml);
-        IOUtils.copy(in, out);
-        in.close();
-        out.close();
+		System.setProperty("axis2.xml", axis2Xml.getCanonicalPath());
 
-        System.setProperty("axis2.xml", axis2Xml.getCanonicalPath());
+		File soapDir = new File(tmpDir, "soap");
+		soapDir.mkdirs();
+		System.setProperty("ihe.soap.tmpdir", soapDir.getCanonicalPath());
 
-        File soapDir = new File(tmpDir, "soap");
-        soapDir.mkdirs();
-        System.setProperty("ihe.soap.tmpdir", soapDir.getCanonicalPath());
+		System.setProperty("use.http.chunking", "true");
+	}
 
-        System.setProperty("use.http.chunking", "true");
-    }
+	/**
+	 * Create an instance of this class.
+	 *
+	 * @param study The DICOM study that will comprise the submission set. It
+	 * is assumed the files for this study are stored at:
+	 * ${rsna.root}/tmp/${jobId}/studies/${studyUid}
+	 *
+	 * @throws IllegalArgumentException If the patient associated with this
+	 * study does not have an RSNA ID.
+	 */
+	public Iti41(DicomStudy study)
+	{
+		this.study = study;
 
-    /**
-     * Create an instance of this class.
-     *
-     * @param study The DICOM study that will comprise the submission set. It
-     * is assumed the files for this study are stored at:
-     * ${rsna.root}/tmp/${jobId}/studies/${studyUid}
-     *
-     * @throws IllegalArgumentException If the patient associated with this
-     * study does not have an RSNA ID.
-     */
-    public Iti41(DicomStudy study)
-    {
-        this.study = study;
+		this.job = study.getJob();
 
-        this.job = study.getJob();
+		this.exam = job.getExam();
+	}
 
-        this.exam = job.getExam();
-    }
+	/**
+	 * Perform the actual submission to the document repository.
+	 *
+	 * @param debugFile An optional file to which to dump the submission
+	 * set metadata
+	 * @throws Exception If there was an error processing the submission set.
+	 */
+	public void submitDocuments(File debugFile) throws Exception
+	{
+		SubmitTransactionData tx = new SubmitTransactionData();
 
-    /**
-     * Perform the actual submission to the document repository.
-     *
-     * @param debugFile An optional file to which to dump the submission
-     * set metadata
-     * @throws Exception If there was an error processing the submission set.
-     */
-    public void submitDocuments(File debugFile) throws Exception
-    {
-        SubmitTransactionData tx = new SubmitTransactionData();
 
 
+		//
+		// Add entry for report
+		//
 
-        //
-        // Add entry for report
-        //
+		String report = exam.getReport();
+		if (report != null)
+		{
+			XDSDocument reportDoc =
+					new XDSDocumentFromByteArray(TEXT_DESCRIPTOR, report.getBytes("UTF-8"));
 
-        String report = exam.getReport();
-        if (report != null)
-        {
-            XDSDocument reportDoc =
-                    new XDSDocumentFromByteArray(TEXT_DESCRIPTOR, report.getBytes("UTF-8"));
+			String reportUuid = tx.addDocument(reportDoc);
+			DocumentEntryType reportEntry = tx.getDocumentEntry(reportUuid);
+			initDocEntry(reportEntry);
 
-            String reportUuid = tx.addDocument(reportDoc);
-            DocumentEntryType reportEntry = tx.getDocumentEntry(reportUuid);
-            initDocEntry(reportEntry);
 
+			CodedMetadataType reportFmt = xdsFactory.createCodedMetadataType();
+			reportFmt.setCode("TEXT");
+			reportFmt.setDisplayName(inStr("TEXT"));
+			reportFmt.setSchemeName("RSNA-ISN");
+			reportEntry.setFormatCode(reportFmt);
 
-            CodedMetadataType reportFmt = xdsFactory.createCodedMetadataType();
-            reportFmt.setCode("TEXT");
-            reportFmt.setDisplayName(inStr("TEXT"));
-            reportFmt.setSchemeName("RSNA-ISN");
-            reportEntry.setFormatCode(reportFmt);
+			//CodedMetadataType reportEventCode = xdsFactory.createCodedMetadataType();
+			//reportEventCode.setCode("REPORT");
+			//reportEntry.getEventCode().add(reportEventCode);
 
-            //CodedMetadataType reportEventCode = xdsFactory.createCodedMetadataType();
-            //reportEventCode.setCode("REPORT");
-            //reportEntry.getEventCode().add(reportEventCode);
+			reportEntry.setMimeType(TEXT_DESCRIPTOR.getMimeType());
 
-            reportEntry.setMimeType(TEXT_DESCRIPTOR.getMimeType());
+			//reportEntry.setUniqueId(study.getStudyUid());
+			reportEntry.setUniqueId(UIDUtils.createUID());
+		}
 
-            //reportEntry.setUniqueId(study.getStudyUid());
-            reportEntry.setUniqueId(UIDUtils.createUID());
-        }
 
 
 
 
 
+		//
+		// Add entry for KOS
+		//
 
-        //
-        // Add entry for KOS
-        //
+		DicomKos kos = study.getKos();
+		File kosFile = kos.getFile();
+		XDSDocument kosDoc = new XDSDocumentFromFile(KOS_DESCRIPTOR, kosFile); //new LazyLoadedXdsDocument(KOS_DESCRIPTOR, kosFile);
+		String kosUuid = tx.addDocument(kosDoc);
+		DocumentEntryType kosEntry = tx.getDocumentEntry(kosUuid);
+		initDocEntry(kosEntry);
 
-        DicomKos kos = study.getKos();
-        File kosFile = kos.getFile();
-        XDSDocument kosDoc = new XDSDocumentFromFile(KOS_DESCRIPTOR, kosFile); //new LazyLoadedXdsDocument(KOS_DESCRIPTOR, kosFile);
-        String kosUuid = tx.addDocument(kosDoc);
-        DocumentEntryType kosEntry = tx.getDocumentEntry(kosUuid);
-        initDocEntry(kosEntry);
+		CodedMetadataType kosFmt = xdsFactory.createCodedMetadataType();
+		kosFmt.setCode(UID.KeyObjectSelectionDocumentStorage);
+		kosFmt.setDisplayName(inStr(UID.KeyObjectSelectionDocumentStorage));
+		kosFmt.setSchemeName(DICOM_UID_REG_UID);
+		kosFmt.setSchemeUUID(DICOM_UID_REG_UID);
+		kosEntry.setFormatCode(kosFmt);
 
-        CodedMetadataType kosFmt = xdsFactory.createCodedMetadataType();
-        kosFmt.setCode(UID.KeyObjectSelectionDocumentStorage);
-        kosFmt.setDisplayName(inStr(UID.KeyObjectSelectionDocumentStorage));
-        kosFmt.setSchemeName(DICOM_UID_REG_UID);
-        kosFmt.setSchemeUUID(DICOM_UID_REG_UID);
-        kosEntry.setFormatCode(kosFmt);
+		//CodedMetadataType kosEventCode = xdsFactory.createCodedMetadataType();
+		//kosEventCode.setCode("KO");
+		//kosEventCode.setSchemeName("DCM");
+		//kosEventCode.setSchemeUUID(DICOM_UID_REG_UID);
+		//kosEntry.getEventCode().add(kosEventCode);
 
-        //CodedMetadataType kosEventCode = xdsFactory.createCodedMetadataType();
-        //kosEventCode.setCode("KO");
-        //kosEventCode.setSchemeName("DCM");
-        //kosEventCode.setSchemeUUID(DICOM_UID_REG_UID);
-        //kosEntry.getEventCode().add(kosEventCode);
+		kosEntry.setMimeType(KOS_DESCRIPTOR.getMimeType());
 
-        kosEntry.setMimeType(KOS_DESCRIPTOR.getMimeType());
+		kosEntry.setUniqueId(kos.getSopInstanceUid());
 
-        kosEntry.setUniqueId(kos.getSopInstanceUid());
 
 
+		//
+		// Add entries for images
+		//
+		for (DicomSeries series : study.getSeries().values())
+		{
+			for (DicomObject object : series.getObjects().values())
+			{
+				File dcmFile = object.getFile();
 
-        //
-        // Add entries for images
-        //
-        for (DicomSeries series : study.getSeries().values())
-        {
-            for (DicomObject object : series.getObjects().values())
-            {
-                File dcmFile = object.getFile();
+				XDSDocument dcmDoc = new LazyLoadedXdsDocument(DocumentDescriptor.DICOM, dcmFile);
+				String dcmUuid = tx.addDocument(dcmDoc);
+				DocumentEntryType dcmEntry = tx.getDocumentEntry(dcmUuid);
+				initDocEntry(dcmEntry);
 
-                XDSDocument dcmDoc = new LazyLoadedXdsDocument(DocumentDescriptor.DICOM, dcmFile);
-                String dcmUuid = tx.addDocument(dcmDoc);
-                DocumentEntryType dcmEntry = tx.getDocumentEntry(dcmUuid);
-                initDocEntry(dcmEntry);
+				CodedMetadataType dcmFmt = xdsFactory.createCodedMetadataType();
+				String sopClass = object.getSopClassUid();
+				dcmFmt.setCode(sopClass);
+				dcmFmt.setDisplayName(inStr(sopClass));
+				dcmFmt.setSchemeName(DICOM_UID_REG_UID);
+				dcmFmt.setSchemeUUID(DICOM_UID_REG_UID);
+				dcmEntry.setFormatCode(dcmFmt);
 
-                CodedMetadataType dcmFmt = xdsFactory.createCodedMetadataType();
-                String sopClass = object.getSopClassUid();
-                dcmFmt.setCode(sopClass);
-                dcmFmt.setDisplayName(inStr(sopClass));
-                dcmFmt.setSchemeName(DICOM_UID_REG_UID);
-                dcmFmt.setSchemeUUID(DICOM_UID_REG_UID);
-                dcmEntry.setFormatCode(dcmFmt);
+				//CodedMetadataType dcmEventCode = xdsFactory.createCodedMetadataType();
+				//dcmEventCode.setCode(series.getModality());
+				//dcmEventCode.setSchemeName("DCM");
+				//dcmEventCode.setSchemeUUID(DICOM_UID_REG_UID);
+				//dcmEntry.getEventCode().add(dcmEventCode);
 
-                //CodedMetadataType dcmEventCode = xdsFactory.createCodedMetadataType();
-                //dcmEventCode.setCode(series.getModality());
-                //dcmEventCode.setSchemeName("DCM");
-                //dcmEventCode.setSchemeUUID(DICOM_UID_REG_UID);
-                //dcmEntry.getEventCode().add(dcmEventCode);
+				dcmEntry.setMimeType(DocumentDescriptor.DICOM.getMimeType());
 
-                dcmEntry.setMimeType(DocumentDescriptor.DICOM.getMimeType());
+				dcmEntry.setUniqueId(object.getSopInstanceUid());
+			}
+		}
 
-                dcmEntry.setUniqueId(object.getSopInstanceUid());
-            }
-        }
 
 
 
+		//
+		// Initialize submission set metadata
+		//
+		SubmissionSetType subSet = tx.getSubmissionSet();
+		AuthorType author = getAuthor();
+		if (author != null)
+			subSet.setAuthor(author);
 
-        //
-        // Initialize submission set metadata
-        //
-        SubmissionSetType subSet = tx.getSubmissionSet();
-        AuthorType author = getAuthor();
-        if (author != null)
-            subSet.setAuthor(author);
+		CodedMetadataType contentType = xdsFactory.createCodedMetadataType();
+		contentType.setCode("Imaging Exam");
+		contentType.setDisplayName(inStr("Imaging Exam"));
+		contentType.setSchemeName("RSNA-ISN");
+		subSet.setContentTypeCode(contentType);
 
-        CodedMetadataType contentType = xdsFactory.createCodedMetadataType();
-        contentType.setCode("Imaging Exam");
-        contentType.setDisplayName(inStr("Imaging Exam"));
-        contentType.setSchemeName("RSNA-ISN");
-        subSet.setContentTypeCode(contentType);
+		subSet.setPatientId(getRsnaId());
+		subSet.setSourceId(sourceId);
+		subSet.setSubmissionTime(getGmt(new Date()));
+		//subSet.setTitle(inStr(study.getStudyDescription()));
+		subSet.setUniqueId(UIDUtils.createUID());
 
-        subSet.setPatientId(getRsnaId());
-        subSet.setSourceId(sourceId);
-        subSet.setSubmissionTime(getGmt(new Date()));
-        //subSet.setTitle(inStr(study.getStudyDescription()));
-        subSet.setUniqueId(UIDUtils.createUID());
+		if (debugFile != null)
+			tx.saveMetadataToFile(debugFile.getCanonicalPath());
 
-        if (debugFile != null)
-            tx.saveMetadataToFile(debugFile.getCanonicalPath());
 
+		B_Source reg = new B_Source(endpoint);
+		IHESOAP12Sender sender = (IHESOAP12Sender) reg.getSenderClient().getSender();
 
-        B_Source reg = new B_Source(endpoint);
-        IHESOAP12Sender sender = (IHESOAP12Sender) reg.getSenderClient().getSender();
+		Options options = sender.getAxisServiceClient().getOptions();
+		options.setTimeOutInMilliSeconds(timeout);
 
-        Options options = sender.getAxisServiceClient().getOptions();
-        options.setTimeOutInMilliSeconds(timeout);
+		XDSResponseType resp = reg.submit(tx);
 
-        XDSResponseType resp = reg.submit(tx);
+		XDSStatusType status = resp.getStatus();
+		int code = status.getValue();
 
-        XDSStatusType status = resp.getStatus();
-        int code = status.getValue();
+		if (code != XDSStatusType.SUCCESS)
+		{
+			XDSErrorListType errors = resp.getErrorList();
+			List<XDSErrorType> errorList = errors.getError();
 
-        if (code != XDSStatusType.SUCCESS)
-        {
-            throw new IHEException("Unable to submit documents for study "
-                    + study.getStudyUid()
-                    + ". Remote site returned error: " + status.getLiteral());
+			String chMsg = status.getLiteral();
+			for (XDSErrorType error : errorList)
+			{
+				chMsg = error.getCodeContext();
+				chMsg = StringUtils.removeStart(chMsg,
+						"com.axonmed.xds.registry.exceptions.RegistryException: ");
+				
+				break;
+			}
 
-        }
-    }
 
-    private AuthorType getAuthor()
-    {
-        XCN legalAuthenticator = getLegalAuthenticator();
-        if (legalAuthenticator != null)
-        {
-            AuthorType author = xdsFactory.createAuthorType();
-            author.setAuthorPerson(legalAuthenticator);
+			throw new ClearinghouseException("Submission of study "
+					+ study.getStudyUid()
+					+ " failed. Clearinghouse returned error: " + chMsg);
 
+		}
+	}
 
+	private AuthorType getAuthor()
+	{
+		XCN legalAuthenticator = getLegalAuthenticator();
+		if (legalAuthenticator != null)
+		{
+			AuthorType author = xdsFactory.createAuthorType();
+			author.setAuthorPerson(legalAuthenticator);
 
-            XON institution= hl7Factory.eINSTANCE.createXON();
-            institution.setOrganizationName("RSNA ISN");
 
-            EList institutions = author.getAuthorInstitution();
-            institutions.add(institution);
 
+			XON institution = hl7Factory.eINSTANCE.createXON();
+			institution.setOrganizationName("RSNA ISN");
 
-            return author;
-        }
-        else
-        {
-            return null;
-        }
+			EList institutions = author.getAuthorInstitution();
+			institutions.add(institution);
 
-    }
 
-    private XCN getLegalAuthenticator()
-    {
-        Author signer = null; //exam.getSigner();
-        if (signer != null)
-        {
-            XCN legalAuthenticator = hl7Factory.createXCN();
+			return author;
+		}
+		else
+		{
+			return null;
+		}
 
-            legalAuthenticator.setFamilyName(signer.getLastName());
-            legalAuthenticator.setGivenName(signer.getFirstName());
-            legalAuthenticator.setIdNumber(signer.getId());
-            legalAuthenticator.setAssigningAuthorityUniversalIdType("ISO");
+	}
+
+	private XCN getLegalAuthenticator()
+	{
+		Author signer = null; //exam.getSigner();
+		if (signer != null)
+		{
+			XCN legalAuthenticator = hl7Factory.createXCN();
 
-            return legalAuthenticator;
-        }
-        else
-        {
-            XCN legalAuthenticator = hl7Factory.createXCN();
-
-            legalAuthenticator.setFamilyName("RSNA ISN");
-            legalAuthenticator.setGivenName("RSNA ISN");
-            legalAuthenticator.setIdNumber("RSNA ISN");
-            legalAuthenticator.setAssigningAuthorityUniversalIdType("ISO");
-
-            return legalAuthenticator;
-        }
-    }
-
-    private CX getRsnaId()
-    {
-        CX rsnaId = hl7Factory.createCX();
-        rsnaId.setIdNumber(job.getSingleUsePatientId());
-        rsnaId.setAssigningAuthorityUniversalId(Constants.RSNA_UNIVERSAL_ID);
-        rsnaId.setAssigningAuthorityUniversalIdType(Constants.RSNA_UNIVERSAL_ID_TYPE);
-
-        return rsnaId;
-    }
-
-    private SourcePatientInfoType getSrcPatInfo()
-    {
-        XPN rsnaPatName = hl7Factory.createXPN();
-        rsnaPatName.setFamilyName("RSNA ISN");
-        rsnaPatName.setGivenName("RSNA ISN");
-
-        SourcePatientInfoType srcPatInfo = hl7Factory.createSourcePatientInfoType();
-        srcPatInfo.getPatientIdentifier().add(getRsnaId());
-        srcPatInfo.getPatientName().add(rsnaPatName);
-
-        return srcPatInfo;
-    }
-
-    private CodedMetadataType getClassCode()
-    {
-        CodedMetadataType classCode = xdsFactory.createCodedMetadataType();
-        classCode.setCode("Imaging Exam");
-        classCode.setDisplayName(inStr("Imaging Exam"));
-        classCode.setSchemeName("RSNA ISN");
-
-        return classCode;
-    }
-
-    private CodedMetadataType getConfidentialityCode()
-    {
-        CodedMetadataType confidentialityCode = xdsFactory.createCodedMetadataType();
-        confidentialityCode.setCode("GRANT");
-        confidentialityCode.setSchemeName("RSNA ISN");
-
-        return confidentialityCode;
-    }
-
-    private String getGmt(Date date)
-    {
-        return sdf.format(date);
-    }
-
-    private CodedMetadataType getHealthcareFacilityTypeCode()
-    {
-        CodedMetadataType healthcareFacilityTypeCode = xdsFactory.createCodedMetadataType();
-        healthcareFacilityTypeCode.setCode("GENERAL HOSPITAL");
-        healthcareFacilityTypeCode.setDisplayName(inStr("GENERAL HOSPITAL"));
-        healthcareFacilityTypeCode.setSchemeName("RSNA-ISN");
-
-        return healthcareFacilityTypeCode;
-    }
-
-    private CodedMetadataType getPracticeSettingCode()
-    {
-        CodedMetadataType practiceSettingCode = xdsFactory.createCodedMetadataType();
-        practiceSettingCode.setCode("Radiology");
-        practiceSettingCode.setDisplayName(inStr("Radiology"));
-        practiceSettingCode.setSchemeName("RSNA-ISN");
-
-        return practiceSettingCode;
-    }
-
-    private CodedMetadataType getTypeCode()
-    {
-        CodedMetadataType typeCode = xdsFactory.createCodedMetadataType();
-        //typeCode.setCode(study.getStudyDescription());
-        //typeCode.setDisplayName(inStr(study.getStudyDescription()));
-        //typeCode.setSchemeName("RSNA-ISN");
-
-        typeCode.setCode("18748-4");
-        typeCode.setDisplayName(inStr("Diagnostic Imaging Report"));
-        typeCode.setSchemeName("LOINC");
-
-        return typeCode;
-    }
-
-    private void initDocEntry(DocumentEntryType docEntry)
-    {
-        AuthorType author = getAuthor();
-        if (author != null)
-            docEntry.setAuthor(author);
-
-        docEntry.setClassCode(getClassCode());
-        docEntry.getConfidentialityCode().add(getConfidentialityCode());
-        docEntry.setCreationTime(getGmt(new Date()));
-        docEntry.setHealthCareFacilityTypeCode(getHealthcareFacilityTypeCode());
-        docEntry.setLanguageCode("en-US");
-
-        //XCN legalAuthenticator = getLegalAuthenticator();
-        //if (legalAuthenticator != null)
-        //    docEntry.setLegalAuthenticator(legalAuthenticator);
-
-        docEntry.setPatientId(getRsnaId());
-        docEntry.setPracticeSettingCode(getPracticeSettingCode());
-        docEntry.setServiceStartTime(getGmt(study.getStudyDateTime()));
-        docEntry.setServiceStopTime(getGmt(study.getStudyDateTime()));
-        docEntry.setSourcePatientId(getRsnaId());
-        docEntry.setSourcePatientInfo(getSrcPatInfo());
-        //docEntry.setTitle(inStr(study.getStudyDescription()));
-        docEntry.setTypeCode(getTypeCode());
-    }
-
-    private static InternationalStringType inStr(String value)
-    {
-        LocalizedStringType lzStr = xdsFactory.createLocalizedStringType();
-        lzStr.setCharset("UTF-8");
-        lzStr.setLang("en-US");
-        lzStr.setValue(value);
-
-        InternationalStringType inStr = xdsFactory.createInternationalStringType();
-        inStr.getLocalizedString().add(lzStr);
-
-        return inStr;
-    }
+			legalAuthenticator.setFamilyName(signer.getLastName());
+			legalAuthenticator.setGivenName(signer.getFirstName());
+			legalAuthenticator.setIdNumber(signer.getId());
+			legalAuthenticator.setAssigningAuthorityUniversalIdType("ISO");
+
+			return legalAuthenticator;
+		}
+		else
+		{
+			XCN legalAuthenticator = hl7Factory.createXCN();
+
+			legalAuthenticator.setFamilyName("RSNA ISN");
+			legalAuthenticator.setGivenName("RSNA ISN");
+			legalAuthenticator.setIdNumber("RSNA ISN");
+			legalAuthenticator.setAssigningAuthorityUniversalIdType("ISO");
+
+			return legalAuthenticator;
+		}
+	}
+
+	private CX getRsnaId()
+	{
+		CX rsnaId = hl7Factory.createCX();
+		rsnaId.setIdNumber(job.getSingleUsePatientId());
+		rsnaId.setAssigningAuthorityUniversalId(Constants.RSNA_UNIVERSAL_ID);
+		rsnaId.setAssigningAuthorityUniversalIdType(Constants.RSNA_UNIVERSAL_ID_TYPE);
+
+		return rsnaId;
+	}
+
+	private SourcePatientInfoType getSrcPatInfo()
+	{
+		XPN rsnaPatName = hl7Factory.createXPN();
+		rsnaPatName.setFamilyName("RSNA ISN");
+		rsnaPatName.setGivenName("RSNA ISN");
+
+		SourcePatientInfoType srcPatInfo = hl7Factory.createSourcePatientInfoType();
+		srcPatInfo.getPatientIdentifier().add(getRsnaId());
+		srcPatInfo.getPatientName().add(rsnaPatName);
+
+		return srcPatInfo;
+	}
+
+	private CodedMetadataType getClassCode()
+	{
+		CodedMetadataType classCode = xdsFactory.createCodedMetadataType();
+		classCode.setCode("Imaging Exam");
+		classCode.setDisplayName(inStr("Imaging Exam"));
+		classCode.setSchemeName("RSNA ISN");
+
+		return classCode;
+	}
+
+	private CodedMetadataType getConfidentialityCode()
+	{
+		CodedMetadataType confidentialityCode = xdsFactory.createCodedMetadataType();
+		confidentialityCode.setCode("GRANT");
+		confidentialityCode.setSchemeName("RSNA ISN");
+
+		return confidentialityCode;
+	}
+
+	private String getGmt(Date date)
+	{
+		return sdf.format(date);
+	}
+
+	private CodedMetadataType getHealthcareFacilityTypeCode()
+	{
+		CodedMetadataType healthcareFacilityTypeCode = xdsFactory.createCodedMetadataType();
+		healthcareFacilityTypeCode.setCode("GENERAL HOSPITAL");
+		healthcareFacilityTypeCode.setDisplayName(inStr("GENERAL HOSPITAL"));
+		healthcareFacilityTypeCode.setSchemeName("RSNA-ISN");
+
+		return healthcareFacilityTypeCode;
+	}
+
+	private CodedMetadataType getPracticeSettingCode()
+	{
+		CodedMetadataType practiceSettingCode = xdsFactory.createCodedMetadataType();
+		practiceSettingCode.setCode("Radiology");
+		practiceSettingCode.setDisplayName(inStr("Radiology"));
+		practiceSettingCode.setSchemeName("RSNA-ISN");
+
+		return practiceSettingCode;
+	}
+
+	private CodedMetadataType getTypeCode()
+	{
+		CodedMetadataType typeCode = xdsFactory.createCodedMetadataType();
+		//typeCode.setCode(study.getStudyDescription());
+		//typeCode.setDisplayName(inStr(study.getStudyDescription()));
+		//typeCode.setSchemeName("RSNA-ISN");
+
+		typeCode.setCode("18748-4");
+		typeCode.setDisplayName(inStr("Diagnostic Imaging Report"));
+		typeCode.setSchemeName("LOINC");
+
+		return typeCode;
+	}
+
+	private void initDocEntry(DocumentEntryType docEntry)
+	{
+		AuthorType author = getAuthor();
+		if (author != null)
+			docEntry.setAuthor(author);
+
+		docEntry.setClassCode(getClassCode());
+		docEntry.getConfidentialityCode().add(getConfidentialityCode());
+		docEntry.setCreationTime(getGmt(new Date()));
+		docEntry.setHealthCareFacilityTypeCode(getHealthcareFacilityTypeCode());
+		docEntry.setLanguageCode("en-US");
+
+		//XCN legalAuthenticator = getLegalAuthenticator();
+		//if (legalAuthenticator != null)
+		//    docEntry.setLegalAuthenticator(legalAuthenticator);
+
+		docEntry.setPatientId(getRsnaId());
+		docEntry.setPracticeSettingCode(getPracticeSettingCode());
+		docEntry.setServiceStartTime(getGmt(study.getStudyDateTime()));
+		docEntry.setServiceStopTime(getGmt(study.getStudyDateTime()));
+		docEntry.setSourcePatientId(getRsnaId());
+		docEntry.setSourcePatientInfo(getSrcPatInfo());
+		//docEntry.setTitle(inStr(study.getStudyDescription()));
+		docEntry.setTypeCode(getTypeCode());
+	}
+
+	private static InternationalStringType inStr(String value)
+	{
+		LocalizedStringType lzStr = xdsFactory.createLocalizedStringType();
+		lzStr.setCharset("UTF-8");
+		lzStr.setLang("en-US");
+		lzStr.setValue(value);
+
+		InternationalStringType inStr = xdsFactory.createInternationalStringType();
+		inStr.getLocalizedString().add(lzStr);
+
+		return inStr;
+	}
 
 }

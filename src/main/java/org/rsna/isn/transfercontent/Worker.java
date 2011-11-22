@@ -35,6 +35,7 @@ import org.rsna.isn.domain.DicomStudy;
 import org.rsna.isn.domain.Exam;
 import org.rsna.isn.domain.Job;
 import org.rsna.isn.transfercontent.dcm.KosGenerator;
+import org.rsna.isn.transfercontent.ihe.ClearinghouseException;
 import org.rsna.isn.transfercontent.ihe.Iti41;
 import org.rsna.isn.transfercontent.ihe.Iti8;
 import org.rsna.isn.util.Environment;
@@ -50,7 +51,7 @@ class Worker extends Thread
 	private static final Logger logger = Logger.getLogger(Worker.class);
 
 	private static final File dcmDir = Environment.getDcmDir();
-	
+
 	private static final File tmpDir = Environment.getTmpDir();
 
 	private final Job job;
@@ -111,11 +112,23 @@ class Worker extends Thread
 					dao.updateStatus(job, Job.RSNA_STARTED_PATIENT_REGISTRATION);
 
 					logger.info("Started patient registration for " + job);
-					
+
 					Iti8 iti8 = new Iti8(job);
 					iti8.registerPatient();
 
 					logger.info("Completed patient registration for " + job);
+				}
+				catch (ClearinghouseException ex)
+				{
+					String chMsg = ex.getMessage();
+					String errorMsg = "Unable to register patient for "
+							+ job + ". " + chMsg;
+
+					logger.error(errorMsg);
+
+					dao.updateStatus(job, Job.RSNA_FAILED_TO_REGISTER_PATIENT, chMsg);
+
+					return;
 				}
 				catch (IHEException ex)
 				{
@@ -137,7 +150,7 @@ class Worker extends Thread
 
 					File jobDir = new File(tmpDir, Integer.toString(job.getJobId()));
 					File studiesDir = new File(jobDir, "studies");
-					for(DicomStudy study : studies.values())
+					for (DicomStudy study : studies.values())
 					{
 						File studyDir = new File(studiesDir, study.getStudyUid());
 						File debugFile = new File(studyDir, "submission-set.xml");
@@ -147,6 +160,18 @@ class Worker extends Thread
 					}
 
 					logger.info("Completed document submission for " + job);
+				}
+				catch (ClearinghouseException ex)
+				{
+					String chMsg = ex.getMessage();
+					String errorMsg = "Unable to submit documents for "
+							+ job + ". " + chMsg;
+
+					logger.error(errorMsg);
+
+					dao.updateStatus(job, Job.RSNA_FAILED_TO_SUBMIT_DOCUMENTS, chMsg);
+
+					return;
 				}
 				catch (Exception ex)
 				{

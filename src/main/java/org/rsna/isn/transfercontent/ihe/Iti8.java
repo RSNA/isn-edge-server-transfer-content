@@ -48,115 +48,117 @@ import org.rsna.isn.util.Constants;
  */
 public class Iti8
 {
+	private static final Logger logger = Logger.getLogger(Iti8.class);
 
-    private static final Logger logger = Logger.getLogger(Iti8.class);
+	private static final URI pix;
 
-    private static final URI pix;
+	private static final URI registry;
 
-    private static final URI registry;
+	private static final MessageManager manager = MessageManager.getFactory();
 
-    private static final MessageManager manager = MessageManager.getFactory();
+	private final Job job;
 
-    private final Job job;
+	static
+	{
+		try
+		{
+			ConfigurationDao dao = new ConfigurationDao();
 
-    static
-    {
-        try
-        {
-            ConfigurationDao dao = new ConfigurationDao();
+			String pixUri = dao.getConfiguration("iti8-pix-uri");
+			if (StringUtils.isBlank(pixUri))
+				throw new ExceptionInInitializerError("iti8-pix-uri is blank");
 
-            String pixUri = dao.getConfiguration("iti8-pix-uri");
-            if (StringUtils.isBlank(pixUri))
-                throw new ExceptionInInitializerError("iti8-pix-uri is blank");
-
-            pix = new URI(pixUri);
-
+			pix = new URI(pixUri);
 
 
 
 
-            String regUri = dao.getConfiguration("iti8-reg-uri");
-            if (StringUtils.isBlank(regUri))
-                throw new ExceptionInInitializerError("iti8-reg-uri is blank");
 
-            registry = new URI(regUri);
+			String regUri = dao.getConfiguration("iti8-reg-uri");
+			if (StringUtils.isBlank(regUri))
+				throw new ExceptionInInitializerError("iti8-reg-uri is blank");
 
-            PIXSourceAuditor.getAuditor().getConfig().setAuditorEnabled(false);
-        }
-        catch (Exception ex)
-        {
-            throw new ExceptionInInitializerError(ex);
-        }
-    }
+			registry = new URI(regUri);
 
-    /**
-     * Create an instance of this class.
-     *
-     * @param exam An exam instance
-     * @throws IllegalArgumentException If there is no RSNA id associated with
-     * the exam
-     */
-    public Iti8(Job job)
-    {
-        this.job = job;
-    }
+			PIXSourceAuditor.getAuditor().getConfig().setAuditorEnabled(false);
+		}
+		catch (Exception ex)
+		{
+			throw new ExceptionInInitializerError(ex);
+		}
+	}
 
-    /**
-     * Register the patient with the PIX and registry.
-     *
-     * @throws IHEException If there was an uncaught exception while attempting
-     * to register the patient.
-     */
-    public void registerPatient() throws IHEException
-    {
-        sendIti8Message(pix);
+	/**
+	 * Create an instance of this class.
+	 *
+	 * @param exam An exam instance
+	 * @throws IllegalArgumentException If there is no RSNA id associated with
+	 * the exam
+	 */
+	public Iti8(Job job)
+	{
+		this.job = job;
+	}
 
-        sendIti8Message(registry);
-    }
+	/**
+	 * Register the patient with the PIX and registry.
+	 *
+	 * @throws IHEException If there was an uncaught exception while attempting
+	 * to register the patient.
+	 */
+	public void registerPatient() throws IHEException, ClearinghouseException
+	{
+		sendIti8Message(pix, "PIX");
 
-    private void sendIti8Message(URI uri) throws IHEException
-    {
-        PixSource feed = new PixSource();
+		sendIti8Message(registry, "registry");
+	}
 
-        MLLPDestination mllp = new MLLPDestination(uri);
-        MLLPDestination.setUseATNA(false);
-        feed.setMLLPDestination(mllp);
+	private void sendIti8Message(URI uri, String remoteType) throws IHEException, ClearinghouseException
+	{
+		PixSource feed = new PixSource();
 
-
-        PixMsgRegisterOutpatient msg = new PixMsgRegisterOutpatient(manager,
-                null, job.getSingleUsePatientId(),
-                null, Constants.RSNA_UNIVERSAL_ID,
-                Constants.RSNA_UNIVERSAL_ID_TYPE);
-        msg.addOptionalPatientNameFamilyName("RSNA ISN");
-        msg.addOptionalPatientNameGivenName("RSNA ISN");
+		MLLPDestination mllp = new MLLPDestination(uri);
+		MLLPDestination.setUseATNA(false);
+		feed.setMLLPDestination(mllp);
 
 
-        PixSourceResponse rsp = feed.sendRegistration(msg, false);
+		PixMsgRegisterOutpatient msg = new PixMsgRegisterOutpatient(manager,
+				null, job.getSingleUsePatientId(),
+				null, Constants.RSNA_UNIVERSAL_ID,
+				Constants.RSNA_UNIVERSAL_ID_TYPE);
+		msg.addOptionalPatientNameFamilyName("RSNA ISN");
+		msg.addOptionalPatientNameGivenName("RSNA ISN");
 
-        String code = rsp.getResponseAckCode(false);
-        String error = rsp.getField("MSA-3");
-        String remote = uri.getHost() + ":" + uri.getPort();
 
-        if ("AE".equals(code))
-        {
-            throw new IHEException("Remote application " + remote
-                    + " responded with error: " + error);
-        }
-        else if ("AR".equals(code))
-        {
+		PixSourceResponse rsp = feed.sendRegistration(msg, false);
 
-            if (error.startsWith("PIX-10000:"))
-            {
-                logger.info("Remote application " + remote
-                        + " reports patient id " + job.getSingleUsePatientId()
-                        + " has already been registered.");
-            }
-            else
-            {
-                throw new IHEException("Remote application " + remote
-                        + " rejected message with reason: " + error);
-            }
-        }
-    }
+		String code = rsp.getResponseAckCode(false);
+		String error = rsp.getField("MSA-3");
+
+		if ("AE".equals(code))
+		{
+			String chMsg = "Clearinghouse " + remoteType
+					+ " failed to process ITI-8 message.  Error returned was: " + error;
+
+			throw new ClearinghouseException(chMsg);
+		}
+		else if ("AR".equals(code))
+		{
+
+			if (error.startsWith("PIX-10000:"))
+			{
+				logger.info("Clearinghouse " + remoteType
+						+ " reports patient id " + job.getSingleUsePatientId()
+						+ " has already been registered.");
+			}
+			else
+			{
+				String chMsg = "Clearinghouse " + remoteType
+						+ " rejected ITI-8 message. Error returned was: " + error;
+
+				throw new ClearinghouseException(chMsg);
+			}
+		}
+	}
 
 }
