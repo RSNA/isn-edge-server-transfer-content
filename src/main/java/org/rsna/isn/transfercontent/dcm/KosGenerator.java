@@ -93,7 +93,8 @@ public class KosGenerator
 			Map<String, DicomStudy> studies = new LinkedHashMap();
 
 			File dcmDir = Environment.getDcmDir();
-			File patDir = new File(dcmDir, exam.getMrn());
+			File jobDcmDir = new File(dcmDir, Integer.toString(job.getJobId()));
+			File patDir = new File(jobDcmDir, exam.getMrn());
 			File examDir = new File(patDir, exam.getAccNum());
 			if (!examDir.isDirectory())
 				throw new IOException(examDir + " is not a directory");

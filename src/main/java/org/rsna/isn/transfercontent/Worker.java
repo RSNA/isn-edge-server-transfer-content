@@ -185,14 +185,9 @@ class Worker extends Thread
 				File jobDir = new File(tmpDir, Integer.toString(job.getJobId()));
 				FileUtils.deleteDirectory(jobDir);
 
-
-				String mrn = exam.getMrn();
-				String accNum = exam.getAccNum();
-
-				File patDir = new File(dcmDir, mrn);
-				File examDir = new File(patDir, accNum);
-				FileUtils.deleteDirectory(examDir);
-				patDir.delete();
+				
+				File jobDcmDir = new File(dcmDir, Integer.toString(job.getJobId()));
+				FileUtils.deleteDirectory(jobDcmDir);
 
 				dao.updateStatus(job, Job.RSNA_COMPLETED_TRANSFER_TO_CLEARINGHOUSE);
 
