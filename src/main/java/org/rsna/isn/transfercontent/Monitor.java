@@ -24,6 +24,7 @@
 package org.rsna.isn.transfercontent;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.Set;
 import org.apache.log4j.Logger;
 import org.rsna.isn.dao.JobDao;
@@ -65,6 +66,31 @@ class Monitor extends Thread
 
 
 		JobDao dao = new JobDao();
+		try
+		{
+			Set<Job> interruptedJobs = new HashSet();
+			interruptedJobs.addAll(dao.getJobsByStatus(Job.RSNA_STARTED_TRANSFER_CONTENT));
+			interruptedJobs.addAll(dao.getJobsByStatus(Job.RSNA_STARTED_KOS_GENERATION));
+			interruptedJobs.addAll(dao.getJobsByStatus(Job.RSNA_STARTED_PATIENT_REGISTRATION));
+			interruptedJobs.addAll(dao.getJobsByStatus(Job.RSNA_STARTED_DOCUMENT_SUBMISSION));
+
+			for (Job job : interruptedJobs)
+			{				
+				dao.updateStatus(job, Job.RSNA_WAITING_FOR_TRANSFER_CONTENT, "Retrying job");
+				
+				logger.info("Retrying " + job);
+			}
+		}
+		catch (Exception ex)
+		{
+			logger.fatal("Uncaught exception while restarting interrupted jobs.", ex);
+
+			return;
+		}
+
+
+
+
 		keepRunning = true;
 		while (keepRunning)
 		{

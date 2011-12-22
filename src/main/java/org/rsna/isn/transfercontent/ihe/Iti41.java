@@ -46,11 +46,9 @@ import org.openhealthtools.ihe.common.hl7v2.XCN;
 import org.openhealthtools.ihe.common.hl7v2.XON;
 import org.openhealthtools.ihe.common.hl7v2.XPN;
 import org.openhealthtools.ihe.common.ws.IHESOAP12Sender;
-import org.openhealthtools.ihe.utils.IHEException;
 import org.openhealthtools.ihe.xds.document.DocumentDescriptor;
 import org.openhealthtools.ihe.xds.document.XDSDocument;
 import org.openhealthtools.ihe.xds.document.XDSDocumentFromByteArray;
-import org.openhealthtools.ihe.xds.document.XDSDocumentFromFile;
 import org.openhealthtools.ihe.xds.metadata.AuthorType;
 import org.openhealthtools.ihe.xds.metadata.CodedMetadataType;
 import org.openhealthtools.ihe.xds.metadata.DocumentEntryType;
@@ -58,6 +56,7 @@ import org.openhealthtools.ihe.xds.metadata.InternationalStringType;
 import org.openhealthtools.ihe.xds.metadata.LocalizedStringType;
 import org.openhealthtools.ihe.xds.metadata.MetadataFactory;
 import org.openhealthtools.ihe.xds.metadata.SubmissionSetType;
+import org.openhealthtools.ihe.xds.metadata.transform.ByteArrayProvideAndRegisterDocumentSetTransformer;
 import org.openhealthtools.ihe.xds.response.XDSErrorListType;
 import org.openhealthtools.ihe.xds.response.XDSErrorType;
 import org.openhealthtools.ihe.xds.response.XDSResponseType;
@@ -207,7 +206,7 @@ public class Iti41
 		//
 
 		String report = exam.getReport();
-		if (report != null)
+		if (StringUtils.isNotBlank(report))
 		{
 			XDSDocument reportDoc =
 					new XDSDocumentFromByteArray(TEXT_DESCRIPTOR, report.getBytes("UTF-8"));
@@ -232,6 +231,10 @@ public class Iti41
 			//reportEntry.setUniqueId(study.getStudyUid());
 			reportEntry.setUniqueId(UIDUtils.createUID());
 		}
+		else
+		{
+			logger.warn("No report associated with " + exam + " from " + job);
+		}
 
 
 
@@ -244,7 +247,7 @@ public class Iti41
 
 		DicomKos kos = study.getKos();
 		File kosFile = kos.getFile();
-		XDSDocument kosDoc = new XDSDocumentFromFile(KOS_DESCRIPTOR, kosFile); //new LazyLoadedXdsDocument(KOS_DESCRIPTOR, kosFile);
+		XDSDocument kosDoc = new LazyLoadedXdsDocument(KOS_DESCRIPTOR, kosFile);
 		String kosUuid = tx.addDocument(kosDoc);
 		DocumentEntryType kosEntry = tx.getDocumentEntry(kosUuid);
 		initDocEntry(kosEntry);
@@ -326,8 +329,26 @@ public class Iti41
 		subSet.setUniqueId(UIDUtils.createUID());
 
 		if (debugFile != null)
-			tx.saveMetadataToFile(debugFile.getCanonicalPath());
+		{
+			// tx.saveMetadataToFile does not close the FOS, which means you
+			// can't delete the file when you're done processing the job
+			// tx.saveMetadataToFile(debugFile.getCanonicalPath());
 
+			ByteArrayProvideAndRegisterDocumentSetTransformer setTransformer =
+					new ByteArrayProvideAndRegisterDocumentSetTransformer();
+			setTransformer.transform(tx.getMetadata());
+			
+			FileOutputStream fos = null;
+			try
+			{
+				fos = new FileOutputStream(debugFile);
+				fos.write(setTransformer.getMetadataByteArray());
+			}
+			finally
+			{
+				IOUtils.closeQuietly(fos);
+			}
+		}
 
 		B_Source reg = new B_Source(endpoint);
 		IHESOAP12Sender sender = (IHESOAP12Sender) reg.getSenderClient().getSender();
@@ -351,7 +372,7 @@ public class Iti41
 				chMsg = error.getCodeContext();
 				chMsg = StringUtils.removeStart(chMsg,
 						"com.axonmed.xds.registry.exceptions.RegistryException: ");
-				
+
 				break;
 			}
 
@@ -373,7 +394,7 @@ public class Iti41
 
 
 
-			XON institution = hl7Factory.eINSTANCE.createXON();
+			XON institution = Hl7v2Factory.eINSTANCE.createXON();
 			institution.setOrganizationName("RSNA ISN");
 
 			EList institutions = author.getAuthorInstitution();

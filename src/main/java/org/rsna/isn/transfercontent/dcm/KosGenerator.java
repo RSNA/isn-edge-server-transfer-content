@@ -346,7 +346,6 @@ public class KosGenerator
 
 
 			out.writeDataset(kos, txuid);
-
 			out.close();
 			out = null;
 
