@@ -37,7 +37,7 @@ import org.openhealthtools.ihe.xds.document.XDSDocument;
  * when an instance is instantiated.
  *
  * @author Wyatt Tellis
- * @version 1.2.0
+ * @version 2.1.0
  *
  */
 public class LazyLoadedXdsDocument extends XDSDocument

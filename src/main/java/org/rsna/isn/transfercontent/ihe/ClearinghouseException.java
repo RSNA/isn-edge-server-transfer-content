@@ -28,7 +28,7 @@ package org.rsna.isn.transfercontent.ihe;
  * to an ITI transaction. 
  *
  * @author Wyatt Tellis
- * @version 2.0.0
+ * @version 2.1.0
  *
  */
 public class ClearinghouseException extends Exception

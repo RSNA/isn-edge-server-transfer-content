@@ -44,7 +44,7 @@ import org.rsna.isn.util.Constants;
  * properties must be set in the configurations table of the RSNA database.
  *
  * @author Wyatt Tellis
- * @version 1.2.0
+ * @version 2.1.0
  */
 public class Iti8
 {

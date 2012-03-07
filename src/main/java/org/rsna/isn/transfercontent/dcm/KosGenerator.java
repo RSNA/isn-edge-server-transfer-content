@@ -52,7 +52,7 @@ import org.rsna.isn.util.Environment;
  * Utility class for generating KOS manifests.
  *
  * @author Wyatt Tellis
- * @version 1.2.0
+ * @version 2.1.0
  *
  */
 public class KosGenerator
