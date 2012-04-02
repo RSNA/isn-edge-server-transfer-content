@@ -116,97 +116,97 @@
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>pix-source</artifactId>
-			<version>1.1.0</version>
+			<version>1.2.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>mllp</artifactId>
-			<version>1.1.0</version>
+			<version>1.2.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>hl7v2</artifactId>
-			<version>1.1.0</version>
+			<version>1.2.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>hl7v2-client</artifactId>
-			<version>1.1.0</version>
+			<version>1.2.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>utils</artifactId>
-			<version>1.1.0</version>
+			<version>1.2.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>atna-auditor</artifactId>
-			<version>1.1.0</version>
+			<version>1.2.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>atna-nodeauth</artifactId>
-			<version>1.1.0</version>
+			<version>1.2.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>common-ebxml3</artifactId>
-			<version>1.1.0</version>
+			<version>1.2.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>common-ws-axis2</artifactId>
-			<version>1.1.0</version>
+			<version>1.2.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>atna-context</artifactId>
-			<version>1.1.0</version>
+			<version>1.2.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>xds</artifactId>
-			<version>1.1.0</version>
+			<version>1.2.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>xds-soap</artifactId>
-			<version>1.1.0</version>
+			<version>1.2.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>xds-source</artifactId>
-			<version>1.1.0</version>
+			<version>1.2.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>xds-metadata</artifactId>
-			<version>1.1.0</version>
+			<version>1.2.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>xds-metadata-extract</artifactId>
-			<version>1.1.0</version>
+			<version>1.2.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>xds-metadata-transform</artifactId>
-			<version>1.1.0</version>
+			<version>1.2.0</version>
 		</dependency>
 
 		<dependency>
