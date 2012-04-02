@@ -63,181 +63,6 @@
 					</archive>
 				</configuration>
 			</plugin>
-                        <plugin>
-                          <groupId>org.apache.maven.plugins</groupId>
-                          <artifactId>maven-dependency-plugin</artifactId>
-                          <version>2.4</version>
-                          <executions>
-                            <execution>
-                              <id>copy-dependencies</id>
-                              <phase>package</phase>
-                              <goals>
-                                <goal>copy-dependencies</goal>
-                              </goals>
-                              <configuration>
-                                <outputDirectory>${project.build.directory}/lib</outputDirectory>
-                                <artifactItems>
-                                  <artifactItem>
-                                    <groupId>org.rsna.isn</groupId>
-                                    <artifactId>core</artifactId>
-                                    <version>2.1.0</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>log4j</groupId>
-                                    <artifactId>log4j</artifactId>
-                                    <version>1.2.16</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.slf4j</groupId>
-                                    <artifactId>slf4j-log4j12</artifactId>
-                                    <version>1.6.1</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>commons-lang</groupId>
-                                    <artifactId>commons-lang</artifactId>
-                                    <version>2.4</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>commons-io</groupId>
-                                    <artifactId>commons-io</artifactId>
-                                    <version>1.4</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>dcm4che</groupId>
-                                    <artifactId>dcm4che-core</artifactId>
-                                    <version>2.0.25</version>
-                                  <artifactItem>
-                                    <groupId>org.openhealthtools.ihe</groupId>
-                                    <artifactId>pix-source</artifactId>
-                                    <version>1.1.0</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.openhealthtools.ihe</groupId>
-                                    <artifactId>mllp</artifactId>
-                                    <version>1.1.0</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.openhealthtools.ihe</groupId>
-                                    <artifactId>hl7v2</artifactId>
-                                    <version>1.1.0</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.openhealthtools.ihe</groupId>
-                                    <artifactId>hl7v2-client</artifactId>
-                                    <version>1.1.0</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.openhealthtools.ihe</groupId>
-                                    <artifactId>utils</artifactId>
-                                    <version>1.1.0</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.openhealthtools.ihe</groupId>
-                                    <artifactId>atna-auditor</artifactId>
-                                    <version>1.1.0</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.openhealthtools.ihe</groupId>
-                                    <artifactId>atna-nodeauth</artifactId>
-                                    <version>1.1.0</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.openhealthtools.ihe</groupId>
-                                    <artifactId>common-ebxml3</artifactId>
-                                    <version>1.1.0</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.openhealthtools.ihe</groupId>
-                                    <artifactId>common-ws-axis2</artifactId>
-                                    <version>1.1.0</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.openhealthtools.ihe</groupId>
-                                    <artifactId>atna-context</artifactId>
-                                    <version>1.1.0</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.openhealthtools.ihe</groupId>
-                                    <artifactId>xds</artifactId>
-                                    <version>1.1.0</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.openhealthtools.ihe</groupId>
-                                    <artifactId>xds-soap</artifactId>
-                                    <version>1.1.0</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.openhealthtools.ihe</groupId>
-                                    <artifactId>xds-source</artifactId>
-                                    <version>1.1.0</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.openhealthtools.ihe</groupId>
-                                    <artifactId>xds-metadata</artifactId>
-                                    <version>1.1.0</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.openhealthtools.ihe</groupId>
-                                    <artifactId>xds-metadata-extract</artifactId>
-                                    <version>1.1.0</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.openhealthtools.ihe</groupId>
-                                    <artifactId>xds-metadata-transform</artifactId>
-                                    <version>1.1.0</version>
-                                  </artifactItem>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.eclipse.ohf</groupId>
-                                    <artifactId>hl7v2-core</artifactId>
-                                    <version>0.2.0.200812311053</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.eclipse.ohf</groupId>
-                                    <artifactId>utilities</artifactId>
-                                    <version>0.2.0.200812311053</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.eclipse.emf</groupId>
-                                    <artifactId>ecore</artifactId>
-                                    <version>2.5.0.200906151043</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.eclipse.emf</groupId>
-                                    <artifactId>ecore-common</artifactId>
-                                    <version>2.5.0.200906151043</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.eclipse.emf</groupId>
-                                    <artifactId>ecore-xmi</artifactId>
-                                    <version>2.5.0.200906151043</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.apache.axis2</groupId>
-                                    <artifactId>axis2-kernel</artifactId>
-                                    <version>1.4.1</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.apache.axis2</groupId>
-                                    <artifactId>axis2-addressing</artifactId>
-                                    <version>1.4</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>org.apache.axis2</groupId>
-                                    <artifactId>axis2-jaxws</artifactId>
-                                    <version>1.4.1</version>
-                                  </artifactItem>
-                                  <artifactItem>
-                                    <groupId>junit</groupId>
-                                    <artifactId>junit</artifactId>
-                                    <version>3.8.1</version>
-                                    <scope>test</scope>
-                                  </artifactItem>
-                                </artifactItems>
-                              </configuration>
-                            </execution>
-                          </executions>
-                        </plugin>
 		</plugins>
 		<resources>
 			<resource>
@@ -291,97 +116,97 @@
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>pix-source</artifactId>
-			<version>1.1.0</version>
+			<version>[1.1.0]</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>mllp</artifactId>
-			<version>1.1.0</version>
+			<version>[1.1.0]</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>hl7v2</artifactId>
-			<version>1.1.0</version>
+			<version>[1.1.0]</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>hl7v2-client</artifactId>
-			<version>1.1.0</version>
+			<version>[1.1.0]</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>utils</artifactId>
-			<version>1.1.0</version>
+			<version>[1.1.0]</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>atna-auditor</artifactId>
-			<version>1.1.0</version>
+			<version>[1.1.0]</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>atna-nodeauth</artifactId>
-			<version>1.1.0</version>
+			<version>[1.1.0]</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>common-ebxml3</artifactId>
-			<version>1.1.0</version>
+			<version>[1.1.0]</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>common-ws-axis2</artifactId>
-			<version>1.1.0</version>
+			<version>[1.1.0]</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>atna-context</artifactId>
-			<version>1.1.0</version>
+			<version>[1.1.0]</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>xds</artifactId>
-			<version>1.1.0</version>
+			<version>[1.1.0]</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>xds-soap</artifactId>
-			<version>1.1.0</version>
+			<version>[1.1.0]</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>xds-source</artifactId>
-			<version>1.1.0</version>
+			<version>[1.1.0]</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>xds-metadata</artifactId>
-			<version>1.1.0</version>
+			<version>[1.1.0]</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>xds-metadata-extract</artifactId>
-			<version>1.1.0</version>
+			<version>[1.1.0]</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
 			<artifactId>xds-metadata-transform</artifactId>
-			<version>1.1.0</version>
+			<version>[1.1.0]</version>
 		</dependency>
 
 		<dependency>

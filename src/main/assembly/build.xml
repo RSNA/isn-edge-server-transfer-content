@@ -9,7 +9,7 @@
     <includeBaseDirectory>false</includeBaseDirectory>
     <dependencySets>
 	<dependencySet>
-	    <outputDirectory>ext</outputDirectory>
+	    <outputDirectory>lib</OutputDirectory>
 	    <useProjectArtifact>true</useProjectArtifact>
 	</dependencySet>
     </dependencySets>
