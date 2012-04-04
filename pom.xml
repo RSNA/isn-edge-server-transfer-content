@@ -279,7 +279,7 @@
 		<repository>
 			<id>rsna-isn-thirdparty</id>
 			<name>RSNA ISN Thirdparty Repo</name>
-			<url>http://rsna-nibib-maven-repository.mirtl.org:30261/nexus/content/repositories/thirdparty/</url>
+                        <url>https://raw.github.com/RSNA/isn-maven-repo/master/thirdparty/</url>
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
