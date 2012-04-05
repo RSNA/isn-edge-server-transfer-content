@@ -20,7 +20,7 @@
 					<encoding>${project.build.sourceEncoding}</encoding>
 				</configuration>
 			</plugin>
-	    
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
@@ -39,6 +39,7 @@
 						<manifest>
 							<addClasspath>true</addClasspath>
 							<classpathPrefix>ext/</classpathPrefix>
+
 							<mainClass>org.rsna.isn.transfercontent.App</mainClass>
 						</manifest>
 					</archive>
@@ -58,6 +59,7 @@
 						<manifest>
 							<addClasspath>true</addClasspath>
 							<classpathPrefix>ext/</classpathPrefix>
+
 							<mainClass>org.rsna.isn.transfercontent.App</mainClass>
 						</manifest>
 					</archive>
@@ -82,7 +84,7 @@
 			<artifactId>core</artifactId>
 			<version>2.1.0</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
@@ -238,7 +240,7 @@
 			<artifactId>ecore-xmi</artifactId>
 			<version>2.5.0.200906151043</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.apache.axis2</groupId>
 			<artifactId>axis2-kernel</artifactId>
@@ -256,7 +258,7 @@
 			<artifactId>axis2-jaxws</artifactId>
 			<version>1.4.1</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -279,7 +281,7 @@
 		<repository>
 			<id>rsna-isn-thirdparty</id>
 			<name>RSNA ISN Thirdparty Repo</name>
-			<url>http://rsna-nibib-maven-repository.mirtl.org:30261/nexus/content/repositories/thirdparty/</url>
+                        <url>https://raw.github.com/RSNA/isn-maven-repo/master/thirdparty/</url>
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
