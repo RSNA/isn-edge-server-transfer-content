@@ -159,7 +159,7 @@
 
 		<dependency>
 			<groupId>org.openhealthtools.ihe</groupId>
-			<artifactId>common-ebxml3</artifactId>
+			<artifactId>common-ebXML3</artifactId>
 			<version>1.2.0</version>
 		</dependency>
 
