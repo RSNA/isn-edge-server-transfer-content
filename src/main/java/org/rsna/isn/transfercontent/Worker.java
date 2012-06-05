@@ -193,7 +193,7 @@ class Worker extends Thread
 
 				logger.info("Successfully transferred content to clearinghouse for " + job);
 			}
-			catch (Exception ex)
+			catch (Throwable ex)
 			{
 				logger.error("Uncaught exception while processing job " + job, ex);
 
@@ -204,7 +204,7 @@ class Worker extends Thread
 
 
 		}
-		catch (Exception ex)
+		catch (Throwable ex)
 		{
 			logger.error("Uncaught exception while updating job " + job, ex);
 		}
