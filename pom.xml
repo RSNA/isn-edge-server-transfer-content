@@ -82,7 +82,7 @@
 		<dependency>
 			<groupId>org.rsna.isn</groupId>
 			<artifactId>core</artifactId>
-			<version>2.1.0</version>
+			<version>${project.version}</version>
 		</dependency>
 
 		<dependency>

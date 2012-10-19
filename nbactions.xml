@@ -4,7 +4,7 @@
             <actionName>run</actionName>
             <goals>
                 <goal>process-classes</goal>
-                <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.2:exec</goal>
             </goals>
             <properties>
                 <exec.classpathScope>runtime</exec.classpathScope>
@@ -16,7 +16,7 @@
             <actionName>run.single.main</actionName>
             <goals>
                 <goal>process-classes</goal>
-                <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.2:exec</goal>
             </goals>
             <properties>
                 <exec.classpathScope>${classPathScope}</exec.classpathScope>
@@ -28,7 +28,7 @@
             <actionName>debug</actionName>
             <goals>
                 <goal>process-classes</goal>
-                <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.2:exec</goal>
             </goals>
             <properties>
                 <exec.classpathScope>runtime</exec.classpathScope>
@@ -41,7 +41,7 @@
             <actionName>debug.single.main</actionName>
             <goals>
                 <goal>process-classes</goal>
-                <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.2:exec</goal>
             </goals>
             <properties>
                 <exec.classpathScope>${classPathScope}</exec.classpathScope>
@@ -55,7 +55,7 @@
             <actionName>debug</actionName>
             <goals>
                 <goal>process-classes</goal>
-                <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.2:exec</goal>
             </goals>
             <properties>
                 <exec.classpathScope>runtime</exec.classpathScope>
@@ -79,7 +79,7 @@
             <actionName>debug</actionName>
             <goals>
                 <goal>process-classes</goal>
-                <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.2:exec</goal>
             </goals>
             <properties>
                 <exec.classpathScope>runtime</exec.classpathScope>
@@ -92,7 +92,7 @@
             <actionName>profile</actionName>
             <goals>
                 <goal>process-classes</goal>
-                <goal>org.codehaus.mojo:exec-maven-plugin:1.1.1:exec</goal>
+                <goal>org.codehaus.mojo:exec-maven-plugin:1.2:exec</goal>
             </goals>
             <properties>
                 <exec.args>${profiler.args} -Drsna.root=${rsna.root} -Xmx1024m -classpath %classpath org.rsna.isn.transfercontent.App</exec.args>
