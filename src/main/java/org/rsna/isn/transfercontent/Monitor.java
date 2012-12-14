@@ -122,7 +122,7 @@ class Monitor extends Thread
 
 				break;
 			}
-			catch (Exception ex)
+			catch (Throwable ex)
 			{
 				logger.fatal("Uncaught exception while processing jobs.", ex);
 

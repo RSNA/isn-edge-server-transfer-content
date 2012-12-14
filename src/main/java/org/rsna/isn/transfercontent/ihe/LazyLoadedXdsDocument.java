@@ -23,6 +23,7 @@
  */
 package org.rsna.isn.transfercontent.ihe;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -33,8 +34,8 @@ import org.openhealthtools.ihe.xds.document.DocumentDescriptor;
 import org.openhealthtools.ihe.xds.document.XDSDocument;
 
 /**
- * This class loads the contents of an XDS document on demand instead of
- * when an instance is instantiated.
+ * This class loads the contents of an XDS document on demand instead of when an
+ * instance is instantiated.
  *
  * @author Wyatt Tellis
  * @version 2.1.0
@@ -42,154 +43,145 @@ import org.openhealthtools.ihe.xds.document.XDSDocument;
  */
 public class LazyLoadedXdsDocument extends XDSDocument
 {
+	private static final Logger logger = Logger.getLogger(LazyLoadedXdsDocument.class);
 
-    private static final Logger logger = Logger.getLogger(LazyLoadedXdsDocument.class);
+	public LazyLoadedXdsDocument(DocumentDescriptor descriptor, File file)
+	{
+		super(descriptor);
 
-    public LazyLoadedXdsDocument(DocumentDescriptor descriptor, File file)
-    {
-        super(descriptor);
+		this.file = file;
+	}
 
-        this.file = file;
-    }
+	private final File file;
 
-    private final File file;
+	/**
+	 * Get the value of file
+	 *
+	 * @return the value of file
+	 */
+	public File getFile()
+	{
+		return file;
+	}
 
-    /**
-     * Get the value of file
-     *
-     * @return the value of file
-     */
-    public File getFile()
-    {
-        return file;
-    }
+	@Override
+	public InputStream getStream()
+	{
+		return new AutoCloseInputStream(new LazyOpenFileInputStream(file));
+	}
 
-    @Override
-    public InputStream getStream()
-    {
-        return new AutoCloseInputStream(new LazyOpenFileInputStream(file));
-    }
+	private class LazyOpenFileInputStream extends InputStream
+	{
+		private final File file;
 
-    private class LazyOpenFileInputStream extends InputStream
-    {
+		private BufferedInputStream in = null;
 
-        private final File file;
+		public LazyOpenFileInputStream(File file)
+		{
+			this.file = file;
+		}
 
-        private FileInputStream in = null;
+		@Override
+		public int read(byte[] b, int off, int len) throws IOException
+		{
+			init();
 
-        public LazyOpenFileInputStream(File file)
-        {
-            this.file = file;
-        }
+			return in.read(b, off, len);
+		}
 
-        @Override
-        public int read(byte[] b, int off, int len) throws IOException
-        {
-            if (in == null)
-            {
-                in = new FileInputStream(file);
-            }
+		@Override
+		public int read(byte[] b) throws IOException
+		{
+			init();
 
-            return in.read(b, off, len);
-        }
+			return in.read(b);
+		}
 
-        @Override
-        public int read(byte[] b) throws IOException
-        {
-            if (in == null)
-            {
-                in = new FileInputStream(file);
-            }
+		@Override
+		public int read() throws IOException
+		{
+			init();
 
-            return in.read(b);
-        }
+			return in.read();
+		}
 
-        @Override
-        public int read() throws IOException
-        {
-            if (in == null)
-            {
-                in = new FileInputStream(file);
-            }
+		@Override
+		public int available() throws IOException
+		{
+			init();
 
-            return in.read();
-        }
+			return in.available();
+		}
 
-        @Override
-        public int available() throws IOException
-        {
-            if (in == null)
-            {
-                in = new FileInputStream(file);
-            }
+		@Override
+		public boolean markSupported()
+		{
+			try
+			{
+				init();
 
-            return in.available();
-        }
+				return in.markSupported();
+			}
+			catch (IOException ex)
+			{
+				throw new RuntimeException(ex);
+			}
+		}
 
-        @Override
-        public boolean markSupported()
-        {
-            try
-            {
-                if (in == null)
-                {
-                    in = new FileInputStream(file);
-                }
+		@Override
+		public synchronized void mark(int readlimit)
+		{
+			try
+			{
+				init();
 
-                return in.markSupported();
-            }
-            catch (IOException ex)
-            {
-                throw new RuntimeException(ex);
-            }
-        }
+				in.mark(readlimit);
+			}
+			catch (IOException ex)
+			{
+				throw new RuntimeException(ex);
+			}
+		}
 
-        @Override
-        public synchronized void mark(int readlimit)
-        {
-            try
-            {
-                if (in == null)
-                {
-                    in = new FileInputStream(file);
-                }
+		@Override
+		public synchronized void reset() throws IOException
+		{
+			init();
 
-                in.mark(readlimit);
-            }
-            catch (IOException ex)
-            {
-                throw new RuntimeException(ex);
-            }
-        }
+			in.reset();
+		}
 
-        @Override
-        public synchronized void reset() throws IOException
-        {
-            if (in == null)
-            {
-                in = new FileInputStream(file);
-            }
+		@Override
+		public long skip(long n) throws IOException
+		{
+			init();
 
-            in.reset();
-        }
+			return in.skip(n);
+		}
 
-        @Override
-        public long skip(long n) throws IOException
-        {
-            if (in == null)
-            {
-                in = new FileInputStream(file);
-            }
+		@Override
+		public void close() throws IOException
+		{
+			if (in != null)
+			{
+				in.close();
+			
+				in = null;
+				
+				logger.info("Completed transmission of file " + file);
+			}
+		}
 
-            return in.skip(n);
-        }
+		private void init() throws IOException
+		{
+			if (in == null)
+			{
+				FileInputStream fis = new FileInputStream(file);
+				in = new BufferedInputStream(fis);
 
-        @Override
-        public void close() throws IOException
-        {
-            if (in != null)
-                in.close();
-        }
+				logger.info("Started transmission of file " + file);
+			}
+		}
 
-    }
+	}
 }

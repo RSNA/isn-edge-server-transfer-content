@@ -26,10 +26,13 @@ package org.rsna.isn.transfercontent.dcm;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.apache.log4j.Logger;
 import org.dcm4che2.data.BasicDicomObject;
 import org.dcm4che2.data.DicomElement;
 import org.dcm4che2.data.DicomObject;
@@ -57,6 +60,8 @@ import org.rsna.isn.util.Environment;
  */
 public class KosGenerator
 {
+	private Logger logger = Logger.getLogger(KosGenerator.class);
+	
 	private final Job job;
 
 	/**
@@ -111,8 +116,11 @@ public class KosGenerator
 
 
 			StopTagInputHandler stop = new StopTagInputHandler(Tag.PixelData);
-			for (File srcFile : examDir.listFiles())
+			Iterator<File> it = FileUtils.iterateFiles(examDir, 
+					TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
+			while (it.hasNext())
 			{
+				File srcFile = it.next();
 				in = new DicomInputStream(srcFile);
 				in.setHandler(stop);
 
@@ -185,6 +193,8 @@ public class KosGenerator
 				obj.setFile(destFile);
 
 				series.getObjects().put(sopInstanceUid, obj);
+				
+				logger.info("Processed file " + srcFile + " for " + job);
 			}
 
 
