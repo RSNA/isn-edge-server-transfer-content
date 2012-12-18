@@ -26,6 +26,7 @@ package org.rsna.isn.transfercontent;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
+import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.rsna.isn.dao.JobDao;
 import org.rsna.isn.domain.Job;
@@ -54,6 +55,7 @@ class Monitor extends Thread
 	}
 
 	@Override
+	@SuppressWarnings("SleepWhileInLoop")
 	public void run()
 	{
 		File dcmDir = Environment.getDcmDir();
@@ -119,14 +121,19 @@ class Monitor extends Thread
 			catch (InterruptedException ex)
 			{
 				logger.fatal("Monitor thread interrupted", ex);
-
-				break;
+				
+				LogManager.shutdown();
+				
+				System.exit(1);
 			}
 			catch (Throwable ex)
 			{
-				logger.fatal("Uncaught exception while processing jobs.", ex);
-
-				break;
+				logger.fatal("Uncaught exception while processing jobs. "
+						+ "Monitor thread shutdown", ex);
+				
+				LogManager.shutdown();
+				
+				System.exit(1);
 			}
 		}
 
