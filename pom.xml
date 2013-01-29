@@ -5,7 +5,7 @@
 	<groupId>org.rsna.isn</groupId>
 	<artifactId>transfer-content</artifactId>
 	<packaging>jar</packaging>
-	<version>3.0.0-t3-e1</version>
+	<version>3.0.0-t3</version>
 	<name>RSNA ISN - Transfer Content Application</name>
 	<url>http://maven.apache.org</url>
 	<build>

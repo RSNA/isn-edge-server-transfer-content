@@ -147,7 +147,7 @@ public class Iti41
 		//
 		// Load Axis 2 configuration (there has got be a better way)
 		//
-		Class cls = Iti41.class;
+		Class<Iti41> cls = Iti41.class;
 		String pkg = cls.getPackage().getName().replace('.', '/');
 		String path = "/" + pkg + "/axis2.xml";
 		InputStream in = cls.getResourceAsStream(path);
@@ -384,6 +384,7 @@ public class Iti41
 		}
 	}
 
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	private AuthorType getAuthor()
 	{
 		XCN legalAuthenticator = getLegalAuthenticator();
@@ -447,6 +448,7 @@ public class Iti41
 		return rsnaId;
 	}
 
+	@SuppressWarnings("unchecked")
 	private SourcePatientInfoType getSrcPatInfo()
 	{
 		XPN rsnaPatName = hl7Factory.createXPN();
@@ -518,6 +520,7 @@ public class Iti41
 		return typeCode;
 	}
 
+	@SuppressWarnings("unchecked")
 	private void initDocEntry(DocumentEntryType docEntry)
 	{
 		AuthorType author = getAuthor();
@@ -544,6 +547,7 @@ public class Iti41
 		docEntry.setTypeCode(getTypeCode());
 	}
 
+	@SuppressWarnings("unchecked")
 	private static InternationalStringType inStr(String value)
 	{
 		LocalizedStringType lzStr = xdsFactory.createLocalizedStringType();

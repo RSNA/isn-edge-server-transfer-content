@@ -24,18 +24,22 @@
 package org.rsna.isn.transfercontent.ihe;
 
 /**
- * Exception used to indicate the clearinghouse returned an error in response
- * to an ITI transaction. 
+ * Exception used to indicate the clearinghouse returned an error in response to
+ * an ITI transaction.
  *
  * @author Wyatt Tellis
- * @version 2.1.0
+ * @since 2.1.0
+ * @version 3.0.0
  *
  */
 public class ClearinghouseException extends Exception
 {
+	private static final long serialVersionUID = 300L;
+
 	/**
-	 * Constructs an instance of <code>ClearinghouseException</code> with the specified detail message.
-	 * 
+	 * Constructs an instance of
+	 * <code>ClearinghouseException</code> with the specified detail message.
+	 *
 	 * @param msg The error message from the clearinghouse
 	 */
 	public ClearinghouseException(String msg)

@@ -35,8 +35,9 @@ public class KosTest
 {
 	/**
 	 * @param args the command line arguments
+	 * @throws Exception If there was an error generating the KOS 
 	 */
-	public static void main(String argv[]) throws Exception
+	public static void main(String args[]) throws Exception
 	{
 		Job job = new JobDao().getJobById(50);
 

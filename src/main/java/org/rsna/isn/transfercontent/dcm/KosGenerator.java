@@ -88,6 +88,7 @@ public class KosGenerator
 	 * object. 
 	 * @throws IOException If there was an error processing the DICOM files. 
 	 */
+	@SuppressWarnings("unchecked")
 	public Map<String, DicomStudy> processFiles() throws IOException
 	{
 		DicomInputStream in = null;
@@ -95,7 +96,7 @@ public class KosGenerator
 		{
 			Exam exam = job.getExam();
 
-			Map<String, DicomStudy> studies = new LinkedHashMap();
+			Map<String, DicomStudy> studies = new LinkedHashMap<String, DicomStudy>();
 
 			File dcmDir = Environment.getDcmDir();
 			File jobDcmDir = new File(dcmDir, Integer.toString(job.getJobId()));
@@ -115,7 +116,7 @@ public class KosGenerator
 				throw new IOException(studiesDir + " is not a directory.");
 
 
-			StopTagInputHandler stop = new StopTagInputHandler(Tag.PixelData);
+			StopTagInputHandler stop = new StopTagInputHandler(Tag.PixelData);			
 			Iterator<File> it = FileUtils.iterateFiles(examDir, 
 					TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
 			while (it.hasNext())

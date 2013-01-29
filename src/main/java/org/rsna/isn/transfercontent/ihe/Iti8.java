@@ -91,9 +91,7 @@ public class Iti8
 	/**
 	 * Create an instance of this class.
 	 *
-	 * @param exam An exam instance
-	 * @throws IllegalArgumentException If there is no RSNA id associated with
-	 * the exam
+	 * @param job An job instance. Not be null.  
 	 */
 	public Iti8(Job job)
 	{
@@ -105,6 +103,8 @@ public class Iti8
 	 *
 	 * @throws IHEException If there was an uncaught exception while attempting
 	 * to register the patient.
+	 * @throws ClearinghouseException  If the clearinghouse returned an error while
+	 * attempting to register the patient.
 	 */
 	public void registerPatient() throws IHEException, ClearinghouseException
 	{

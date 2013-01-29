@@ -68,6 +68,7 @@ class Worker extends Thread
 	}
 
 	@Override
+	@SuppressWarnings("UnusedAssignment")
 	public void run()
 	{
 		logger.info("Started worker thread for " + job);
@@ -79,9 +80,9 @@ class Worker extends Thread
 			{
 				//
 				// Generate KOS objects
-				//
-				Map<String, DicomStudy> studies = Collections.EMPTY_MAP;
-				try
+				//				
+				Map<String, DicomStudy> studies = 
+						Collections.<String, DicomStudy>emptyMap();				try
 				{
 					dao.updateStatus(job, Job.RSNA_STARTED_KOS_GENERATION);
 
