@@ -42,7 +42,7 @@ import org.rsna.isn.util.Environment;
 
 /**
  * Worker thread that processes jobs.
- * 
+ *
  * @author Wyatt Tellis
  * @version 2.1.0
  */
@@ -81,8 +81,10 @@ class Worker extends Thread
 				//
 				// Generate KOS objects
 				//				
-				Map<String, DicomStudy> studies = 
-						Collections.<String, DicomStudy>emptyMap();				try
+				Map<String, DicomStudy> studies =
+						Collections.<String, DicomStudy>emptyMap();
+				
+				try
 				{
 					dao.updateStatus(job, Job.RSNA_STARTED_KOS_GENERATION);
 
@@ -186,7 +188,7 @@ class Worker extends Thread
 				File jobDir = new File(tmpDir, Integer.toString(job.getJobId()));
 				FileUtils.deleteDirectory(jobDir);
 
-				
+
 				File jobDcmDir = new File(dcmDir, Integer.toString(job.getJobId()));
 				FileUtils.deleteDirectory(jobDcmDir);
 

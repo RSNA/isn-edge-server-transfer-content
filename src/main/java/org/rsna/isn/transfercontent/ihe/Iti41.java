@@ -20,6 +20,12 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
+ * 
+ * 
+ * 3.1.0
+ *      03/04/2013: Wyatt Tellis
+ *           * Added check for report status as part of "send_on_complete" feature
+ * 
  */
 package org.rsna.isn.transfercontent.ihe;
 
@@ -70,18 +76,20 @@ import org.rsna.isn.domain.DicomObject;
 import org.rsna.isn.domain.DicomSeries;
 import org.rsna.isn.domain.DicomStudy;
 import org.rsna.isn.domain.Exam;
+import static org.rsna.isn.domain.Exam.*;
 import org.rsna.isn.domain.Job;
 import org.rsna.isn.util.Constants;
 import org.rsna.isn.util.Environment;
 
 /**
  * This class implements the ITI-41 (Submit and register document set)
- * transaction.
- * Note: the "iti41-repository-unique-id", "iti41-source-id", and "iti41-endpoint-url"
- * properties must be set in the configurations table of the RSNA database.
+ * transaction. Note: the "iti41-repository-unique-id", "iti41-source-id", and
+ * "iti41-endpoint-url" properties must be set in the configurations table of
+ * the RSNA database.
  *
  * @author Wyatt Tellis
- * @version 2.1.0
+ * @version 3.1.0
+ * @since 1.0.0
  *
  */
 public class Iti41
@@ -172,8 +180,8 @@ public class Iti41
 	/**
 	 * Create an instance of this class.
 	 *
-	 * @param study The DICOM study that will comprise the submission set. It
-	 * is assumed the files for this study are stored at:
+	 * @param study The DICOM study that will comprise the submission set. It is
+	 * assumed the files for this study are stored at:
 	 * ${rsna.root}/tmp/${jobId}/studies/${studyUid}
 	 *
 	 * @throws IllegalArgumentException If the patient associated with this
@@ -191,8 +199,8 @@ public class Iti41
 	/**
 	 * Perform the actual submission to the document repository.
 	 *
-	 * @param debugFile An optional file to which to dump the submission
-	 * set metadata
+	 * @param debugFile An optional file to which to dump the submission set
+	 * metadata
 	 * @throws Exception If there was an error processing the submission set.
 	 */
 	public void submitDocuments(File debugFile) throws Exception
@@ -204,37 +212,53 @@ public class Iti41
 		//
 		// Add entry for report
 		//
-
-		String report = exam.getReport();
-		if (StringUtils.isNotBlank(report))
+		String examStatus = exam.getStatus();
+		if (FINALIZED.equals(examStatus))
 		{
-			XDSDocument reportDoc =
-					new XDSDocumentFromByteArray(TEXT_DESCRIPTOR, report.getBytes("UTF-8"));
+			String report = exam.getReport();
+			if (StringUtils.isNotBlank(report))
+			{
+				XDSDocument reportDoc =
+						new XDSDocumentFromByteArray(TEXT_DESCRIPTOR, report.getBytes("UTF-8"));
 
-			String reportUuid = tx.addDocument(reportDoc);
-			DocumentEntryType reportEntry = tx.getDocumentEntry(reportUuid);
-			initDocEntry(reportEntry);
+				String reportUuid = tx.addDocument(reportDoc);
+				DocumentEntryType reportEntry = tx.getDocumentEntry(reportUuid);
+				initDocEntry(reportEntry);
 
 
-			CodedMetadataType reportFmt = xdsFactory.createCodedMetadataType();
-			reportFmt.setCode("TEXT");
-			reportFmt.setDisplayName(inStr("TEXT"));
-			reportFmt.setSchemeName("RSNA-ISN");
-			reportEntry.setFormatCode(reportFmt);
+				CodedMetadataType reportFmt = xdsFactory.createCodedMetadataType();
+				reportFmt.setCode("TEXT");
+				reportFmt.setDisplayName(inStr("TEXT"));
+				reportFmt.setSchemeName("RSNA-ISN");
+				reportEntry.setFormatCode(reportFmt);
 
-			//CodedMetadataType reportEventCode = xdsFactory.createCodedMetadataType();
-			//reportEventCode.setCode("REPORT");
-			//reportEntry.getEventCode().add(reportEventCode);
+				//CodedMetadataType reportEventCode = xdsFactory.createCodedMetadataType();
+				//reportEventCode.setCode("REPORT");
+				//reportEntry.getEventCode().add(reportEventCode);
 
-			reportEntry.setMimeType(TEXT_DESCRIPTOR.getMimeType());
+				reportEntry.setMimeType(TEXT_DESCRIPTOR.getMimeType());
 
-			//reportEntry.setUniqueId(study.getStudyUid());
-			reportEntry.setUniqueId(UIDUtils.createUID());
+				reportEntry.setUniqueId(UIDUtils.createUID());
+			}
+			else
+			{
+				logger.warn("No report text associated with " + exam + " for " + job);
+			}
+		}
+		else if(job.isSendOnComplete())
+		{
+			logger.info("Sending " + exam + " for " + job + " without a report");
+		}
+		else if(NON_REPORTABLE.equals(examStatus))
+		{
+			logger.info("No report sent for " + exam + " for " + job 
+					+ " because the exam has a status of " + NON_REPORTABLE);
 		}
 		else
 		{
-			logger.warn("No report associated with " + exam + " from " + job);
+			throw new RuntimeException("Invalid exam status: " + examStatus);
 		}
+			
 
 
 
@@ -337,7 +361,7 @@ public class Iti41
 			ByteArrayProvideAndRegisterDocumentSetTransformer setTransformer =
 					new ByteArrayProvideAndRegisterDocumentSetTransformer();
 			setTransformer.transform(tx.getMetadata());
-			
+
 			FileOutputStream fos = null;
 			try
 			{
@@ -384,7 +408,10 @@ public class Iti41
 		}
 	}
 
-	@SuppressWarnings({"unchecked", "rawtypes"})
+	@SuppressWarnings(
+	{
+		"unchecked", "rawtypes"
+	})
 	private AuthorType getAuthor()
 	{
 		XCN legalAuthenticator = getLegalAuthenticator();
