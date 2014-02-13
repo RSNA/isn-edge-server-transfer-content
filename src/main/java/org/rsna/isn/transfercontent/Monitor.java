@@ -26,14 +26,17 @@ package org.rsna.isn.transfercontent;
 import java.io.File;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.rsna.isn.dao.ConfigurationDao;
+import org.rsna.isn.dao.EmailDao;
 import org.rsna.isn.dao.JobDao;
 import org.rsna.isn.domain.Job;
+import org.rsna.isn.util.Email;
 import org.rsna.isn.util.Environment;
 
 /**
@@ -42,7 +45,7 @@ import org.rsna.isn.util.Environment;
  * concurrent worker threads are allowed.
  *
  * @author Wyatt Tellis
- * @version 3.1.0
+ * @version 3.2.0
  * @since 1.0.0
  */
 class Monitor extends Thread
@@ -156,6 +159,16 @@ class Monitor extends Thread
 						logger.warn("Retried job #" + jobId);
 					}
 				}
+
+                //Find emails to send
+                EmailDao eDao = new EmailDao();  
+                Map<Integer, Email> emailsToSend = eDao.findEmailsToSend();
+                
+                for (Map.Entry<Integer, Email> emailQueue : emailsToSend.entrySet()) 
+                {
+                    Email email = emailQueue.getValue();                             
+                    email.send(emailQueue.getKey());
+                }
 
 				sleep(1000);
 			}
