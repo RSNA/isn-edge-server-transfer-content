@@ -25,6 +25,7 @@ package org.rsna.isn.transfercontent.dcm;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -44,6 +45,7 @@ import org.dcm4che2.io.DicomOutputStream;
 import org.dcm4che2.io.StopTagInputHandler;
 import org.dcm4che2.media.FileMetaInformation;
 import org.dcm4che2.util.UIDUtils;
+import org.rsna.isn.dao.ConfigurationDao;
 import org.rsna.isn.domain.DicomKos;
 import org.rsna.isn.domain.DicomSeries;
 import org.rsna.isn.domain.DicomStudy;
@@ -55,7 +57,7 @@ import org.rsna.isn.util.Environment;
  * Utility class for generating KOS manifests.
  *
  * @author Wyatt Tellis
- * @version 2.1.0
+ * @version 3.2.0
  *
  */
 public class KosGenerator
@@ -89,7 +91,7 @@ public class KosGenerator
 	 * @throws IOException If there was an error processing the DICOM files. 
 	 */
 	@SuppressWarnings("unchecked")
-	public Map<String, DicomStudy> processFiles() throws IOException
+	public Map<String, DicomStudy> processFiles() throws IOException, SQLException
 	{
 		DicomInputStream in = null;
 		try
@@ -98,13 +100,19 @@ public class KosGenerator
 
 			Map<String, DicomStudy> studies = new LinkedHashMap<String, DicomStudy>();
 
+                        DicomStudy study = null;
+                        File studyDir = null;
+                        int lastSeries = 0;
+                        
+                        String reportSeriesUid = UIDUtils.createUID();
+                        
 			File dcmDir = Environment.getDcmDir();
 			File jobDcmDir = new File(dcmDir, Integer.toString(job.getJobId()));
 			File patDir = new File(jobDcmDir, exam.getMrn());
 			File examDir = new File(patDir, exam.getAccNum());
 			if (!examDir.isDirectory())
 				throw new IOException(examDir + " is not a directory");
-
+                                              
 			File tmpDir = Environment.getTmpDir();
 
 			File jobDir = new File(tmpDir, Integer.toString(job.getJobId()));
@@ -144,14 +152,18 @@ public class KosGenerator
 				String sopClassUid = header.getString(Tag.SOPClassUID);
 
 
-				File studyDir = new File(studiesDir, studyUid);
+                                if (header.getInt(Tag.SeriesNumber) > lastSeries)
+                                {
+                                        lastSeries = header.getInt(Tag.SeriesNumber);
+                                }
+
+				studyDir = new File(studiesDir, studyUid);
 				File seriesDir = new File(studyDir, seriesUid);
 				File destFile = new File(seriesDir, srcFile.getName());
 				FileUtils.copyFile(srcFile, destFile);
 
 
-
-				DicomStudy study = studies.get(studyUid);
+				study = studies.get(studyUid);
 				if (study == null)
 				{
 					study = new DicomStudy();
@@ -185,7 +197,7 @@ public class KosGenerator
 
 					study.getSeries().put(seriesUid, series);
 				}
-
+                                
 				org.rsna.isn.domain.DicomObject obj = new org.rsna.isn.domain.DicomObject();
 
 				obj.setSopClassUid(sopClassUid);
@@ -198,14 +210,71 @@ public class KosGenerator
 				logger.info("Processed file " + srcFile + " for " + job);
 			}
 
+                             
+                        ConfigurationDao config = new ConfigurationDao();
+                        if (config.isAttachDicomReport() && exam.isReportAvailable())
+                        {
+                                DicomSeries reportSeries = study.getSeries().get(reportSeriesUid);
+                                if (reportSeries == null)
+                                {
+                                        File reportSeriesDir = new File(studyDir,reportSeriesUid);
+                                        reportSeriesDir.mkdir();
 
-			for (DicomStudy study : studies.values())
+                                        ReportToDicom.generate(exam, study,reportSeriesDir,reportSeriesUid,lastSeries+1);
+                                        logger.info("Generated report for " + job);
+
+                                        reportSeries = new DicomSeries();
+                                        reportSeries.setSeriesUid(reportSeriesUid);
+                                        reportSeries.setSeriesDescription("REPORT");
+                                        reportSeries.setModality("OT");
+
+                                        study.getSeries().put(reportSeriesUid, reportSeries);
+
+
+                                        Iterator<File> iter = FileUtils.iterateFiles(reportSeriesDir, 
+                                            TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
+
+                                        while (iter.hasNext())
+                                        {
+                                                File reportSrcFile = iter.next();
+                                                in = new DicomInputStream(reportSrcFile);
+                                                in.setHandler(stop);
+
+
+                                                DicomObject fmi = in.readFileMetaInformation();
+                                                if (fmi == null)
+                                                        throw new IOException(reportSrcFile + " is not a DICOM part-10 file");
+
+                                                DicomObject reportHeader = in.readDicomObject();
+
+                                                String reportStudyUid = reportHeader.getString(Tag.StudyInstanceUID);
+                                                String reportSopInstanceUid = reportHeader.getString(Tag.SOPInstanceUID);
+                                                String reportSopClassUid = reportHeader.getString(Tag.SOPClassUID);
+
+                                                String reportTransferSyntaxUid = in.getTransferSyntax().uid();
+
+                                                org.rsna.isn.domain.DicomObject obj = new org.rsna.isn.domain.DicomObject();
+
+                                                obj.setSopClassUid(reportSopClassUid);
+                                                obj.setSopInstanceUid(reportSopInstanceUid);
+                                                obj.setTransferSyntaxUid(reportTransferSyntaxUid);
+                                                obj.setFile(new File(reportSeriesDir, reportSrcFile.getName()));
+
+                                                reportSeries.getObjects().put(reportSopInstanceUid, obj);
+
+                                                logger.info("Processed dicom report " + reportSrcFile + " for " + job);
+
+                                        }
+                                }
+                        }
+                                
+			for (DicomStudy studyKos : studies.values())
 			{
-				String studyUid = study.getStudyUid();
-
-				File studyDir = new File(studiesDir, studyUid);
-
-				buildKos(studyDir, study);
+				String studyUid = studyKos.getStudyUid();
+                                          
+				File studyDirKos = new File(studiesDir, studyUid);
+                           
+				buildKos(studyDirKos, studyKos);
 			}
 
 
@@ -371,4 +440,4 @@ public class KosGenerator
 		}
 	}
 
-}
+        }
