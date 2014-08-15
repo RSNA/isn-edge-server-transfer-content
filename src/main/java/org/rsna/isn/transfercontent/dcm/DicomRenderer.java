@@ -138,8 +138,8 @@ public class DicomRenderer extends Java2DRenderer {
 
                 // Add series related information to the DICOM dataset
                 dicom.putInt(Tag.SeriesNumber, VR.IS, seriesNumber);
-                dicom.putDate(Tag.SeriesDate, VR.DA, new java.util.Date());
-                dicom.putDate(Tag.SeriesTime, VR.TM, new java.util.Date());
+                dicom.putDate(Tag.SeriesDate, VR.DA, exam.getStatusTimestamp());
+                dicom.putDate(Tag.SeriesTime, VR.TM, exam.getStatusTimestamp());
                 dicom.putString(Tag.SeriesDescription, null, "REPORT");
                 dicom.putString(Tag.Modality, VR.CS, "OT"); // secondary capture
 
