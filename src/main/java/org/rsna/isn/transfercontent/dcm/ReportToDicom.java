@@ -54,6 +54,7 @@ import org.rsna.isn.util.FormatText;
 public class ReportToDicom {
        
     private static final Logger logger = Logger.getLogger(ReportToDicom.class);
+    private static String stylesheet = "report-stylesheet.xslt";
     
     public static void generate(Exam exam, DicomStudy study,File reportSeriesDir, String reportSeriesUID,int seriesNumber)
     {
@@ -74,8 +75,18 @@ public class ReportToDicom {
                   TransformerFactory factory = TransformerFactory.newInstance();
 
                   File confDir = Environment.getConfDir();
-                  Source src = new StreamSource(new File(confDir,"report-stylesheet.xslt"));
-
+                  File xsltFile = new File(confDir, stylesheet);
+                  
+                  Source src;
+                  if (xsltFile.exists())
+                  {
+                        src = new StreamSource(xsltFile);
+                  }
+                  else
+                  {
+                        src = new StreamSource(ReportToDicom.class.getResourceAsStream(stylesheet));
+                  }
+                      
                   Transformer transformer = factory.newTransformer(src);
 
 
