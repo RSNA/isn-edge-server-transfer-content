@@ -35,8 +35,9 @@ import org.apache.log4j.Logger;
 import org.rsna.isn.dao.ConfigurationDao;
 import org.rsna.isn.dao.EmailDao;
 import org.rsna.isn.dao.JobDao;
+import org.rsna.isn.domain.Email;
 import org.rsna.isn.domain.Job;
-import org.rsna.isn.util.Email;
+import org.rsna.isn.util.EmailUtil;
 import org.rsna.isn.util.Environment;
 
 /**
@@ -160,17 +161,16 @@ class Monitor extends Thread
 					}
 				}
 
-                //Find emails to send
-                EmailDao eDao = new EmailDao();  
-                Map<Integer, Email> emailsToSend = eDao.findEmailsToSend();
-                
-                for (Map.Entry<Integer, Email> emailQueue : emailsToSend.entrySet()) 
-                {
-                    Email email = emailQueue.getValue();                             
-                    email.send(emailQueue.getKey());
-                }
+                                //Find emails to send
+                                EmailDao eDao = new EmailDao();  
+                                Set<Email> emailsToSend = eDao.findEmailsToSend();
+                                                      
+                                for (Email email : emailsToSend) 
+                                {                     
+                                    EmailUtil.sendInQueue(email);
+                                }
 
-				sleep(1000);
+                                sleep(1000);
 			}
 			catch (InterruptedException ex)
 			{
