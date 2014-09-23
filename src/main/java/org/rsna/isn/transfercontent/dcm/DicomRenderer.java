@@ -140,9 +140,10 @@ public class DicomRenderer extends Java2DRenderer {
                 dicom.putInt(Tag.SeriesNumber, VR.IS, seriesNumber);
                 dicom.putDate(Tag.SeriesDate, VR.DA, exam.getStatusTimestamp());
                 dicom.putDate(Tag.SeriesTime, VR.TM, exam.getStatusTimestamp());
-                dicom.putString(Tag.SeriesDescription, null, "REPORT");
+                dicom.putString(Tag.SeriesDescription, VR.LO, "REPORT");
                 dicom.putString(Tag.Modality, VR.CS, "OT"); // secondary capture
-
+                dicom.putString(Tag.ConversionType, VR.CS, "SYN"); // secondary capture
+                
                 // Add image related information to the DICOM dataset
                 dicom.putInt(Tag.InstanceNumber, VR.IS, pageNumber);
                 dicom.putInt(Tag.SamplesPerPixel, VR.US, samplesPerPixel);
@@ -153,6 +154,7 @@ public class DicomRenderer extends Java2DRenderer {
                 dicom.putInt(Tag.BitsStored, VR.US, bitsAllocated);
                 dicom.putInt(Tag.HighBit, VR.US, bitsAllocated - 1);
                 dicom.putInt(Tag.PixelRepresentation, VR.US, 0);
+                dicom.putString(Tag.BurnedInAnnotation, VR.CS, "YES");
 
                 // Add the unique identifiers
                 dicom.putString(Tag.SOPClassUID, VR.UI, UID.SecondaryCaptureImageStorage);
