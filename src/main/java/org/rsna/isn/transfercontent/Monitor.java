@@ -26,7 +26,6 @@ package org.rsna.isn.transfercontent;
 import java.io.File;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.commons.lang.time.DateUtils;

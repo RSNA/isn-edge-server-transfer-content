@@ -151,12 +151,8 @@ public class KosGenerator
 				String sopInstanceUid = header.getString(Tag.SOPInstanceUID);
 				String sopClassUid = header.getString(Tag.SOPClassUID);
 
-
-                                if (header.getInt(Tag.SeriesNumber) > lastSeries)
-                                {
-                                        lastSeries = header.getInt(Tag.SeriesNumber);
-                                }
-
+                                lastSeries =  Math.max(header.getInt(Tag.SeriesNumber), lastSeries);
+                                
 				studyDir = new File(studiesDir, studyUid);
 				File seriesDir = new File(studyDir, seriesUid);
 				File destFile = new File(seriesDir, srcFile.getName());
