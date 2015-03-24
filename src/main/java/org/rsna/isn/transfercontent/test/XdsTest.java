@@ -29,12 +29,15 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import javax.imageio.IIOImage;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.RandomStringUtils;
 import org.dcm4che2.data.BasicDicomObject;
 import org.dcm4che2.data.DicomElement;
@@ -73,7 +76,23 @@ public class XdsTest {
         public static String submit()  
         {           
                 Job job = new Job();
+                
                 String singleUsePatientId = RandomStringUtils.randomAlphanumeric(64);
+                
+                try 
+                {   
+                    MessageDigest md;
+                    md = MessageDigest.getInstance("SHA-256");
+                    md.update(singleUsePatientId.getBytes());
+                    byte[] shaDig = md.digest();
+
+                    singleUsePatientId = new String(Hex.encodeHex(shaDig));
+                } 
+                catch (NoSuchAlgorithmException ex) 
+                {
+                    return ex.getMessage();
+                }
+                
                 job.setSingleUsePatientId(singleUsePatientId);
 
                 try
