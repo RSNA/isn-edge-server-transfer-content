@@ -210,57 +210,68 @@ public class KosGenerator
                         ConfigurationDao config = new ConfigurationDao();
                         if (config.isAttachDicomReport() && exam.isReportAvailable())
                         {
-                                DicomSeries reportSeries = study.getSeries().get(reportSeriesUid);
-                                if (reportSeries == null)
+                                if (Exam.FINALIZED.equals(exam.getStatus()))
                                 {
-                                        File reportSeriesDir = new File(studyDir,reportSeriesUid);
-                                        reportSeriesDir.mkdir();
-
-                                        ReportToDicom.generate(exam, study,reportSeriesDir,reportSeriesUid,lastSeries+1);
-                                        logger.info("Generated report for " + job);
-
-                                        reportSeries = new DicomSeries();
-                                        reportSeries.setSeriesUid(reportSeriesUid);
-                                        reportSeries.setSeriesDescription("REPORT");
-                                        reportSeries.setModality("OT");
-
-                                        study.getSeries().put(reportSeriesUid, reportSeries);
-
-
-                                        Iterator<File> iter = FileUtils.iterateFiles(reportSeriesDir, 
-                                            TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
-
-                                        while (iter.hasNext())
+                                        DicomSeries reportSeries = study.getSeries().get(reportSeriesUid);
+                                        if (reportSeries == null)
                                         {
-                                                File reportSrcFile = iter.next();
-                                                in = new DicomInputStream(reportSrcFile);
-                                                in.setHandler(stop);
+                                                File reportSeriesDir = new File(studyDir,reportSeriesUid);
+                                                reportSeriesDir.mkdir();
+
+                                                ReportToDicom.generate(exam, study,reportSeriesDir,reportSeriesUid,lastSeries+1);
+                                                logger.info("Generated SC report for " + job);
+
+                                                reportSeries = new DicomSeries();
+                                                reportSeries.setSeriesUid(reportSeriesUid);
+                                                reportSeries.setSeriesDescription("REPORT");
+                                                reportSeries.setModality("OT");
+
+                                                study.getSeries().put(reportSeriesUid, reportSeries);
 
 
-                                                DicomObject fmi = in.readFileMetaInformation();
-                                                if (fmi == null)
-                                                        throw new IOException(reportSrcFile + " is not a DICOM part-10 file");
+                                                Iterator<File> iter = FileUtils.iterateFiles(reportSeriesDir, 
+                                                    TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
 
-                                                DicomObject reportHeader = in.readDicomObject();
+                                                while (iter.hasNext())
+                                                {
+                                                        File reportSrcFile = iter.next();
+                                                        in = new DicomInputStream(reportSrcFile);
+                                                        in.setHandler(stop);
 
-                                                String reportStudyUid = reportHeader.getString(Tag.StudyInstanceUID);
-                                                String reportSopInstanceUid = reportHeader.getString(Tag.SOPInstanceUID);
-                                                String reportSopClassUid = reportHeader.getString(Tag.SOPClassUID);
 
-                                                String reportTransferSyntaxUid = in.getTransferSyntax().uid();
+                                                        DicomObject fmi = in.readFileMetaInformation();
+                                                        if (fmi == null)
+                                                                throw new IOException(reportSrcFile + " is not a DICOM part-10 file");
 
-                                                org.rsna.isn.domain.DicomObject obj = new org.rsna.isn.domain.DicomObject();
+                                                        DicomObject reportHeader = in.readDicomObject();
 
-                                                obj.setSopClassUid(reportSopClassUid);
-                                                obj.setSopInstanceUid(reportSopInstanceUid);
-                                                obj.setTransferSyntaxUid(reportTransferSyntaxUid);
-                                                obj.setFile(new File(reportSeriesDir, reportSrcFile.getName()));
+                                                        String reportStudyUid = reportHeader.getString(Tag.StudyInstanceUID);
+                                                        String reportSopInstanceUid = reportHeader.getString(Tag.SOPInstanceUID);
+                                                        String reportSopClassUid = reportHeader.getString(Tag.SOPClassUID);
 
-                                                reportSeries.getObjects().put(reportSopInstanceUid, obj);
+                                                        String reportTransferSyntaxUid = in.getTransferSyntax().uid();
 
-                                                logger.info("Processed dicom report " + reportSrcFile + " for " + job);
+                                                        org.rsna.isn.domain.DicomObject obj = new org.rsna.isn.domain.DicomObject();
 
-                                        }
+                                                        obj.setSopClassUid(reportSopClassUid);
+                                                        obj.setSopInstanceUid(reportSopInstanceUid);
+                                                        obj.setTransferSyntaxUid(reportTransferSyntaxUid);
+                                                        obj.setFile(new File(reportSeriesDir, reportSrcFile.getName()));
+
+                                                        reportSeries.getObjects().put(reportSopInstanceUid, obj);
+
+                                                        logger.info("Processed SC dicom report " + reportSrcFile + " for " + job);
+                                                }
+                                        }       
+                                }
+                                else if(job.isSendOnComplete())
+                                {
+                                        logger.info("Sending " + exam + " for " + job + " without generating a SC report");
+                                }
+                                else if(Exam.NON_REPORTABLE.equals(exam.getStatus()))
+                                {
+                                        logger.info("No SC report generated for " + exam + " for " + job 
+                                                + " because the exam has a status of " + Exam.NON_REPORTABLE);
                                 }
                         }
                                 
