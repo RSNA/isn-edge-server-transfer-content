@@ -34,10 +34,13 @@ import org.apache.log4j.Logger;
 import org.rsna.isn.dao.ConfigurationDao;
 import org.rsna.isn.dao.EmailDao;
 import org.rsna.isn.dao.JobDao;
+import org.rsna.isn.dao.SmsDao;
 import org.rsna.isn.domain.Email;
 import org.rsna.isn.domain.Job;
+import org.rsna.isn.domain.Sms;
 import org.rsna.isn.util.EmailUtil;
 import org.rsna.isn.util.Environment;
+import org.rsna.isn.util.SmsUtil;
 
 /**
  * This class monitors the RSNA database for new jobs. If it finds a new job, it
@@ -169,6 +172,23 @@ class Monitor extends Thread
                                     EmailUtil.sendInQueue(email);
                                 }
 
+                                //Find SMS to send
+                                SmsDao smsDao = new SmsDao();  
+                                Set<Sms> smsToSend = smsDao.findSmsToSend();
+                                                      
+                                for (Sms sms : smsToSend) 
+                                {     
+                                    try
+                                    {
+                                        SmsUtil.send(sms.getRecipient(),sms.getMessage());
+                                        smsDao.updateQueue(sms.getSmslId(), true, false, "Successful");
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        logger.fatal("Uncaught exception while restarting interrupted jobs.", ex);
+                                        smsDao.updateQueue(sms.getSmslId(), false, true, ex.getMessage());
+                                    }
+                                }
                                 sleep(1000);
 			}
 			catch (InterruptedException ex)

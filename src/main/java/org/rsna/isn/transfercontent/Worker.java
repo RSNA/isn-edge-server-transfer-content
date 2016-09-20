@@ -31,14 +31,18 @@ import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.openhealthtools.ihe.utils.IHEException;
 import org.rsna.isn.dao.JobDao;
+import org.rsna.isn.dao.SmsDao;
 import org.rsna.isn.domain.DicomStudy;
 import org.rsna.isn.domain.Exam;
 import org.rsna.isn.domain.Job;
+import org.rsna.isn.domain.MsgTemplate;
+import org.rsna.isn.domain.Sms;
 import org.rsna.isn.transfercontent.dcm.KosGenerator;
 import org.rsna.isn.transfercontent.ihe.ClearinghouseException;
 import org.rsna.isn.transfercontent.ihe.Iti41;
 import org.rsna.isn.transfercontent.ihe.Iti8;
 import org.rsna.isn.util.Environment;
+import org.rsna.isn.util.SmsUtil;
 
 /**
  * Worker thread that processes jobs.
@@ -195,6 +199,36 @@ class Worker extends Thread
 				dao.updateStatus(job, Job.RSNA_COMPLETED_TRANSFER_TO_CLEARINGHOUSE);
 
 				logger.info("Successfully transferred content to clearinghouse for " + job);
+                                
+                                SmsDao smsDao = new SmsDao();
+                                Sms sms = smsDao.getSms();
+                                
+                                if (dao.isJobSetComplete(job.getJobSetId()) && smsDao.isSmsEnabled() && !job.getPhoneNumber().isEmpty())
+                                {      
+                                        MsgTemplate smsMessage = new MsgTemplate(); 
+                                
+                                        
+                                        smsMessage.setTemplate(sms.getMessage());
+                                        smsMessage.setAccessCode(job.getAccessCode()); 
+                                        sms.setMessage(smsMessage.compose());
+                                        sms.setRecipient(job.getPhoneNumber());
+     
+                                        smsDao.addToQueue(sms);
+                                }
+                                /*
+                                SmsDao smsDao = new SmsDao();
+                                               
+                                if (dao.isJobSetComplete(job.getJobSetId()) && smsDao.isSmsEnabled())
+                                {      
+                                        MsgTemplate smsMessage = new MsgTemplate(); 
+                                
+                                        smsMessage.setTemplate(smsDao.getSms().getMessage());
+                                        smsMessage.setAccessCode(job.getAccessCode());
+                                        SmsUtil.send(job.getPhoneNumber(), smsMessage.compose());
+                                        
+                                        logger.info("Sent SMS to " + job.getPhoneNumber() + " for Job Set ID " + job.getJobSetId());
+                                }  
+                                */
 			}
 			catch (Throwable ex)
 			{
