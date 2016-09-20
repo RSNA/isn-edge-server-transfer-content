@@ -36,6 +36,7 @@ import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import org.apache.axis2.addressing.AddressingConstants;
 import org.apache.axis2.client.Options;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -206,9 +207,9 @@ public class Iti41
 	public void submitDocuments(File debugFile) throws Exception
 	{
 		SubmitTransactionData tx = new SubmitTransactionData();
-
-
-
+                
+                
+                
 		//
 		// Add entry for report
 		//
@@ -264,7 +265,7 @@ public class Iti41
 
 
 
-
+                
 		//
 		// Add entry for KOS
 		//
@@ -277,8 +278,8 @@ public class Iti41
 		initDocEntry(kosEntry);
 
 		CodedMetadataType kosFmt = xdsFactory.createCodedMetadataType();
-		kosFmt.setCode(UID.KeyObjectSelectionDocumentStorage);
-		kosFmt.setDisplayName(inStr(UID.KeyObjectSelectionDocumentStorage));
+                kosFmt.setCode(UID.KeyObjectSelectionDocumentStorage);
+                kosFmt.setDisplayName(inStr(UID.KeyObjectSelectionDocumentStorage));
 		kosFmt.setSchemeName(DICOM_UID_REG_UID);
 		kosFmt.setSchemeUUID(DICOM_UID_REG_UID);
 		kosEntry.setFormatCode(kosFmt);
@@ -291,10 +292,7 @@ public class Iti41
 
 		kosEntry.setMimeType(KOS_DESCRIPTOR.getMimeType());
 
-		kosEntry.setUniqueId(kos.getSopInstanceUid());
-
-
-
+		kosEntry.setUniqueId(kos.getSopInstanceUid());         
 		//
 		// Add entries for images
 		//
@@ -310,10 +308,10 @@ public class Iti41
 				initDocEntry(dcmEntry);
 
 				CodedMetadataType dcmFmt = xdsFactory.createCodedMetadataType();
-				String sopClass = object.getSopClassUid();
-				dcmFmt.setCode(sopClass);
+				String sopClass = object.getSopClassUid();                   
+                                dcmFmt.setCode(sopClass);
 				dcmFmt.setDisplayName(inStr(sopClass));
-				dcmFmt.setSchemeName(DICOM_UID_REG_UID);
+                                dcmFmt.setSchemeName(DICOM_UID_REG_UID);             
 				dcmFmt.setSchemeUUID(DICOM_UID_REG_UID);
 				dcmEntry.setFormatCode(dcmFmt);
 
@@ -379,7 +377,8 @@ public class Iti41
 
 		Options options = sender.getAxisServiceClient().getOptions();
 		options.setTimeOutInMilliSeconds(timeout);
-
+                options.setProperty(AddressingConstants.ADD_MUST_UNDERSTAND_TO_ADDRESSING_HEADERS, Boolean.TRUE); 
+                                
 		XDSResponseType resp = reg.submit(tx);
 
 		XDSStatusType status = resp.getStatus();
@@ -504,7 +503,8 @@ public class Iti41
 		CodedMetadataType confidentialityCode = xdsFactory.createCodedMetadataType();
 		confidentialityCode.setCode("GRANT");
 		confidentialityCode.setSchemeName("RSNA ISN");
-
+                confidentialityCode.setDisplayName(inStr("GRANT"));
+                
 		return confidentialityCode;
 	}
 
@@ -526,10 +526,10 @@ public class Iti41
 	private CodedMetadataType getPracticeSettingCode()
 	{
 		CodedMetadataType practiceSettingCode = xdsFactory.createCodedMetadataType();
-		practiceSettingCode.setCode("Radiology");
+		practiceSettingCode.setCode("R-3027B");
 		practiceSettingCode.setDisplayName(inStr("Radiology"));
-		practiceSettingCode.setSchemeName("RSNA-ISN");
-
+                practiceSettingCode.setSchemeName("SRT");
+                
 		return practiceSettingCode;
 	}
 
@@ -542,17 +542,17 @@ public class Iti41
 
 		typeCode.setCode("18748-4");
 		typeCode.setDisplayName(inStr("Diagnostic Imaging Report"));
-		typeCode.setSchemeName("LOINC");
-
+                typeCode.setSchemeName("LOINC");
+                
 		return typeCode;
 	}
 
 	@SuppressWarnings("unchecked")
 	private void initDocEntry(DocumentEntryType docEntry)
 	{
-		AuthorType author = getAuthor();
-		if (author != null)
-			docEntry.setAuthor(author);
+//		AuthorType author = getAuthor();
+//		if (author != null)
+//			docEntry.setAuthor(author);
 
 		docEntry.setClassCode(getClassCode());
 		docEntry.getConfidentialityCode().add(getConfidentialityCode());
