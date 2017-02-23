@@ -1,4 +1,4 @@
-/* Copyright (c) <2010>, <Radiological Society of North America>
+/* Copyright (c) <2016>, <Radiological Society of North America>
  * All rights reserved.
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
@@ -24,31 +24,31 @@
 package org.rsna.isn.transfercontent.ihe;
 
 import java.net.URI;
+import java.sql.SQLException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.ohf.hl7v2.core.message.MessageManager;
 import org.openhealthtools.ihe.atna.auditor.PIXSourceAuditor;
 import org.openhealthtools.ihe.common.mllp.MLLPDestination;
-import org.openhealthtools.ihe.pix.source.PixMsgRegisterOutpatient;
-import org.openhealthtools.ihe.pix.source.PixSource;
-import org.openhealthtools.ihe.pix.source.PixSourceResponse;
+import org.openhealthtools.ihe.pix.consumer.PixConsumer;
+import org.openhealthtools.ihe.pix.consumer.PixConsumerQuery;
+import org.openhealthtools.ihe.pix.consumer.PixConsumerResponse;
 import org.openhealthtools.ihe.utils.IHEException;
 import org.rsna.isn.dao.ConfigurationDao;
+import org.rsna.isn.dao.JobDao;
 import org.rsna.isn.domain.Job;
 import org.rsna.isn.util.Constants;
 
 /**
- * This class implements the ITI-8 (Patient identity feed) transaction.
+ * This class implements the ITI-9 (Patient ID Cross Reference Query) transaction.
  *
- * Note: the "iti8-pix-host", "iti8-pix-port", "iti8-reg-host" and "iti8-reg-port"
- * properties must be set in the configurations table of the RSNA database.
  *
- * @author Wyatt Tellis
- * @version 2.1.0
+ * @author Clifton Li
+ * @version 5.0.0
  */
-public class Iti8
+public class Iti9
 {
-	private static final Logger logger = Logger.getLogger(Iti8.class);
+	private static final Logger logger = Logger.getLogger(Iti9.class);
 
 	private static final URI pix;
 
@@ -57,6 +57,8 @@ public class Iti8
 	private static final MessageManager manager = MessageManager.getFactory();
 
 	private final Job job;
+        
+        private static String sourceId;
 
 	static
 	{
@@ -81,6 +83,9 @@ public class Iti8
 			registry = new URI(regUri);
 
 			PIXSourceAuditor.getAuditor().getConfig().setAuditorEnabled(false);
+                        
+                        sourceId = dao.getConfiguration("iti41-source-id");
+                        
 		}
 		catch (Exception ex)
 		{
@@ -93,50 +98,56 @@ public class Iti8
 	 *
 	 * @param job An job instance. Not be null.  
 	 */
-	public Iti8(Job job)
+	public Iti9(Job job)
 	{
 		this.job = job;
 	}
 
 	/**
-	 * Register the patient with the PIX and registry.
+	 * Implementation of Patient Identifier Cross-Reference.
 	 *
 	 * @throws IHEException If there was an uncaught exception while attempting
 	 * to register the patient.
 	 * @throws ClearinghouseException  If the clearinghouse returned an error while
 	 * attempting to register the patient.
+         * @throws SQLException  If the database can not be updated.
 	 */
-	public void registerPatient() throws IHEException, ClearinghouseException
+	public void retrieveGlobalPatientId() throws IHEException, ClearinghouseException, SQLException
 	{
-	//	sendIti8Message(pix, "PIX");
-
-		sendIti8Message(registry, "registry");
+		pixQuery(pix, "PIX");
 	}
 
-	private void sendIti8Message(URI uri, String remoteType) throws IHEException, ClearinghouseException
+	private void pixQuery(URI uri, String remoteType) throws IHEException, ClearinghouseException, SQLException
 	{
-		PixSource feed = new PixSource();
+		PixConsumer pixQuery = new PixConsumer();
 
 		MLLPDestination mllp = new MLLPDestination(uri);
-                
-		//MLLPDestination.setUseATNA(false);
-		feed.setMLLPDestination(mllp);
-                
+		MLLPDestination.setUseATNA(false);
+		pixQuery.setMLLPDestination(mllp);
 
-		PixMsgRegisterOutpatient msg = new PixMsgRegisterOutpatient(manager,
+                
+                //PixConsumerQuery msg = pixQuery.createQuery(job.getSingleUsePatientId(), null, 
+                //                "1.3.6.1.4.1.21367.13.20.1000", Constants.RSNA_UNIVERSAL_ID_TYPE); 
+                PixConsumerQuery msg = pixQuery.createQuery("IHERED-10000", null, 
+                                "1.3.6.1.4.1.21367.13.20.1000", Constants.RSNA_UNIVERSAL_ID_TYPE); 
+                
+                msg.changeDefaultCharacterSet("UNICODE");
+                
+                /*
+		PixMsgRegisterOutpatient msg2 = new PixMsgRegisterOutpatient(manager,
 				null, job.getSingleUsePatientId(),
-				null, "1.3.6.1.4.1.21367.13.20.3000",
+				null, Constants.RSNA_UNIVERSAL_ID,
 				Constants.RSNA_UNIVERSAL_ID_TYPE);
-		msg.addOptionalPatientNameFamilyName("RSNA ISN");
-		msg.addOptionalPatientNameGivenName("RSNA ISN");
-
-
-//                PixMsgRegisterOutpatient msg = feed.registerOutpatient(job.getSingleUsePatientId());
-
-		PixSourceResponse rsp = feed.sendRegistration(msg, false);
+                
+		msg2.addOptionalPatientNameFamilyName("RSNA ISN");
+		msg2.addOptionalPatientNameGivenName("RSNA ISN");
+                */
+                
+		PixConsumerResponse rsp = pixQuery.sendQuery(msg, false);
 
 		String code = rsp.getResponseAckCode(false);
-		String error = rsp.getField("MSA-3");
+
+                String error = rsp.getField("MSA-3");
 
 		if ("AE".equals(code))
 		{
@@ -162,6 +173,28 @@ public class Iti8
 				throw new ClearinghouseException(chMsg);
 			}
 		}
+                else
+                {
+
+                        String globalId = rsp.getField("PID-3-1");
+
+                        if (!globalId.isEmpty())
+                        {
+                                JobDao dao = new JobDao();
+                                dao.updateGlobalId(globalId, job);   
+                                
+                                logger.info("Received Globlal ID " + globalId);
+                        }
+                        else
+                        {
+                                String chMsg = "Clearinghouse " + remoteType
+						+ " did not return a global ID.";
+
+				throw new ClearinghouseException(chMsg);
+                        }
+                       
+                            
+                }
 	}
 
 }

@@ -42,16 +42,14 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.apache.log4j.Logger;
-import org.dcm4che2.data.UID;
 import org.dcm4che2.util.UIDUtils;
 import org.eclipse.emf.common.util.EList;
 import org.openhealthtools.ihe.atna.auditor.XDSAuditor;
 import org.openhealthtools.ihe.common.hl7v2.CX;
+import org.openhealthtools.ihe.common.hl7v2.CXi;
 import org.openhealthtools.ihe.common.hl7v2.Hl7v2Factory;
-import org.openhealthtools.ihe.common.hl7v2.SourcePatientInfoType;
 import org.openhealthtools.ihe.common.hl7v2.XCN;
 import org.openhealthtools.ihe.common.hl7v2.XON;
-import org.openhealthtools.ihe.common.hl7v2.XPN;
 import org.openhealthtools.ihe.common.ws.IHESOAP12Sender;
 import org.openhealthtools.ihe.xds.document.DocumentDescriptor;
 import org.openhealthtools.ihe.xds.document.XDSDocument;
@@ -63,6 +61,7 @@ import org.openhealthtools.ihe.xds.metadata.InternationalStringType;
 import org.openhealthtools.ihe.xds.metadata.LocalizedStringType;
 import org.openhealthtools.ihe.xds.metadata.MetadataFactory;
 import org.openhealthtools.ihe.xds.metadata.SubmissionSetType;
+import org.openhealthtools.ihe.xds.metadata.constants.IdentifierTypeCodeConstants;
 import org.openhealthtools.ihe.xds.metadata.transform.ByteArrayProvideAndRegisterDocumentSetTransformer;
 import org.openhealthtools.ihe.xds.response.XDSErrorListType;
 import org.openhealthtools.ihe.xds.response.XDSErrorType;
@@ -72,7 +71,6 @@ import org.openhealthtools.ihe.xds.source.B_Source;
 import org.openhealthtools.ihe.xds.source.SubmitTransactionData;
 import org.rsna.isn.dao.ConfigurationDao;
 import org.rsna.isn.domain.Author;
-import org.rsna.isn.domain.DicomKos;
 import org.rsna.isn.domain.DicomObject;
 import org.rsna.isn.domain.DicomSeries;
 import org.rsna.isn.domain.DicomStudy;
@@ -81,6 +79,7 @@ import static org.rsna.isn.domain.Exam.*;
 import org.rsna.isn.domain.Job;
 import org.rsna.isn.util.Constants;
 import org.rsna.isn.util.Environment;
+import org.rsna.isn.util.Reports;
 
 /**
  * This class implements the ITI-41 (Submit and register document set)
@@ -102,12 +101,10 @@ public class Iti41
 	private static final Hl7v2Factory hl7Factory = Hl7v2Factory.eINSTANCE;
 
 	private static final String DICOM_UID_REG_UID = "1.2.840.10008.2.6.1";
+        
+	private static final DocumentDescriptor PDF_DESCRIPTOR =
+			new DocumentDescriptor("PDF", "application/pdf");
 
-	private static final DocumentDescriptor KOS_DESCRIPTOR =
-			new DocumentDescriptor("KOS", "application/dicom-kos");
-
-	private static final DocumentDescriptor TEXT_DESCRIPTOR =
-			new DocumentDescriptor("TEXT", "text/plain");
 
 	private static String sourceId;
 
@@ -122,19 +119,21 @@ public class Iti41
 	private final Exam exam;
 
 	private final Job job;
-
+        
 	public static void init() throws Exception
 	{
 		ConfigurationDao dao = new ConfigurationDao();
 
 		sourceId = dao.getConfiguration("iti41-source-id");
-		if (StringUtils.isBlank(sourceId))
-			throw new ExceptionInInitializerError("iti41-source-id is blank");
-
-		logger.info("Source id set to: " + sourceId);
-
-
-
+                
+                //Update sourceID so all ISN instances have unique IDs
+                //1.3.6.1.4.1.19376.2.840.1.1.2.1 was the default UID
+		if (StringUtils.isBlank(sourceId) || sourceId.equals("1.3.6.1.4.1.19376.2.840.1.1.2.1"))
+                {       
+                        sourceId = Constants.RSNA_ISN_UNIVERSAL_ID + "." + UIDUtils.createUID();
+                        dao.updateSourceId(sourceId);
+                        logger.info("Source id set to: " + sourceId);
+                }
 
 		String uri = dao.getConfiguration("iti41-endpoint-uri");
 		if (StringUtils.isBlank(uri))
@@ -204,12 +203,11 @@ public class Iti41
 	 * metadata
 	 * @throws Exception If there was an error processing the submission set.
 	 */
-	public void submitDocuments(File debugFile) throws Exception
-	{
-		SubmitTransactionData tx = new SubmitTransactionData();
-                
-                
-                
+        
+        public void submitReport(File debugFile) throws Exception
+        {
+                SubmitTransactionData tx = new SubmitTransactionData();
+
 		//
 		// Add entry for report
 		//
@@ -219,27 +217,45 @@ public class Iti41
 			String report = exam.getReport();
 			if (StringUtils.isNotBlank(report))
 			{
-				XDSDocument reportDoc =
-						new XDSDocumentFromByteArray(TEXT_DESCRIPTOR, report.getBytes("UTF-8"));
+                                ConfigurationDao dao = new ConfigurationDao();
 
+                                String pfdTemplate = dao.getConfiguration("pdf-template");
+                                
+                                byte[] reportBa = null;
+
+                                if (StringUtils.isNotBlank(pfdTemplate) && new File(pfdTemplate).isFile())
+                                {
+                                        reportBa = Reports.useTemplate(exam);
+                                }
+                                else
+                                {
+                                        //simple formatting
+                                        reportBa = Reports.generate(exam);
+                                }
+                                   
+                                XDSDocument reportDoc = new XDSDocumentFromByteArray(PDF_DESCRIPTOR, reportBa);
+                                
 				String reportUuid = tx.addDocument(reportDoc);
-				DocumentEntryType reportEntry = tx.getDocumentEntry(reportUuid);
-				initDocEntry(reportEntry);
+				DocumentEntryType docEntry = tx.getDocumentEntry(reportUuid);
+				initDocEntry(docEntry);
 
+                                CodedMetadataType classCode = xdsFactory.createCodedMetadataType();
+                                classCode.setCode("REPORTS");
+                                classCode.setDisplayName(inStr("Report"));
+                                classCode.setSchemeName("1.3.6.1.4.1.19376.1.2.6.1");
+                                docEntry.setClassCode(classCode);
+                                
+				CodedMetadataType formatCode = xdsFactory.createCodedMetadataType();
+				formatCode.setCode("urn:ihe:rad:PDF");
+				formatCode.setDisplayName(inStr("urn:ihe:rad:PDF"));
+				formatCode.setSchemeName("1.3.6.1.4.1.19376.1.2.3");
+				docEntry.setFormatCode(formatCode);
 
-				CodedMetadataType reportFmt = xdsFactory.createCodedMetadataType();
-				reportFmt.setCode("TEXT");
-				reportFmt.setDisplayName(inStr("TEXT"));
-				reportFmt.setSchemeName("RSNA-ISN");
-				reportEntry.setFormatCode(reportFmt);
+				docEntry.setMimeType(PDF_DESCRIPTOR.getMimeType());
 
-				//CodedMetadataType reportEventCode = xdsFactory.createCodedMetadataType();
-				//reportEventCode.setCode("REPORT");
-				//reportEntry.getEventCode().add(reportEventCode);
-
-				reportEntry.setMimeType(TEXT_DESCRIPTOR.getMimeType());
-
-				reportEntry.setUniqueId(UIDUtils.createUID());
+				docEntry.setUniqueId(UIDUtils.createUID());
+                                
+                                submitTransaction(tx,debugFile);
 			}
 			else
 			{
@@ -259,41 +275,12 @@ public class Iti41
 		{
 			throw new RuntimeException("Invalid exam status: " + examStatus);
 		}
-			
-
-
-
-
-
+        }
+        
+	public void submitDocuments(File debugFile) throws Exception
+	{
+		SubmitTransactionData tx = new SubmitTransactionData();
                 
-		//
-		// Add entry for KOS
-		//
-
-		DicomKos kos = study.getKos();
-		File kosFile = kos.getFile();
-		XDSDocument kosDoc = new LazyLoadedXdsDocument(KOS_DESCRIPTOR, kosFile);
-		String kosUuid = tx.addDocument(kosDoc);
-		DocumentEntryType kosEntry = tx.getDocumentEntry(kosUuid);
-		initDocEntry(kosEntry);
-
-		CodedMetadataType kosFmt = xdsFactory.createCodedMetadataType();
-                kosFmt.setCode(UID.KeyObjectSelectionDocumentStorage);
-                kosFmt.setDisplayName(inStr(UID.KeyObjectSelectionDocumentStorage));
-		kosFmt.setSchemeName(DICOM_UID_REG_UID);
-		kosFmt.setSchemeUUID(DICOM_UID_REG_UID);
-		kosEntry.setFormatCode(kosFmt);
-
-		//CodedMetadataType kosEventCode = xdsFactory.createCodedMetadataType();
-		//kosEventCode.setCode("KO");
-		//kosEventCode.setSchemeName("DCM");
-		//kosEventCode.setSchemeUUID(DICOM_UID_REG_UID);
-		//kosEntry.getEventCode().add(kosEventCode);
-
-		kosEntry.setMimeType(KOS_DESCRIPTOR.getMimeType());
-
-		kosEntry.setUniqueId(kos.getSopInstanceUid());         
-		//
 		// Add entries for images
 		//
 		for (DicomSeries series : study.getSeries().values())
@@ -312,25 +299,28 @@ public class Iti41
                                 dcmFmt.setCode(sopClass);
 				dcmFmt.setDisplayName(inStr(sopClass));
                                 dcmFmt.setSchemeName(DICOM_UID_REG_UID);             
-				dcmFmt.setSchemeUUID(DICOM_UID_REG_UID);
+				//dcmFmt.setSchemeUUID(DICOM_UID_REG_UID);
 				dcmEntry.setFormatCode(dcmFmt);
 
-				//CodedMetadataType dcmEventCode = xdsFactory.createCodedMetadataType();
-				//dcmEventCode.setCode(series.getModality());
-				//dcmEventCode.setSchemeName("DCM");
-				//dcmEventCode.setSchemeUUID(DICOM_UID_REG_UID);
-				//dcmEntry.getEventCode().add(dcmEventCode);
+				CodedMetadataType dcmEventCode = xdsFactory.createCodedMetadataType();
+				dcmEventCode.setCode(series.getModality());
+				dcmEventCode.setSchemeName("DCM");
+                                //dcmEventCode.setDisplayName(inStr(""));
+				dcmEntry.getEventCode().add(dcmEventCode);
 
 				dcmEntry.setMimeType(DocumentDescriptor.DICOM.getMimeType());
 
 				dcmEntry.setUniqueId(object.getSopInstanceUid());
 			}
 		}
+                
+                submitTransaction(tx,debugFile);
+        }
 
 
-
-
-		//
+        private void submitTransaction(SubmitTransactionData tx, File debugFile) throws Exception
+        {
+            	//
 		// Initialize submission set metadata
 		//
 		SubmissionSetType subSet = tx.getSubmissionSet();
@@ -341,13 +331,13 @@ public class Iti41
 		CodedMetadataType contentType = xdsFactory.createCodedMetadataType();
 		contentType.setCode("Imaging Exam");
 		contentType.setDisplayName(inStr("Imaging Exam"));
-		contentType.setSchemeName("RSNA-ISN");
+		contentType.setSchemeName("1.3.6.1.4.1.19376.3.840.1.1.3");
 		subSet.setContentTypeCode(contentType);
 
 		subSet.setPatientId(getRsnaId());
 		subSet.setSourceId(sourceId);
 		subSet.setSubmissionTime(getGmt(new Date()));
-		//subSet.setTitle(inStr(study.getStudyDescription()));
+                
 		subSet.setUniqueId(UIDUtils.createUID());
 
 		if (debugFile != null)
@@ -405,8 +395,7 @@ public class Iti41
 					+ " failed. Clearinghouse returned error: " + chMsg);
 
 		}
-	}
-
+        }
 	@SuppressWarnings(
 	{
 		"unchecked", "rawtypes"
@@ -474,20 +463,6 @@ public class Iti41
 		return rsnaId;
 	}
 
-	@SuppressWarnings("unchecked")
-	private SourcePatientInfoType getSrcPatInfo()
-	{
-		XPN rsnaPatName = hl7Factory.createXPN();
-		rsnaPatName.setFamilyName("RSNA ISN");
-		rsnaPatName.setGivenName("RSNA ISN");
-
-		SourcePatientInfoType srcPatInfo = hl7Factory.createSourcePatientInfoType();
-		srcPatInfo.getPatientIdentifier().add(getRsnaId());
-		srcPatInfo.getPatientName().add(rsnaPatName);
-
-		return srcPatInfo;
-	}
-
 	private CodedMetadataType getClassCode()
 	{
 		CodedMetadataType classCode = xdsFactory.createCodedMetadataType();
@@ -501,9 +476,9 @@ public class Iti41
 	private CodedMetadataType getConfidentialityCode()
 	{
 		CodedMetadataType confidentialityCode = xdsFactory.createCodedMetadataType();
-		confidentialityCode.setCode("GRANT");
-		confidentialityCode.setSchemeName("RSNA ISN");
-                confidentialityCode.setDisplayName(inStr("GRANT"));
+		confidentialityCode.setCode("V");
+		confidentialityCode.setSchemeName("2.16.840.1.113883.5.25");
+                confidentialityCode.setDisplayName(inStr("very restricted"));
                 
 		return confidentialityCode;
 	}
@@ -516,9 +491,9 @@ public class Iti41
 	private CodedMetadataType getHealthcareFacilityTypeCode()
 	{
 		CodedMetadataType healthcareFacilityTypeCode = xdsFactory.createCodedMetadataType();
-		healthcareFacilityTypeCode.setCode("GENERAL HOSPITAL");
-		healthcareFacilityTypeCode.setDisplayName(inStr("GENERAL HOSPITAL"));
-		healthcareFacilityTypeCode.setSchemeName("RSNA-ISN");
+		healthcareFacilityTypeCode.setCode("33022008");
+		healthcareFacilityTypeCode.setDisplayName(inStr("Hospital-based outpatient clinic or department--OTHER-NOT LISTED"));
+		healthcareFacilityTypeCode.setSchemeName("2.16.840.1.113883.3.88.12.80.67");
 
 		return healthcareFacilityTypeCode;
 	}
@@ -528,7 +503,7 @@ public class Iti41
 		CodedMetadataType practiceSettingCode = xdsFactory.createCodedMetadataType();
 		practiceSettingCode.setCode("R-3027B");
 		practiceSettingCode.setDisplayName(inStr("Radiology"));
-                practiceSettingCode.setSchemeName("SRT");
+                practiceSettingCode.setSchemeName("2.16.840.1.113883.6.96");
                 
 		return practiceSettingCode;
 	}
@@ -550,10 +525,12 @@ public class Iti41
 	@SuppressWarnings("unchecked")
 	private void initDocEntry(DocumentEntryType docEntry)
 	{
-//		AuthorType author = getAuthor();
-//		if (author != null)
-//			docEntry.setAuthor(author);
-
+		AuthorType author = getAuthor();
+		if (author != null)
+                {
+			docEntry.getAuthors().add(author);
+                }
+                
 		docEntry.setClassCode(getClassCode());
 		docEntry.getConfidentialityCode().add(getConfidentialityCode());
 		docEntry.setCreationTime(getGmt(new Date()));
@@ -569,9 +546,15 @@ public class Iti41
 		docEntry.setServiceStartTime(getGmt(study.getStudyDateTime()));
 		docEntry.setServiceStopTime(getGmt(study.getStudyDateTime()));
 		docEntry.setSourcePatientId(getRsnaId());
-		docEntry.setSourcePatientInfo(getSrcPatInfo());
+		//docEntry.setSourcePatientInfo(getSrcPatInfo());
 		//docEntry.setTitle(inStr(study.getStudyDescription()));
 		docEntry.setTypeCode(getTypeCode());
+                
+                CXi accNum = hl7Factory.createCXi();
+                accNum.setIdNumber(exam.getAccNum());
+                accNum.setIdentifierTypeCode(IdentifierTypeCodeConstants.ACCESSION_NUMBER);
+                docEntry.getReferenceIdList().add(accNum);
+                
 	}
 
 	@SuppressWarnings("unchecked")

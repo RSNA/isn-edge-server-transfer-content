@@ -101,7 +101,7 @@ class Monitor extends Thread
 		{
 			Set<Job> interruptedJobs = new HashSet<Job>();
 			interruptedJobs.addAll(dao.getJobsByStatus(Job.RSNA_STARTED_TRANSFER_CONTENT));
-			interruptedJobs.addAll(dao.getJobsByStatus(Job.RSNA_STARTED_KOS_GENERATION));
+                        interruptedJobs.addAll(dao.getJobsByStatus(Job.RSNA_RETRIEVING_GLOBAL_ID));
 			interruptedJobs.addAll(dao.getJobsByStatus(Job.RSNA_STARTED_PATIENT_REGISTRATION));
 			interruptedJobs.addAll(dao.getJobsByStatus(Job.RSNA_STARTED_DOCUMENT_SUBMISSION));
 
@@ -150,8 +150,8 @@ class Monitor extends Thread
 				Date lastUpdate = DateUtils.addMilliseconds(now, retryDelay);
 				Set<Job> jobsToRetry =
 						dao.findRetryableJobs(lastUpdate,
-						Job.RSNA_FAILED_TO_GENERATE_KOS,
 						Job.RSNA_FAILED_TO_REGISTER_PATIENT,
+						Job.RSNA_FAILED_TO_RETRIEVE_GLOBAL_ID,
 						Job.RSNA_FAILED_TO_SUBMIT_DOCUMENTS);
 
 				for (Job job : jobsToRetry)

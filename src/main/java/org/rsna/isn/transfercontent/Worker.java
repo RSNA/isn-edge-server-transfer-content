@@ -25,6 +25,7 @@ package org.rsna.isn.transfercontent;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
@@ -41,6 +42,7 @@ import org.rsna.isn.transfercontent.dcm.KosGenerator;
 import org.rsna.isn.transfercontent.ihe.ClearinghouseException;
 import org.rsna.isn.transfercontent.ihe.Iti41;
 import org.rsna.isn.transfercontent.ihe.Iti8;
+import org.rsna.isn.transfercontent.ihe.Iti9;
 import org.rsna.isn.util.Environment;
 import org.rsna.isn.util.SmsUtil;
 
@@ -82,6 +84,8 @@ class Worker extends Thread
 			JobDao dao = new JobDao();
 			try
 			{
+                            
+                                /*
 				//
 				// Generate KOS objects
 				//				
@@ -107,13 +111,14 @@ class Worker extends Thread
 
 					return;
 				}
-
+                                */
 
 
 
 				//
 				// Register patient
 				//
+                            
 				try
 				{
 					dao.updateStatus(job, Job.RSNA_STARTED_PATIENT_REGISTRATION);
@@ -145,7 +150,49 @@ class Worker extends Thread
 
 					return;
 				}
+                                
+                                //
+				// Retrieve Global ID 
+				//
+				try
+				{
+					dao.updateStatus(job, Job.RSNA_RETRIEVING_GLOBAL_ID);
 
+					logger.info("Retrieving global ID " + job);
+
+					Iti9 iti9 = new Iti9(job);
+					iti9.retrieveGlobalPatientId();
+
+					logger.info("Received global ID: " + job);
+				}
+				catch (ClearinghouseException ex)
+				{
+					String chMsg = ex.getMessage();
+					String errorMsg = "Unable to retreive global ID for "
+							+ job + ". " + chMsg;
+
+					logger.error(errorMsg);
+
+					dao.updateStatus(job, Job.RSNA_FAILED_TO_RETRIEVE_GLOBAL_ID, chMsg);
+
+					return;
+				}
+				catch (IHEException ex)
+				{
+					logger.error("Unable to retreive global ID for " + job + ". ", ex);
+
+					dao.updateStatus(job, Job.RSNA_FAILED_TO_RETRIEVE_GLOBAL_ID, ex);
+
+					return;
+				}
+                                catch (SQLException ex)
+				{
+					logger.error("Can not update database. Unable to retreive global ID for " + job + ". ", ex);
+
+					dao.updateStatus(job, Job.RSNA_FAILED_TO_RETRIEVE_GLOBAL_ID, ex);
+
+					return;
+				}
 				//
 				// Submit documents to registry
 				//
@@ -157,13 +204,19 @@ class Worker extends Thread
 
 					File jobDir = new File(tmpDir, Integer.toString(job.getJobId()));
 					File studiesDir = new File(jobDir, "studies");
+                                        
+                                        Map<String, DicomStudy> studies =
+						Collections.<String, DicomStudy>emptyMap();
+                                        
 					for (DicomStudy study : studies.values())
 					{
 						File studyDir = new File(studiesDir, study.getStudyUid());
 						File debugFile = new File(studyDir, "submission-set.xml");
 
 						Iti41 iti41 = new Iti41(study);
+                                                iti41.submitReport(debugFile);
 						iti41.submitDocuments(debugFile);
+                                                
 					}
 
 					logger.info("Completed document submission for " + job);
