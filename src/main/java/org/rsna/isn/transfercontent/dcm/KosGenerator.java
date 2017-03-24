@@ -1,4 +1,4 @@
-/* Copyright (c) <2010>, <Radiological Society of North America>
+/* Copyright (c) <2017>, <Radiological Society of North America>
  * All rights reserved.
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
@@ -57,9 +57,15 @@ import org.rsna.isn.util.Environment;
  * Utility class for generating KOS manifests.
  *
  * @author Wyatt Tellis
- * @version 3.2.0
+ * @author Clifton Li
+ * @version 5.0.0
+ * @since 3.2.0
  *
  */
+
+/**
+* Commented some logic so it can reused for XDR transactions
+*/
 public class KosGenerator
 {
 	private Logger logger = Logger.getLogger(KosGenerator.class);
