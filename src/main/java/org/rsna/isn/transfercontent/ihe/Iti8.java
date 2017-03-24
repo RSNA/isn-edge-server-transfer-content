@@ -1,4 +1,4 @@
-/* Copyright (c) <2010>, <Radiological Society of North America>
+/* Copyright (c) <2017>, <Radiological Society of North America>
  * All rights reserved.
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
@@ -44,7 +44,9 @@ import org.rsna.isn.util.Constants;
  * properties must be set in the configurations table of the RSNA database.
  *
  * @author Wyatt Tellis
- * @version 2.1.0
+ * @author Clifton Li
+ * @version 5.0.0
+ * @since 2.1.0
  */
 public class Iti8
 {
@@ -108,8 +110,6 @@ public class Iti8
 	 */
 	public void registerPatient() throws IHEException, ClearinghouseException
 	{
-	//	sendIti8Message(pix, "PIX");
-
 		sendIti8Message(registry, "registry");
 	}
 
@@ -129,9 +129,6 @@ public class Iti8
 				Constants.RSNA_UNIVERSAL_ID_TYPE);
 		msg.addOptionalPatientNameFamilyName("RSNA ISN");
 		msg.addOptionalPatientNameGivenName("RSNA ISN");
-
-
-//                PixMsgRegisterOutpatient msg = feed.registerOutpatient(job.getSingleUsePatientId());
 
 		PixSourceResponse rsp = feed.sendRegistration(msg, false);
 
