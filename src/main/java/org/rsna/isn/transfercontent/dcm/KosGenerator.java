@@ -208,6 +208,7 @@ public class KosGenerator
 
                              
                         ConfigurationDao config = new ConfigurationDao();
+                        /*
                         if (config.isAttachDicomReport() && exam.isReportAvailable())
                         {
                                 if (Exam.FINALIZED.equals(exam.getStatus()))
@@ -274,7 +275,8 @@ public class KosGenerator
                                                 + " because the exam has a status of " + Exam.NON_REPORTABLE);
                                 }
                         }
-                                
+                        */    
+                        /*
 			for (DicomStudy studyKos : studies.values())
 			{
 				String studyUid = studyKos.getStudyUid();
@@ -283,7 +285,7 @@ public class KosGenerator
                            
 				buildKos(studyDirKos, studyKos);
 			}
-
+                        */
 
 			return studies;
 		}

@@ -111,25 +111,31 @@ public class Iti9
 	 * @throws ClearinghouseException  If the clearinghouse returned an error while
 	 * attempting to register the patient.
          * @throws SQLException  If the database can not be updated.
+         * @return globalId
 	 */
-	public void retrieveGlobalPatientId() throws IHEException, ClearinghouseException, SQLException
+        /*
+	public String retrieveGlobalPatientId() throws IHEException, ClearinghouseException, SQLException
 	{
-		pixQuery(pix, "PIX");
+		return pixQuery(pix, "PIX");
 	}
-
-	private void pixQuery(URI uri, String remoteType) throws IHEException, ClearinghouseException, SQLException
+        */
+	public String pixQuery() throws IHEException, ClearinghouseException, SQLException
 	{
 		PixConsumer pixQuery = new PixConsumer();
 
-		MLLPDestination mllp = new MLLPDestination(uri);
+		MLLPDestination mllp = new MLLPDestination(pix);
 		MLLPDestination.setUseATNA(false);
 		pixQuery.setMLLPDestination(mllp);
 
-                
+                String globalId = "";
                 //PixConsumerQuery msg = pixQuery.createQuery(job.getSingleUsePatientId(), null, 
                 //                "1.3.6.1.4.1.21367.13.20.1000", Constants.RSNA_UNIVERSAL_ID_TYPE); 
+                
+                
+                //PixConsumerQuery msg = pixQuery.createQuery("IHERED-10000", null, 
                 PixConsumerQuery msg = pixQuery.createQuery("IHERED-10000", null, 
-                                "1.3.6.1.4.1.21367.13.20.1000", Constants.RSNA_UNIVERSAL_ID_TYPE); 
+                                "1.3.6.1.4.1.21367.13.20.3000",Constants.RSNA_UNIVERSAL_ID_TYPE); 
+                                //"1.3.6.1.4.1.21367.13.20.1000", Constants.RSNA_UNIVERSAL_ID_TYPE); 
                 
                 msg.changeDefaultCharacterSet("UNICODE");
                 
@@ -151,8 +157,8 @@ public class Iti9
 
 		if ("AE".equals(code))
 		{
-			String chMsg = "Clearinghouse " + remoteType
-					+ " failed to process ITI-8 message.  Error returned was: " + error;
+			String chMsg = "Clearinghouse PIX" +
+                                        " failed to process ITI-8 message.  Error returned was: " + error;
 
 			throw new ClearinghouseException(chMsg);
 		}
@@ -161,13 +167,13 @@ public class Iti9
 
 			if (error.startsWith("PIX-10000:"))
 			{
-				logger.info("Clearinghouse " + remoteType
+				logger.info("Clearinghouse PIX"
 						+ " reports patient id " + job.getSingleUsePatientId()
 						+ " has already been registered.");
 			}
 			else
 			{
-				String chMsg = "Clearinghouse " + remoteType
+				String chMsg = "Clearinghouse PIX"
 						+ " rejected ITI-8 message. Error returned was: " + error;
 
 				throw new ClearinghouseException(chMsg);
@@ -176,25 +182,21 @@ public class Iti9
                 else
                 {
 
-                        String globalId = rsp.getField("PID-3-1");
+                        globalId = rsp.getField("PID-3-1");
 
                         if (!globalId.isEmpty())
                         {
-                                JobDao dao = new JobDao();
-                                dao.updateGlobalId(globalId, job);   
-                                
                                 logger.info("Received Globlal ID " + globalId);
                         }
                         else
                         {
-                                String chMsg = "Clearinghouse " + remoteType
-						+ " did not return a global ID.";
+                                String chMsg = "Clearinghouse did not return a global ID.";
 
 				throw new ClearinghouseException(chMsg);
-                        }
-                       
-                            
+                        }                               
                 }
+                
+                return globalId;
 	}
 
 }

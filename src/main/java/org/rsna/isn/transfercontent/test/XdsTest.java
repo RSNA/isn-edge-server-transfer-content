@@ -31,6 +31,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -40,7 +41,6 @@ import javax.imageio.stream.MemoryCacheImageOutputStream;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.RandomStringUtils;
 import org.dcm4che2.data.BasicDicomObject;
-import org.dcm4che2.data.DicomElement;
 import org.dcm4che2.data.DicomObject;
 import org.dcm4che2.data.Tag;
 import org.dcm4che2.data.UID;
@@ -51,49 +51,53 @@ import org.dcm4che2.io.DicomOutputStream;
 import org.dcm4che2.media.FileMetaInformation;
 import org.dcm4che2.util.UIDUtils;
 import org.openhealthtools.ihe.utils.IHEException;
+import org.rsna.isn.domain.DicomSeries;
+import org.rsna.isn.domain.DicomStudy;
+import org.rsna.isn.domain.Exam;
 import org.rsna.isn.domain.Job;
 import org.rsna.isn.transfercontent.ihe.ClearinghouseException;
 import org.rsna.isn.transfercontent.ihe.Iti41XdsTest;
 import org.rsna.isn.transfercontent.ihe.Iti8;
+import org.rsna.isn.transfercontent.ihe.Iti9;
 import org.rsna.isn.util.Environment;
 
 /**
  *
  * @author Clifton Li
- * @version 3.2.0
+ * @version 5.0.0
  * @since 3.2.0
  */
 
 public class XdsTest {
 
-        
+        private final static Exam exam = new Exam();
+        private static Job job = new Job();
         public static void main(String[] args)  
         {       
                 Environment.init("transfer");
+               
                 System.out.print(submit());
         }
     
         public static String submit()  
         {           
-                Job job = new Job();
-                
-                String singleUsePatientId = RandomStringUtils.randomAlphanumeric(64);
-                
                 try 
                 {   
+                    String singleUsePatientId = RandomStringUtils.randomAlphanumeric(64);
                     MessageDigest md;
                     md = MessageDigest.getInstance("SHA-256");
                     md.update(singleUsePatientId.getBytes());
                     byte[] shaDig = md.digest();
 
                     singleUsePatientId = new String(Hex.encodeHex(shaDig));
+                    
+                    job.setSingleUsePatientId(singleUsePatientId);
                 } 
                 catch (NoSuchAlgorithmException ex) 
                 {
                     return ex.getMessage();
                 }
-                
-                job.setSingleUsePatientId(singleUsePatientId);
+
 
                 try
                 {
@@ -109,21 +113,57 @@ public class XdsTest {
                         return "Unable to register patient. " + ex;
                 }
 
+                String globalId;
+                try
+                {
+                        Iti9 iti9 = new Iti9(job);
+                        globalId = iti9.pixQuery();
+                        job.setglobalId(globalId);
+                        
+                        if (globalId.isEmpty())
+                            return "Unable to retreive global ID";         
+                }
+                catch (ClearinghouseException ex)
+                {
+                        return "Unable to retreive globalID" + ex;
+                }
+                catch (IHEException ex)
+                {
+                        return "Unable to retreive globalID" + ex;
+                }
+                catch (SQLException ex)
+                {
+                        return "Unable to retreive globalID" + ex;
+                }                
+                
                 DicomObject defaults = createDefaults();
                 BufferedImage image = createImage();
 
                 DicomObject dcm = createDicomObj(defaults, image);                  
-                DicomObject kos = createKosObj(defaults,dcm);
-
+                
+                exam.setStatus("FINALIZED");
+                exam.setReport("This is a test from RSNA ISN");
+                exam.setAccNum(RandomStringUtils.randomNumeric(8));
+                
+                DicomSeries series = new DicomSeries();
+                series.setModality("OT");
+                
+                //series.getObjects().put(UIDUtils.createUID(),dcm);
+                DicomStudy study = new DicomStudy();
+                study.setStudyDateTime(new Date(System.currentTimeMillis()));
+                study.setStudyDescription("TEST STUDY");
+                study.getSeries().put(UIDUtils.createUID(),series);
+                
+                
                 try
                 {
                         byte[] dicomBa = createDicomByteArray(dcm, image);
-                        byte[] kosBa = createKosByteArray(kos);
 
                         Iti41XdsTest.init();
-                        Iti41XdsTest test = new Iti41XdsTest(singleUsePatientId);
+                        Iti41XdsTest test = new Iti41XdsTest(study, job.getSingleUsePatientId());
 
-                        test.submitDocuments(dicomBa, kosBa, dcm, kos);
+                        test.submitReport(null);
+                        test.submitTestDocuments(dicomBa);
                 }
 
                 catch (ClearinghouseException ex)
@@ -154,78 +194,6 @@ public class XdsTest {
                 out.close();
 
                 return baos.toByteArray();
-        }
-              
-        public static DicomObject createKosObj(DicomObject defaults, DicomObject dcm)
-        {
-                DicomObject kos = new BasicDicomObject();
-                defaults.copyTo(kos);
-
-                kos.putString(Tag.Modality, VR.CS, "KO");
-                kos.putString(Tag.SeriesInstanceUID, VR.UI, UIDUtils.createUID());
-                kos.putNull(Tag.ReferencedPerformedProcedureStepSequence, VR.SQ);
-
-                kos.putDate(Tag.ContentDate, VR.DA, new Date(System.currentTimeMillis()));
-                kos.putDate(Tag.ContentTime, VR.TM, new Date(System.currentTimeMillis()));
-
-                DicomObject evidenceSeq = new BasicDicomObject();
-                evidenceSeq.putString(Tag.StudyInstanceUID, VR.UI, dcm.getString(Tag.StudyInstanceUID, VR.UI));
-
-                DicomElement refSeriesSeq = evidenceSeq.putSequence(Tag.ReferencedSeriesSequence);
-                
-                DicomObject seriesItem = new BasicDicomObject();
-                seriesItem.putString(Tag.SeriesInstanceUID, VR.UI, dcm.getString(Tag.SeriesInstanceUID, VR.UI));
-
-                DicomElement refSopSeq = seriesItem.putSequence(Tag.ReferencedSOPSequence);
-                
-                DicomObject objItem = new BasicDicomObject();
-
-                objItem.putString(Tag.ReferencedSOPInstanceUID, VR.UI, dcm.getString(Tag.SOPInstanceUID, VR.UI));
-                objItem.putString(Tag.ReferencedSOPClassUID, VR.UI, UID.SecondaryCaptureImageStorage);
-
-                refSopSeq.addDicomObject(objItem);
-                refSeriesSeq.addDicomObject(seriesItem);
-
-                kos.putNestedDicomObject(Tag.CurrentRequestedProcedureEvidenceSequence, evidenceSeq);
-
-                //
-                // SR document content module
-                //
-                kos.putString(Tag.ValueType, VR.CS, "CONTAINER");
-
-                DicomElement codeSeq = kos.putSequence(Tag.ConceptNameCodeSequence);
-                DicomObject codeItem = new BasicDicomObject();
-                codeItem.putString(Tag.CodeValue, VR.SH, "113030");
-                codeItem.putString(Tag.CodingSchemeDesignator, VR.SH, "DCM");
-                codeItem.putString(Tag.CodeMeaning, VR.LO, "Manifest");
-                codeSeq.addDicomObject(codeItem);
-
-                kos.putString(Tag.ContinuityOfContent, VR.CS, "SEPARATE");
-
-
-                DicomElement contentSeq = kos.putSequence(Tag.ContentSequence);
-
-                DicomObject contentItem = new BasicDicomObject();
-                contentItem.putString(Tag.ValueType, VR.CS, "IMAGE");
-                contentItem.putString(Tag.RelationshipType, VR.CS, "CONTAINS");
-
-                DicomElement contentSopSeq = contentItem.putSequence(Tag.ReferencedSOPSequence);
-                DicomObject contentSopItem = new BasicDicomObject();
-                contentSopItem.putString(Tag.ReferencedSOPClassUID, VR.UI, UID.SecondaryCaptureImageStorage);
-                contentSopItem.putString(Tag.ReferencedSOPInstanceUID, VR.UI, dcm.getString(Tag.SOPInstanceUID, VR.UI));
-                contentSopSeq.addDicomObject(contentSopItem);
-                contentSeq.addDicomObject(contentItem);
-
-                //
-                // SOP common module
-                //
-                String kosSopInstanceUid = UIDUtils.createUID();
-                kos.putString(Tag.SOPInstanceUID, VR.UI, kosSopInstanceUid);
-
-                String kosSopClassUid = UID.KeyObjectSelectionDocumentStorage;
-                kos.putString(Tag.SOPClassUID, VR.UI, kosSopClassUid);
-
-                return kos;           
         }
         
         public static DicomObject createDicomObj(DicomObject defaults, BufferedImage image) 
@@ -262,7 +230,7 @@ public class XdsTest {
                 return dcm;
         }
         
-        public static DicomObject createDefaults() 
+        private static DicomObject createDefaults() 
         {
                 String patientName = (RandomStringUtils.randomAlphabetic(5) + "^" + RandomStringUtils.randomAlphabetic(5) + "^").toUpperCase();
                 String referringPhysician = (RandomStringUtils.randomAlphabetic(5) + "^" + RandomStringUtils.randomAlphabetic(5) + "^").toUpperCase();
@@ -270,7 +238,6 @@ public class XdsTest {
                 String patientId = RandomStringUtils.randomNumeric(8);
 
                 Date currentDate = new Date(System.currentTimeMillis());
-                String accession = RandomStringUtils.randomNumeric(8);
                 String mrn = RandomStringUtils.randomNumeric(8);
 
                 DicomObject dicom = new BasicDicomObject();
@@ -282,7 +249,7 @@ public class XdsTest {
                 dicom.putDate(Tag.PatientBirthDate, VR.DA, currentDate);
 
                 // Add study related information to the DICOM dataset
-                dicom.putString(Tag.AccessionNumber, VR.SH, RandomStringUtils.randomNumeric(8));
+                dicom.putString(Tag.AccessionNumber, VR.SH, exam.getAccNum());
                 dicom.putString(Tag.StudyID, VR.SH, RandomStringUtils.randomNumeric(8));
                 dicom.putString(Tag.StudyDescription, VR.LO, "TEST STUDY");
                 dicom.putDate(Tag.StudyDate, VR.DA, currentDate);

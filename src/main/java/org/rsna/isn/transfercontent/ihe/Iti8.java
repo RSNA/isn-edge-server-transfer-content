@@ -125,7 +125,7 @@ public class Iti8
 
 		PixMsgRegisterOutpatient msg = new PixMsgRegisterOutpatient(manager,
 				null, job.getSingleUsePatientId(),
-				null, "1.3.6.1.4.1.21367.13.20.3000",
+				null, Constants.RSNA_ISN_ASSIGNING_AUTHORITY,
 				Constants.RSNA_UNIVERSAL_ID_TYPE);
 		msg.addOptionalPatientNameFamilyName("RSNA ISN");
 		msg.addOptionalPatientNameGivenName("RSNA ISN");

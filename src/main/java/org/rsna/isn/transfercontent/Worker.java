@@ -1,4 +1,4 @@
-/* Copyright (c) <2010>, <Radiological Society of North America>
+/* Copyright (c) <2017>, <Radiological Society of North America>
  * All rights reserved.
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
@@ -24,7 +24,6 @@
 package org.rsna.isn.transfercontent;
 
 import java.io.File;
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Map;
@@ -44,13 +43,14 @@ import org.rsna.isn.transfercontent.ihe.Iti41;
 import org.rsna.isn.transfercontent.ihe.Iti8;
 import org.rsna.isn.transfercontent.ihe.Iti9;
 import org.rsna.isn.util.Environment;
-import org.rsna.isn.util.SmsUtil;
 
 /**
  * Worker thread that processes jobs.
  *
  * @author Wyatt Tellis
- * @version 2.1.0
+ * @author Clifton Li
+   @version 5.0.0
+ * @since 2.1.0
  */
 class Worker extends Thread
 {
@@ -84,37 +84,6 @@ class Worker extends Thread
 			JobDao dao = new JobDao();
 			try
 			{
-                            
-                                /*
-				//
-				// Generate KOS objects
-				//				
-				Map<String, DicomStudy> studies =
-						Collections.<String, DicomStudy>emptyMap();
-				
-				try
-				{
-					dao.updateStatus(job, Job.RSNA_STARTED_KOS_GENERATION);
-
-					logger.info("Started KOS generation for " + job);
-
-					KosGenerator gen = new KosGenerator(job);
-					studies = gen.processFiles();
-
-					logger.info("Completed KOS generation for " + job);
-				}
-				catch (IOException ex)
-				{
-					logger.error("Unable to generate KOS for " + job + ". ", ex);
-
-					dao.updateStatus(job, Job.RSNA_FAILED_TO_GENERATE_KOS, ex);
-
-					return;
-				}
-                                */
-
-
-
 				//
 				// Register patient
 				//
@@ -161,7 +130,9 @@ class Worker extends Thread
 					logger.info("Retrieving global ID " + job);
 
 					Iti9 iti9 = new Iti9(job);
-					iti9.retrieveGlobalPatientId();
+					String globalId = iti9.pixQuery();
+                                        
+                                        dao.updateGlobalId(globalId, this.job);   
 
 					logger.info("Received global ID: " + job);
 				}
@@ -205,8 +176,12 @@ class Worker extends Thread
 					File jobDir = new File(tmpDir, Integer.toString(job.getJobId()));
 					File studiesDir = new File(jobDir, "studies");
                                         
+                                        
                                         Map<String, DicomStudy> studies =
 						Collections.<String, DicomStudy>emptyMap();
+                                        
+                                        KosGenerator gen = new KosGenerator(job);
+					studies = gen.processFiles();
                                         
 					for (DicomStudy study : studies.values())
 					{
@@ -268,20 +243,6 @@ class Worker extends Thread
      
                                         smsDao.addToQueue(sms);
                                 }
-                                /*
-                                SmsDao smsDao = new SmsDao();
-                                               
-                                if (dao.isJobSetComplete(job.getJobSetId()) && smsDao.isSmsEnabled())
-                                {      
-                                        MsgTemplate smsMessage = new MsgTemplate(); 
-                                
-                                        smsMessage.setTemplate(smsDao.getSms().getMessage());
-                                        smsMessage.setAccessCode(job.getAccessCode());
-                                        SmsUtil.send(job.getPhoneNumber(), smsMessage.compose());
-                                        
-                                        logger.info("Sent SMS to " + job.getPhoneNumber() + " for Job Set ID " + job.getJobSetId());
-                                }  
-                                */
 			}
 			catch (Throwable ex)
 			{

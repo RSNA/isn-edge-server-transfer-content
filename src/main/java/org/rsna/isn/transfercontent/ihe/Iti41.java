@@ -1,4 +1,4 @@
-/* Copyright (c) <2010>, <Radiological Society of North America>
+/* Copyright (c) <2017>, <Radiological Society of North America>
  * All rights reserved.
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
@@ -88,8 +88,9 @@ import org.rsna.isn.util.Reports;
  * the RSNA database.
  *
  * @author Wyatt Tellis
- * @version 3.1.0
- * @since 1.0.0
+ * @author Clifton Li
+ * @version 5.0.0
+ * @since 3.1.0
  *
  */
 public class Iti41
@@ -130,7 +131,7 @@ public class Iti41
                 //1.3.6.1.4.1.19376.2.840.1.1.2.1 was the default UID
 		if (StringUtils.isBlank(sourceId) || sourceId.equals("1.3.6.1.4.1.19376.2.840.1.1.2.1"))
                 {       
-                        sourceId = Constants.RSNA_ISN_UNIVERSAL_ID + "." + UIDUtils.createUID();
+                        sourceId = Constants.RSNA_ISN_ROOT_SOURCE_ID + "." + UIDUtils.createUID();
                         dao.updateSourceId(sourceId);
                         logger.info("Source id set to: " + sourceId);
                 }
@@ -239,21 +240,7 @@ public class Iti41
 				DocumentEntryType docEntry = tx.getDocumentEntry(reportUuid);
 				initDocEntry(docEntry);
 
-                                CodedMetadataType classCode = xdsFactory.createCodedMetadataType();
-                                classCode.setCode("REPORTS");
-                                classCode.setDisplayName(inStr("Report"));
-                                classCode.setSchemeName("1.3.6.1.4.1.19376.1.2.6.1");
-                                docEntry.setClassCode(classCode);
-                                
-				CodedMetadataType formatCode = xdsFactory.createCodedMetadataType();
-				formatCode.setCode("urn:ihe:rad:PDF");
-				formatCode.setDisplayName(inStr("urn:ihe:rad:PDF"));
-				formatCode.setSchemeName("1.3.6.1.4.1.19376.1.2.3");
-				docEntry.setFormatCode(formatCode);
-
-				docEntry.setMimeType(PDF_DESCRIPTOR.getMimeType());
-
-				docEntry.setUniqueId(UIDUtils.createUID());
+                                docEntryReports(docEntry);
                                 
                                 submitTransaction(tx,debugFile);
 			}
@@ -294,23 +281,7 @@ public class Iti41
 				DocumentEntryType dcmEntry = tx.getDocumentEntry(dcmUuid);
 				initDocEntry(dcmEntry);
 
-				CodedMetadataType dcmFmt = xdsFactory.createCodedMetadataType();
-				String sopClass = object.getSopClassUid();                   
-                                dcmFmt.setCode(sopClass);
-				dcmFmt.setDisplayName(inStr(sopClass));
-                                dcmFmt.setSchemeName(DICOM_UID_REG_UID);             
-				//dcmFmt.setSchemeUUID(DICOM_UID_REG_UID);
-				dcmEntry.setFormatCode(dcmFmt);
-
-				CodedMetadataType dcmEventCode = xdsFactory.createCodedMetadataType();
-				dcmEventCode.setCode(series.getModality());
-				dcmEventCode.setSchemeName("DCM");
-                                //dcmEventCode.setDisplayName(inStr(""));
-				dcmEntry.getEventCode().add(dcmEventCode);
-
-				dcmEntry.setMimeType(DocumentDescriptor.DICOM.getMimeType());
-
-				dcmEntry.setUniqueId(object.getSopInstanceUid());
+				docEntryImages(dcmEntry,series);
 			}
 		}
                 
@@ -318,7 +289,7 @@ public class Iti41
         }
 
 
-        private void submitTransaction(SubmitTransactionData tx, File debugFile) throws Exception
+        protected void submitTransaction(SubmitTransactionData tx, File debugFile) throws Exception
         {
             	//
 		// Initialize submission set metadata
@@ -331,12 +302,12 @@ public class Iti41
 		CodedMetadataType contentType = xdsFactory.createCodedMetadataType();
 		contentType.setCode("Imaging Exam");
 		contentType.setDisplayName(inStr("Imaging Exam"));
-		contentType.setSchemeName("1.3.6.1.4.1.19376.3.840.1.1.3");
+                contentType.setSchemeName("1.3.6.1.4.1.19376.3.840.1.1.3");
 		subSet.setContentTypeCode(contentType);
 
 		subSet.setPatientId(getRsnaId());
 		subSet.setSourceId(sourceId);
-		subSet.setSubmissionTime(getGmt(new Date()));
+                subSet.setSubmissionTime(getGmt(new Date()));
                 
 		subSet.setUniqueId(UIDUtils.createUID());
 
@@ -457,8 +428,8 @@ public class Iti41
 	{
 		CX rsnaId = hl7Factory.createCX();
 		rsnaId.setIdNumber(job.getSingleUsePatientId());
-		rsnaId.setAssigningAuthorityUniversalId(Constants.RSNA_UNIVERSAL_ID);
-		rsnaId.setAssigningAuthorityUniversalIdType(Constants.RSNA_UNIVERSAL_ID_TYPE);
+		rsnaId.setAssigningAuthorityUniversalId(Constants.RSNA_ISN_ASSIGNING_AUTHORITY);
+                rsnaId.setIdNumber(job.getGlobalId());
 
 		return rsnaId;
 	}
@@ -473,7 +444,7 @@ public class Iti41
 		return classCode;
 	}
 
-	private CodedMetadataType getConfidentialityCode()
+	protected CodedMetadataType getConfidentialityCode()
 	{
 		CodedMetadataType confidentialityCode = xdsFactory.createCodedMetadataType();
 		confidentialityCode.setCode("V");
@@ -514,8 +485,8 @@ public class Iti41
 		//typeCode.setCode(study.getStudyDescription());
 		//typeCode.setDisplayName(inStr(study.getStudyDescription()));
 		//typeCode.setSchemeName("RSNA-ISN");
-
-		typeCode.setCode("18748-4");
+                
+                typeCode.setCode("18748-4");
 		typeCode.setDisplayName(inStr("Diagnostic Imaging Report"));
                 typeCode.setSchemeName("LOINC");
                 
@@ -523,7 +494,7 @@ public class Iti41
 	}
 
 	@SuppressWarnings("unchecked")
-	private void initDocEntry(DocumentEntryType docEntry)
+	protected void initDocEntry(DocumentEntryType docEntry)
 	{
 		AuthorType author = getAuthor();
 		if (author != null)
@@ -546,8 +517,7 @@ public class Iti41
 		docEntry.setServiceStartTime(getGmt(study.getStudyDateTime()));
 		docEntry.setServiceStopTime(getGmt(study.getStudyDateTime()));
 		docEntry.setSourcePatientId(getRsnaId());
-		//docEntry.setSourcePatientInfo(getSrcPatInfo());
-		//docEntry.setTitle(inStr(study.getStudyDescription()));
+		docEntry.setTitle(inStr(study.getStudyDescription()));
 		docEntry.setTypeCode(getTypeCode());
                 
                 CXi accNum = hl7Factory.createCXi();
@@ -555,10 +525,65 @@ public class Iti41
                 accNum.setIdentifierTypeCode(IdentifierTypeCodeConstants.ACCESSION_NUMBER);
                 docEntry.getReferenceIdList().add(accNum);
                 
+                
 	}
 
+        protected void docEntryImages(DocumentEntryType dcmEntry, DicomSeries series)
+        {
+            	for (DicomObject object : series.getObjects().values())
+		{
+                        series.getObjects();
+                        CodedMetadataType dcmFmt = xdsFactory.createCodedMetadataType();
+                        String sopClass = object.getSopClassUid();                   
+                        dcmFmt.setCode(sopClass);
+                        dcmFmt.setDisplayName(inStr(sopClass));
+                        dcmFmt.setSchemeName(DICOM_UID_REG_UID);             
+                        //dcmFmt.setSchemeUUID(DICOM_UID_REG_UID);
+                        dcmEntry.setFormatCode(dcmFmt);
+
+                        //Omitting event code for now
+                        /*
+                        CodedMetadataType dcmEventCode = xdsFactory.createCodedMetadataType();
+
+                        dcmEventCode.setCode(series.getModality());
+                        dcmEventCode.setSchemeName("DCM");
+                        dcmEventCode.setDisplayName(inStr("SRT"));
+
+                        dcmEntry.getEventCode().add(dcmEventCode);
+                        */
+                        dcmEntry.setMimeType(DocumentDescriptor.DICOM.getMimeType());
+
+                        dcmEntry.setUniqueId(object.getSopInstanceUid());  
+                }
+        }
+        
+        protected void docEntryReports(DocumentEntryType docEntry)
+        {
+                CodedMetadataType classCode = xdsFactory.createCodedMetadataType();
+                classCode.setCode("REPORTS");
+                classCode.setDisplayName(inStr("Report"));
+                classCode.setSchemeName("1.3.6.1.4.1.19376.1.2.6.1");
+                docEntry.setClassCode(classCode);
+
+                CodedMetadataType formatCode = xdsFactory.createCodedMetadataType();
+                formatCode.setCode("urn:ihe:rad:PDF");
+                formatCode.setDisplayName(inStr("urn:ihe:rad:PDF"));
+                formatCode.setSchemeName("1.3.6.1.4.1.19376.1.2.3");
+                docEntry.setFormatCode(formatCode);
+
+                CodedMetadataType dcmEventCode = xdsFactory.createCodedMetadataType();
+
+                dcmEventCode.setCode("TRID1001");
+                dcmEventCode.setSchemeName("RSNA2008 eventCodeList");
+                dcmEventCode.setDisplayName(inStr("XRAY CHEST Orderable"));
+                docEntry.getEventCode().add(dcmEventCode);
+
+                docEntry.setMimeType(PDF_DESCRIPTOR.getMimeType());
+
+                docEntry.setUniqueId(UIDUtils.createUID());            
+        }
 	@SuppressWarnings("unchecked")
-	private static InternationalStringType inStr(String value)
+	protected static InternationalStringType inStr(String value)
 	{
 		LocalizedStringType lzStr = xdsFactory.createLocalizedStringType();
 		lzStr.setCharset("UTF-8");
