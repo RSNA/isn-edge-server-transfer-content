@@ -28,6 +28,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -35,6 +36,7 @@ import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import javax.imageio.IIOImage;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
@@ -72,6 +74,7 @@ public class XdsTest {
 
         private final static Exam exam = new Exam();
         private static Job job = new Job();
+        
         public static void main(String[] args)  
         {       
                 Environment.init("transfer");
@@ -117,7 +120,8 @@ public class XdsTest {
                 try
                 {
                         Iti9 iti9 = new Iti9(job);
-                        globalId = iti9.pixQuery();
+                        Map.Entry response = iti9.pixQuery();
+                        globalId = response.getKey().toString();
                         job.setglobalId(globalId);
                         
                         if (globalId.isEmpty())
@@ -154,15 +158,16 @@ public class XdsTest {
                 study.setStudyDescription("TEST STUDY");
                 study.getSeries().put(UIDUtils.createUID(),series);
                 
-                
+                job.setExam(exam);
+                study.setJob(job);
                 try
                 {
                         byte[] dicomBa = createDicomByteArray(dcm, image);
 
                         Iti41XdsTest.init();
-                        Iti41XdsTest test = new Iti41XdsTest(study, job.getSingleUsePatientId());
-
-                        test.submitReport(null);
+                        Iti41XdsTest test = new Iti41XdsTest(study, job.getSingleUsePatientId());   
+                        File debugFile = new File("/tmp", "submission-set.xml");
+                        test.submitReport(debugFile);
                         test.submitTestDocuments(dicomBa);
                 }
 

@@ -27,6 +27,7 @@ import java.io.File;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.openhealthtools.ihe.utils.IHEException;
@@ -128,13 +129,19 @@ class Worker extends Thread
 					dao.updateStatus(job, Job.RSNA_RETRIEVING_GLOBAL_ID);
 
 					logger.info("Retrieving global ID " + job);
-
-					Iti9 iti9 = new Iti9(job);
-					String globalId = iti9.pixQuery();
                                         
-                                        dao.updateGlobalId(globalId, this.job);   
-
-					logger.info("Received global ID: " + job);
+					Iti9 iti9 = new Iti9(job);
+					Entry response = iti9.pixQuery();
+                                        
+                                        String globalId = response.getKey().toString();
+                                        String globalAA = response.getValue().toString();
+                                        
+                                        dao.updateGlobalId(globalId, globalAA, this.job);   
+                                        
+                                        job.setglobalId(globalId);
+                                        job.setglobalAA(globalAA);
+                                        
+					logger.info("Saving global ID to DB: " + job);
 				}
 				catch (ClearinghouseException ex)
 				{

@@ -25,7 +25,10 @@ package org.rsna.isn.transfercontent.ihe;
 
 import java.net.URI;
 import java.sql.SQLException;
+import java.util.AbstractMap;
+import java.util.Map;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
 import org.eclipse.ohf.hl7v2.core.message.MessageManager;
 import org.openhealthtools.ihe.atna.auditor.PIXSourceAuditor;
@@ -52,13 +55,13 @@ public class Iti9
 
 	private static final URI pix;
 
-	private static final URI registry;
-
 	private static final MessageManager manager = MessageManager.getFactory();
 
 	private final Job job;
         
         private static String sourceId;
+        
+        private static String rsnaAssigningAuthority;
 
 	static
 	{
@@ -66,26 +69,21 @@ public class Iti9
 		{
 			ConfigurationDao dao = new ConfigurationDao();
 
-			String pixUri = dao.getConfiguration("iti8-pix-uri");
+			String pixUri = dao.getConfiguration("iti9-pix-uri");
 			if (StringUtils.isBlank(pixUri))
-				throw new ExceptionInInitializerError("iti8-pix-uri is blank");
+				throw new ExceptionInInitializerError("iti9-pix-uri is blank");
 
 			pix = new URI(pixUri);
 
+			rsnaAssigningAuthority = dao.getConfiguration("rsna-assigning-authority");
+			if (StringUtils.isBlank(rsnaAssigningAuthority))
+				throw new ExceptionInInitializerError("rsna-assigning-authority");
 
-
-
-
-			String regUri = dao.getConfiguration("iti8-reg-uri");
-			if (StringUtils.isBlank(regUri))
-				throw new ExceptionInInitializerError("iti8-reg-uri is blank");
-
-			registry = new URI(regUri);
-
-			PIXSourceAuditor.getAuditor().getConfig().setAuditorEnabled(false);
-                        
                         sourceId = dao.getConfiguration("iti41-source-id");
+			if (StringUtils.isBlank(sourceId))
+				throw new ExceptionInInitializerError("iti41-source-id");                        
                         
+			PIXSourceAuditor.getAuditor().getConfig().setAuditorEnabled(false);                
 		}
 		catch (Exception ex)
 		{
@@ -119,7 +117,7 @@ public class Iti9
 		return pixQuery(pix, "PIX");
 	}
         */
-	public String pixQuery() throws IHEException, ClearinghouseException, SQLException
+	public Map.Entry<String, String> pixQuery() throws IHEException, ClearinghouseException, SQLException
 	{
 		PixConsumer pixQuery = new PixConsumer();
 
@@ -128,26 +126,12 @@ public class Iti9
 		pixQuery.setMLLPDestination(mllp);
 
                 String globalId = "";
-                //PixConsumerQuery msg = pixQuery.createQuery(job.getSingleUsePatientId(), null, 
-                //                "1.3.6.1.4.1.21367.13.20.1000", Constants.RSNA_UNIVERSAL_ID_TYPE); 
-                
-                
-                //PixConsumerQuery msg = pixQuery.createQuery("IHERED-10000", null, 
-                PixConsumerQuery msg = pixQuery.createQuery("IHERED-10000", null, 
-                                "1.3.6.1.4.1.21367.13.20.3000",Constants.RSNA_UNIVERSAL_ID_TYPE); 
-                                //"1.3.6.1.4.1.21367.13.20.1000", Constants.RSNA_UNIVERSAL_ID_TYPE); 
+                String assigningAuthority = "";
+
+                PixConsumerQuery msg = pixQuery.createQuery(job.getSingleUsePatientId(), null, 
+                                rsnaAssigningAuthority,Constants.RSNA_UNIVERSAL_ID_TYPE);  
                 
                 msg.changeDefaultCharacterSet("UNICODE");
-                
-                /*
-		PixMsgRegisterOutpatient msg2 = new PixMsgRegisterOutpatient(manager,
-				null, job.getSingleUsePatientId(),
-				null, Constants.RSNA_UNIVERSAL_ID,
-				Constants.RSNA_UNIVERSAL_ID_TYPE);
-                
-		msg2.addOptionalPatientNameFamilyName("RSNA ISN");
-		msg2.addOptionalPatientNameGivenName("RSNA ISN");
-                */
                 
 		PixConsumerResponse rsp = pixQuery.sendQuery(msg, false);
 
@@ -181,22 +165,21 @@ public class Iti9
 		}
                 else
                 {
-
                         globalId = rsp.getField("PID-3-1");
-
-                        if (!globalId.isEmpty())
+                        assigningAuthority = rsp.getField("PID-3-4-2");
+                        //AA PID-3-4-2
+                        if (globalId.isEmpty() || assigningAuthority.isEmpty())
                         {
-                                logger.info("Received Globlal ID " + globalId);
+                                String chMsg = "Clearinghouse did not return a global ID / Assigning Authority";
+				throw new ClearinghouseException(chMsg);
                         }
                         else
                         {
-                                String chMsg = "Clearinghouse did not return a global ID.";
-
-				throw new ClearinghouseException(chMsg);
+                                logger.info("Received Globlal ID " + globalId);
+                                logger.info("Received Assigning Authority " + globalId);
                         }                               
                 }
-                
-                return globalId;
-	}
 
+                return new AbstractMap.SimpleImmutableEntry(globalId, assigningAuthority);
+	}
 }

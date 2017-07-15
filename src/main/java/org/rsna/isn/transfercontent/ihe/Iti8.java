@@ -52,12 +52,12 @@ public class Iti8
 {
 	private static final Logger logger = Logger.getLogger(Iti8.class);
 
-	private static final URI pix;
-
 	private static final URI registry;
 
 	private static final MessageManager manager = MessageManager.getFactory();
 
+        private static String rsnaAssigningAuthority;
+        
 	private final Job job;
 
 	static
@@ -66,21 +66,15 @@ public class Iti8
 		{
 			ConfigurationDao dao = new ConfigurationDao();
 
-			String pixUri = dao.getConfiguration("iti8-pix-uri");
-			if (StringUtils.isBlank(pixUri))
-				throw new ExceptionInInitializerError("iti8-pix-uri is blank");
-
-			pix = new URI(pixUri);
-
-
-
-
-
 			String regUri = dao.getConfiguration("iti8-reg-uri");
 			if (StringUtils.isBlank(regUri))
 				throw new ExceptionInInitializerError("iti8-reg-uri is blank");
 
 			registry = new URI(regUri);
+
+                        rsnaAssigningAuthority = dao.getConfiguration("rsna-assigning-authority");
+			if (StringUtils.isBlank(rsnaAssigningAuthority))
+				throw new ExceptionInInitializerError("rsna-assigning-authority");
 
 			PIXSourceAuditor.getAuditor().getConfig().setAuditorEnabled(false);
 		}
@@ -101,7 +95,7 @@ public class Iti8
 	}
 
 	/**
-	 * Register the patient with the PIX and registry.
+	 * Register the patient to the registry.
 	 *
 	 * @throws IHEException If there was an uncaught exception while attempting
 	 * to register the patient.
@@ -125,7 +119,7 @@ public class Iti8
 
 		PixMsgRegisterOutpatient msg = new PixMsgRegisterOutpatient(manager,
 				null, job.getSingleUsePatientId(),
-				null, Constants.RSNA_ISN_ASSIGNING_AUTHORITY,
+				null, rsnaAssigningAuthority,
 				Constants.RSNA_UNIVERSAL_ID_TYPE);
 		msg.addOptionalPatientNameFamilyName("RSNA ISN");
 		msg.addOptionalPatientNameGivenName("RSNA ISN");

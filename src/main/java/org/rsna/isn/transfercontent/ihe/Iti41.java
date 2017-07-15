@@ -427,9 +427,10 @@ public class Iti41
 	private CX getRsnaId()
 	{
 		CX rsnaId = hl7Factory.createCX();
-		rsnaId.setIdNumber(job.getSingleUsePatientId());
-		rsnaId.setAssigningAuthorityUniversalId(Constants.RSNA_ISN_ASSIGNING_AUTHORITY);
+		
                 rsnaId.setIdNumber(job.getGlobalId());
+		rsnaId.setAssigningAuthorityUniversalId(job.getGlobalAA());
+                rsnaId.setAssigningAuthorityUniversalIdType(Constants.RSNA_UNIVERSAL_ID_TYPE);
 
 		return rsnaId;
 	}
@@ -540,17 +541,15 @@ public class Iti41
                         dcmFmt.setSchemeName(DICOM_UID_REG_UID);             
                         //dcmFmt.setSchemeUUID(DICOM_UID_REG_UID);
                         dcmEntry.setFormatCode(dcmFmt);
-
-                        //Omitting event code for now
-                        /*
+                   
                         CodedMetadataType dcmEventCode = xdsFactory.createCodedMetadataType();
 
-                        dcmEventCode.setCode(series.getModality());
+                        dcmEventCode.setCode("NONE");
                         dcmEventCode.setSchemeName("DCM");
-                        dcmEventCode.setDisplayName(inStr("SRT"));
+                        dcmEventCode.setDisplayName(inStr("NONE"));
 
                         dcmEntry.getEventCode().add(dcmEventCode);
-                        */
+                        
                         dcmEntry.setMimeType(DocumentDescriptor.DICOM.getMimeType());
 
                         dcmEntry.setUniqueId(object.getSopInstanceUid());  
