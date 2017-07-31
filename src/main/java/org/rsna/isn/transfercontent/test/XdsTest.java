@@ -117,14 +117,19 @@ public class XdsTest {
                 }
 
                 String globalId;
+                String globalAA;
                 try
                 {
                         Iti9 iti9 = new Iti9(job);
                         Map.Entry response = iti9.pixQuery();
+                        
                         globalId = response.getKey().toString();
                         job.setglobalId(globalId);
                         
-                        if (globalId.isEmpty())
+                        globalAA = response.getValue().toString();
+                        job.setglobalAA(globalAA);
+                        
+                        if (globalId.isEmpty() && globalAA.isEmpty())
                             return "Unable to retreive global ID";         
                 }
                 catch (ClearinghouseException ex)
@@ -154,6 +159,7 @@ public class XdsTest {
                 
                 //series.getObjects().put(UIDUtils.createUID(),dcm);
                 DicomStudy study = new DicomStudy();
+                study.setStudyUid(UIDUtils.createUID());
                 study.setStudyDateTime(new Date(System.currentTimeMillis()));
                 study.setStudyDescription("TEST STUDY");
                 study.getSeries().put(UIDUtils.createUID(),series);

@@ -25,16 +25,12 @@
 
 package org.rsna.isn.transfercontent.ihe;
 
-import java.net.URI;
-import java.text.SimpleDateFormat;
-import org.apache.log4j.Logger;
+import org.dcm4che2.data.UID;
 import org.dcm4che2.util.UIDUtils;
-import org.openhealthtools.ihe.common.hl7v2.Hl7v2Factory;
 import org.openhealthtools.ihe.xds.document.DocumentDescriptor;
 import org.openhealthtools.ihe.xds.document.XDSDocument;
 import org.openhealthtools.ihe.xds.document.XDSDocumentFromByteArray;
 import org.openhealthtools.ihe.xds.metadata.DocumentEntryType;
-import org.openhealthtools.ihe.xds.metadata.MetadataFactory;
 import org.openhealthtools.ihe.xds.source.SubmitTransactionData;
 import org.rsna.isn.domain.DicomObject;
 import org.rsna.isn.domain.DicomSeries;
@@ -52,28 +48,6 @@ import org.rsna.isn.domain.DicomStudy;
  */
 public class Iti41XdsTest extends Iti41
 {
-	private static final Logger logger = Logger.getLogger(Iti41.class);
-
-	private static final MetadataFactory xdsFactory = MetadataFactory.eINSTANCE;
-
-	private static final Hl7v2Factory hl7Factory = Hl7v2Factory.eINSTANCE;
-
-	private static final String DICOM_UID_REG_UID = "1.2.840.10008.2.6.1";
-
-	private static final DocumentDescriptor KOS_DESCRIPTOR =
-			new DocumentDescriptor("KOS", "application/dicom-kos");
-
-	private static final DocumentDescriptor TEXT_DESCRIPTOR =
-			new DocumentDescriptor("TEXT", "text/plain");
-
-	private static String sourceId;
-
-	private static URI endpoint;
-
-	private static long timeout;
-
-	private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-
         private final String singleUsePatientId;
 
         public Iti41XdsTest(DicomStudy study,String singleUsePatientId) 
@@ -99,7 +73,7 @@ public class Iti41XdsTest extends Iti41
                 initDocEntry(dcmEntry);
 
                 DicomObject obj = new DicomObject();
-                obj.setSopClassUid(UIDUtils.createUID());
+                obj.setSopClassUid(UID.SecondaryCaptureImageStorage);
                 obj.setSopInstanceUid(UIDUtils.createUID());  
                 
                 DicomSeries series = new DicomSeries();
@@ -107,6 +81,6 @@ public class Iti41XdsTest extends Iti41
                 
                 docEntryImages(dcmEntry,series);
 
-                submitTransaction(tx,null);
+                submitTransaction(tx,null,"image");
         }
 }

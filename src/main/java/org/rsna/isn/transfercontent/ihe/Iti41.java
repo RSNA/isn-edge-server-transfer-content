@@ -109,8 +109,10 @@ public class Iti41
 
 	private static String sourceId;
 
-	private static URI endpoint;
+	private static URI imgEndpoint;
 
+        private static URI docEndpoint;
+        
 	private static long timeout;
 
 	private final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -120,6 +122,8 @@ public class Iti41
 	private final Exam exam;
 
 	private final Job job;
+        
+        private static String TEMPLATE = "pdf-template.pdf";
         
 	public static void init() throws Exception
 	{
@@ -136,14 +140,17 @@ public class Iti41
                         logger.info("Source id set to: " + sourceId);
                 }
 
-		String uri = dao.getConfiguration("iti41-endpoint-uri");
-		if (StringUtils.isBlank(uri))
-			throw new ExceptionInInitializerError("iti41-endpoint-uri");
-		endpoint = new URI(uri);
+		String imgUri = dao.getConfiguration("iti41-img-endpoint-uri");
+		if (StringUtils.isBlank(imgUri))
+			throw new ExceptionInInitializerError("iti41-img-endpoint-uri");
+		imgEndpoint = new URI(imgUri);
+		logger.info("Image Document Source Endpoint URI set to: " + imgEndpoint);
 
-		logger.info("Endpoint URI set to: " + endpoint);
-
-
+		String docUri = dao.getConfiguration("iti41-doc-endpoint-uri");
+		if (StringUtils.isBlank(docUri))
+			throw new ExceptionInInitializerError("iti41-doc-endpoint-uri");
+		docEndpoint = new URI(docUri);
+		logger.info("Document Source Endpoint URI set to: " + docEndpoint);
 		String t = dao.getConfiguration("iti41-socket-timeout");
 		timeout = NumberUtils.toLong(t, 120) * 1000;
 
@@ -221,10 +228,11 @@ public class Iti41
                                 ConfigurationDao dao = new ConfigurationDao();
 
                                 String pfdTemplate = dao.getConfiguration("pdf-template");
+                                String templatePath = Environment.getConfDir().getAbsolutePath() + "/" + TEMPLATE;
                                 
                                 byte[] reportBa = null;
 
-                                if (StringUtils.isNotBlank(pfdTemplate) && new File(pfdTemplate).isFile())
+                                if (Boolean.parseBoolean(pfdTemplate) && new File(templatePath).isFile())
                                 {
                                         reportBa = Reports.useTemplate(exam);
                                 }
@@ -242,7 +250,7 @@ public class Iti41
 
                                 docEntryReports(docEntry);
                                 
-                                submitTransaction(tx,debugFile);
+                                submitTransaction(tx,debugFile,"report");
 			}
 			else
 			{
@@ -285,11 +293,11 @@ public class Iti41
 			}
 		}
                 
-                submitTransaction(tx,debugFile);
+                submitTransaction(tx,debugFile,"image");
         }
 
 
-        protected void submitTransaction(SubmitTransactionData tx, File debugFile) throws Exception
+        protected void submitTransaction(SubmitTransactionData tx, File debugFile, String srcType) throws Exception
         {
             	//
 		// Initialize submission set metadata
@@ -332,8 +340,20 @@ public class Iti41
 				IOUtils.closeQuietly(fos);
 			}
 		}
-
-		B_Source reg = new B_Source(endpoint);
+                
+                B_Source reg;
+                if (srcType.equals("image"))
+                {
+                         reg = new B_Source(imgEndpoint);
+                }
+                else if (srcType.equals("report"))
+                {
+                         reg = new B_Source(docEndpoint);
+                }
+                else
+                {
+			throw new IllegalArgumentException("Invalid srcType value in submitTransaction.");                       
+                }
 		IHESOAP12Sender sender = (IHESOAP12Sender) reg.getSenderClient().getSender();
 
 		Options options = sender.getAxisServiceClient().getOptions();
