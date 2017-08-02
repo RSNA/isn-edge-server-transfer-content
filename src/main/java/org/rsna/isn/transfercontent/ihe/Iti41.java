@@ -109,6 +109,8 @@ public class Iti41
 
 	private static String sourceId;
 
+        private static String siteAssigningAuthority;
+        
 	private static URI imgEndpoint;
 
         private static URI docEndpoint;
@@ -140,6 +142,14 @@ public class Iti41
                         logger.info("Source id set to: " + sourceId);
                 }
 
+                siteAssigningAuthority = dao.getConfiguration("site-assigning-authority");
+ 		if (StringUtils.isBlank(siteAssigningAuthority))
+                {       
+                        siteAssigningAuthority = Constants.SITE_ASSIGNING_AUTHORITY + "." + UIDUtils.createUID();
+                        dao.updateConfiguration("site-assigning-authority",siteAssigningAuthority);
+                        logger.info("siteAssigningAuthority set to: " + siteAssigningAuthority);
+                }
+                
 		String imgUri = dao.getConfiguration("iti41-img-endpoint-uri");
 		if (StringUtils.isBlank(imgUri))
 			throw new ExceptionInInitializerError("iti41-img-endpoint-uri");
@@ -544,6 +554,8 @@ public class Iti41
                 CXi accNum = hl7Factory.createCXi();
                 accNum.setIdNumber(exam.getAccNum());
                 accNum.setIdentifierTypeCode(IdentifierTypeCodeConstants.ACCESSION_NUMBER);
+                accNum.setAssigningAuthorityUniversalId(siteAssigningAuthority);
+                accNum.setAssigningAuthorityUniversalIdType(Constants.RSNA_UNIVERSAL_ID_TYPE);
                 docEntry.getReferenceIdList().add(accNum);
                 
                 
