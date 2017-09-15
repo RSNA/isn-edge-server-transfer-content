@@ -62,11 +62,12 @@ public class SubmissionTest
 		reg.registerPatient();
                 System.out.println("test");
                 Iti9 reg9 = new Iti9(job);
-		String globalId = reg9.pixQuery();
-                
+		Map.Entry response = reg9.pixQuery();
+                String globalId = response.getKey().toString();
+                String globalAA = response.getValue().toString();
 
 
-                dao.updateGlobalId(globalId, job);   
+                dao.updateGlobalId(globalId,globalAA, job);   
                 Iti41.init();
                 
                 File tmpDir = Environment.getTmpDir();
