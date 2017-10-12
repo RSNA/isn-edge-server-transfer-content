@@ -44,6 +44,7 @@ import org.rsna.isn.transfercontent.ihe.Iti41;
 import org.rsna.isn.transfercontent.ihe.Iti8;
 import org.rsna.isn.transfercontent.ihe.Iti9;
 import org.rsna.isn.util.Environment;
+import org.rsna.isn.util.FormatText;
 
 /**
  * Worker thread that processes jobs.
@@ -244,7 +245,7 @@ class Worker extends Thread
                                 
                                         
                                         smsMessage.setTemplate(sms.getMessage());
-                                        smsMessage.setAccessCode(job.getAccessCode()); 
+                                        smsMessage.setAccessCode(FormatText.formatAccessCode(job.getAccessCode())); 
                                         sms.setMessage(smsMessage.compose());
                                         sms.setRecipient(job.getPhoneNumber());
      
