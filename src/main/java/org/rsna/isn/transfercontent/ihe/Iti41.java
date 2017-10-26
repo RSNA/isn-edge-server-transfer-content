@@ -408,7 +408,7 @@ public class Iti41
 		{
 			AuthorType author = xdsFactory.createAuthorType();
 			author.setAuthorPerson(legalAuthenticator);
-
+                        
 
 
 			XON institution = Hl7v2Factory.eINSTANCE.createXON();
@@ -416,7 +416,7 @@ public class Iti41
 
 			EList institutions = author.getAuthorInstitution();
 			institutions.add(institution);
-
+                       
 
 			return author;
 		}
@@ -437,6 +437,7 @@ public class Iti41
 			legalAuthenticator.setFamilyName(signer.getLastName());
 			legalAuthenticator.setGivenName(signer.getFirstName());
 			legalAuthenticator.setIdNumber(signer.getId());
+                        legalAuthenticator.setAssigningAuthorityUniversalId(Constants.RSNA_ISN_ASSIGNING_AUTHORITY);
 			legalAuthenticator.setAssigningAuthorityUniversalIdType("ISO");
 
 			return legalAuthenticator;
@@ -448,6 +449,7 @@ public class Iti41
 			legalAuthenticator.setFamilyName("RSNA ISN");
 			legalAuthenticator.setGivenName("RSNA ISN");
 			legalAuthenticator.setIdNumber("RSNA ISN");
+                        legalAuthenticator.setAssigningAuthorityUniversalId(Constants.RSNA_ISN_ASSIGNING_AUTHORITY);
 			legalAuthenticator.setAssigningAuthorityUniversalIdType("ISO");
 
 			return legalAuthenticator;
@@ -468,9 +470,9 @@ public class Iti41
 	private CodedMetadataType getClassCode()
 	{
 		CodedMetadataType classCode = xdsFactory.createCodedMetadataType();
-		classCode.setCode("Imaging Exam");
-		classCode.setDisplayName(inStr("Imaging Exam"));
-		classCode.setSchemeName("RSNA ISN");
+		classCode.setCode("IMAGES");
+		classCode.setDisplayName(inStr("Images"));
+		classCode.setSchemeName("1.3.6.1.4.1.19376.1.2.6.1");
 
 		return classCode;
 	}
@@ -513,13 +515,10 @@ public class Iti41
 	private CodedMetadataType getTypeCode()
 	{
 		CodedMetadataType typeCode = xdsFactory.createCodedMetadataType();
-		//typeCode.setCode(study.getStudyDescription());
-		//typeCode.setDisplayName(inStr(study.getStudyDescription()));
-		//typeCode.setSchemeName("RSNA-ISN");
                 
-                typeCode.setCode("18748-4");
-		typeCode.setDisplayName(inStr("Diagnostic Imaging Report"));
-                typeCode.setSchemeName("LOINC");
+                typeCode.setCode("Imaging Exam");
+		typeCode.setDisplayName(inStr("Imaging Exam"));
+                typeCode.setSchemeName("1.3.6.1.4.1.19376.2.840.1.1.2");
                 
 		return typeCode;
 	}
@@ -553,10 +552,12 @@ public class Iti41
                 
                 CXi accNum = hl7Factory.createCXi();
                 accNum.setIdNumber(exam.getAccNum());
-                accNum.setIdentifierTypeCode(IdentifierTypeCodeConstants.ACCESSION_NUMBER);
                 accNum.setAssigningAuthorityUniversalId(siteAssigningAuthority);
-                accNum.setAssigningAuthorityUniversalIdType(Constants.RSNA_UNIVERSAL_ID_TYPE);
+                //accNum.setAssigningAuthorityName("RSNA-ISN");
+                accNum.setAssigningAuthorityUniversalIdType("ISO^");
+                accNum.setIdentifierTypeCode(IdentifierTypeCodeConstants.ACCESSION_NUMBER);
                 docEntry.getReferenceIdList().add(accNum);
+                accNum.toString();
                 
                 
 	}
@@ -576,10 +577,9 @@ public class Iti41
                    
                         CodedMetadataType dcmEventCode = xdsFactory.createCodedMetadataType();
 
-                        dcmEventCode.setCode("NONE");
+                        dcmEventCode.setCode("OT");
                         dcmEventCode.setSchemeName("DCM");
-                        dcmEventCode.setDisplayName(inStr("NONE"));
-
+                        dcmEventCode.setDisplayName(inStr("Other"));                
                         dcmEntry.getEventCode().add(dcmEventCode);
                         
                         dcmEntry.setMimeType(DocumentDescriptor.DICOM.getMimeType());
@@ -604,9 +604,9 @@ public class Iti41
 
                 CodedMetadataType dcmEventCode = xdsFactory.createCodedMetadataType();
 
-                dcmEventCode.setCode("TRID1001");
-                dcmEventCode.setSchemeName("RSNA2008 eventCodeList");
-                dcmEventCode.setDisplayName(inStr("XRAY CHEST Orderable"));
+                dcmEventCode.setCode("OT");
+                dcmEventCode.setSchemeName("DCM");
+                dcmEventCode.setDisplayName(inStr("Other"));
                 docEntry.getEventCode().add(dcmEventCode);
 
                 docEntry.setMimeType(PDF_DESCRIPTOR.getMimeType());
