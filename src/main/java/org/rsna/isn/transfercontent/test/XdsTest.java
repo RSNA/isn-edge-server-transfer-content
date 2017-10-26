@@ -42,6 +42,8 @@ import javax.imageio.ImageWriter;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.log4j.Logger;
 import org.dcm4che2.data.BasicDicomObject;
 import org.dcm4che2.data.DicomObject;
 import org.dcm4che2.data.Tag;
@@ -72,6 +74,8 @@ import org.rsna.isn.util.Environment;
 
 public class XdsTest {
 
+        private static final Logger logger = Logger.getLogger(XdsTest.class);
+        
         private final static Exam exam = new Exam();
         private static Job job = new Job();
         
@@ -109,10 +113,12 @@ public class XdsTest {
                 }
                 catch (ClearinghouseException ex)
                 {
+                        logger.error("Unable to register patient. " + ex);
                         return "Unable to register patient. " + ex;
                 }
                 catch (IHEException ex)
                 {
+                        logger.error("Unable to register patient. " + ex);
                         return "Unable to register patient. " + ex;
                 }
 
@@ -129,19 +135,24 @@ public class XdsTest {
                         globalAA = response.getValue().toString();
                         job.setglobalAA(globalAA);
                         
-                        if (globalId.isEmpty() && globalAA.isEmpty())
-                            return "Unable to retreive global ID";         
+                        if (globalId.isEmpty() && globalAA.isEmpty()) {
+                            logger.error("Unable to retreive global ID");
+                            return "Unable to retreive global ID";    
+                        }     
                 }
                 catch (ClearinghouseException ex)
                 {
+                        logger.error("Unable to retreive globalID" + ex);
                         return "Unable to retreive globalID" + ex;
                 }
                 catch (IHEException ex)
                 {
+                        logger.error("Unable to retreive globalID" + ex);
                         return "Unable to retreive globalID" + ex;
                 }
                 catch (SQLException ex)
                 {
+                        logger.error("Unable to retreive globalID" + ex);
                         return "Unable to retreive globalID" + ex;
                 }                
                 
@@ -179,10 +190,12 @@ public class XdsTest {
 
                 catch (ClearinghouseException ex)
                 {
+                        logger.error("Unable to submit documents. " + ExceptionUtils.getStackTrace(ex));
                         return "Unable to submit documents. " + ex;
                 }
                 catch (Exception ex)
                 {
+                        logger.error("Unable to submit documents. " + ExceptionUtils.getStackTrace(ex));
                         return "Unable to submit documents. " + ex;
                 }
             
