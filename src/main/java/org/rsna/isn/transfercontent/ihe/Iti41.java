@@ -518,7 +518,7 @@ public class Iti41
                 
                 typeCode.setCode("Imaging Exam");
 		typeCode.setDisplayName(inStr("Imaging Exam"));
-                typeCode.setSchemeName("1.3.6.1.4.1.19376.2.840.1.1.2");
+                typeCode.setSchemeName("1.3.6.1.4.1.19376.3.840.1.1.2");
                 
 		return typeCode;
 	}
