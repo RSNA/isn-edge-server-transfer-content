@@ -134,18 +134,20 @@ public class Iti41
 		sourceId = dao.getConfiguration("iti41-source-id");
                 
                 //Update sourceID so all ISN instances have unique IDs
-                //1.3.6.1.4.1.19376.2.840.1.1.2.1 was the default UID
-		if (StringUtils.isBlank(sourceId) || sourceId.equals("1.3.6.1.4.1.19376.2.840.1.1.2.1"))
+                if (!sourceId.startsWith(Constants.RSNA_ISN_ROOT_SOURCE_ID))    
                 {       
-                        sourceId = Constants.RSNA_ISN_ROOT_SOURCE_ID + "." + UIDUtils.createUID();
+                        //randomUID() shortens the UID to less than 64 characters per OID spec
+                        sourceId = randomUID(Constants.RSNA_ISN_ROOT_SOURCE_ID);
                         dao.updateSourceId(sourceId);
                         logger.info("Source id set to: " + sourceId);
                 }
 
                 siteAssigningAuthority = dao.getConfiguration("site-assigning-authority");
- 		if (StringUtils.isBlank(siteAssigningAuthority))
+ 		if (!siteAssigningAuthority.startsWith(Constants.SITE_ASSIGNING_AUTHORITY))
                 {       
-                        siteAssigningAuthority = Constants.SITE_ASSIGNING_AUTHORITY + "." + UIDUtils.createUID();
+                        //randomUID() shortens the UID to less than 64 characters per OID spec
+                        siteAssigningAuthority = randomUID(Constants.SITE_ASSIGNING_AUTHORITY);
+                        
                         dao.updateConfiguration("site-assigning-authority",siteAssigningAuthority);
                         logger.info("siteAssigningAuthority set to: " + siteAssigningAuthority);
                 }
@@ -554,8 +556,9 @@ public class Iti41
                 accNum.setIdNumber(exam.getAccNum());
                 accNum.setAssigningAuthorityUniversalId(siteAssigningAuthority);
                 //accNum.setAssigningAuthorityName("RSNA-ISN");
-                accNum.setAssigningAuthorityUniversalIdType("ISO^");
                 accNum.setIdentifierTypeCode(IdentifierTypeCodeConstants.ACCESSION_NUMBER);
+                accNum.setAssigningAuthorityUniversalIdType("ISO^");
+
                 docEntry.getReferenceIdList().add(accNum);
                 accNum.toString();
                 
@@ -626,5 +629,15 @@ public class Iti41
 
 		return inStr;
 	}
+        
+        private static String randomUID(String baseUID)
+        {
+                String randomUID = UIDUtils.createUID();
+                int UIDlength = randomUID.length();
+
+                String uidTail = randomUID.substring(15, UIDlength);
+                
+                return baseUID + "." + uidTail;
+        }
 
 }

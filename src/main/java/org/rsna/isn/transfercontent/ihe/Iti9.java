@@ -59,8 +59,6 @@ public class Iti9
 
 	private final Job job;
         
-        private static String sourceId;
-        
         private static String rsnaAssigningAuthority;
 
 	static
@@ -77,11 +75,7 @@ public class Iti9
 
 			rsnaAssigningAuthority = dao.getConfiguration("rsna-assigning-authority");
 			if (StringUtils.isBlank(rsnaAssigningAuthority))
-				throw new ExceptionInInitializerError("rsna-assigning-authority");
-
-                        sourceId = dao.getConfiguration("iti41-source-id");
-			if (StringUtils.isBlank(sourceId))
-				throw new ExceptionInInitializerError("iti41-source-id");                        
+				throw new ExceptionInInitializerError("rsna-assigning-authority");                  
                         
 			PIXSourceAuditor.getAuditor().getConfig().setAuditorEnabled(false);                
 		}
